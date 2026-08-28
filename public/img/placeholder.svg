@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
+<rect width="800" height="1000" fill="#141416"/>
+<g stroke="#3a3a3d" stroke-width="2">
+  <line x1="0" y1="0" x2="800" y2="1000"/>
+  <line x1="800" y1="0" x2="0" y2="1000"/>
+</g>
+<text x="400" y="510" font-family="Arial, sans-serif" font-size="34" fill="#6f6e6a" text-anchor="middle" letter-spacing="4">NJFILMES</text>
+</svg>
