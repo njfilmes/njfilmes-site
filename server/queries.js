@@ -281,3 +281,30 @@ export function setPhotoAsCover(projectId, photoId) {
   const photo = getPhoto(photoId);
   if (photo) db.prepare('UPDATE projects SET cover_photo = ? WHERE id = ?').run(photo.filename, projectId);
 }
+
+// ---------- Depoimentos (feedback de clientes em vídeo) ----------
+export function listTestimonials() {
+  return db.prepare('SELECT * FROM testimonials ORDER BY sort_order ASC, id ASC').all();
+}
+export function getTestimonial(id) {
+  return db.prepare('SELECT * FROM testimonials WHERE id = ?').get(id);
+}
+export function createTestimonial({ client_name, role = '', provider, video_id = '', video_url, sort_order = 0 }) {
+  return db
+    .prepare('INSERT INTO testimonials (client_name, role, provider, video_id, video_url, sort_order) VALUES (?, ?, ?, ?, ?, ?)')
+    .run(client_name, role || '', provider, video_id || '', video_url, sort_order).lastInsertRowid;
+}
+export function updateTestimonial(id, { client_name, role, provider, video_id, video_url, sort_order }) {
+  db.prepare('UPDATE testimonials SET client_name=?, role=?, provider=?, video_id=?, video_url=?, sort_order=? WHERE id=?').run(
+    client_name,
+    role || '',
+    provider,
+    video_id || '',
+    video_url,
+    sort_order,
+    id
+  );
+}
+export function deleteTestimonial(id) {
+  db.prepare('DELETE FROM testimonials WHERE id = ?').run(id);
+}

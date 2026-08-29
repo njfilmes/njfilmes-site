@@ -41,7 +41,7 @@ export async function uniqueSlug(db, table, base, ignoreId = null) {
   }
 }
 
-// Detecta provedor de vídeo (YouTube/Vimeo) a partir de uma URL colada pelo usuário e extrai o ID,
+// Detecta provedor de vídeo (YouTube/Vimeo/Mega) a partir de uma URL colada pelo usuário e extrai o ID,
 // para permitir embed automático responsivo.
 export function parseVideoUrl(url) {
   const clean = String(url || '').trim();
@@ -57,6 +57,13 @@ export function parseVideoUrl(url) {
   m = clean.match(/vimeo\.com\/(?:video\/)?(\d+)/);
   if (m) {
     return { provider: 'vimeo', videoId: m[1], url: clean, embedUrl: `https://player.vimeo.com/video/${m[1]}` };
+  }
+
+  // Mega.nz: link de compartilhamento de arquivo (/file/ID#CHAVE) é convertido para o
+  // link de embed oficial do Mega (/embed/ID#CHAVE), que funciona dentro de um iframe.
+  m = clean.match(/mega\.nz\/(?:file|embed)\/([a-zA-Z0-9_-]+)#([a-zA-Z0-9_-]+)/);
+  if (m) {
+    return { provider: 'mega', videoId: m[1], url: clean, embedUrl: `https://mega.nz/embed/${m[1]}#${m[2]}` };
   }
 
   // Link direto para arquivo de vídeo hospedado externamente
@@ -79,6 +86,9 @@ export function videoEmbedUrl(video) {
   const videoId = video.video_id || video.videoId;
   if (video.provider === 'youtube' && videoId) return `https://www.youtube.com/embed/${videoId}`;
   if (video.provider === 'vimeo' && videoId) return `https://player.vimeo.com/video/${videoId}`;
+  if (video.provider === 'mega' && videoId && (video.video_key || video.videoKey)) {
+    return `https://mega.nz/embed/${videoId}#${video.video_key || video.videoKey}`;
+  }
   return video.url || '';
 }
 
@@ -91,7 +101,7 @@ export function videoEmbedHtml(video, opts = {}) {
   if (video.provider === 'file') {
     return `<div class="${className}"><video controls preload="metadata" playsinline src="${escapeHtml(video.url)}"></video></div>`;
   }
-  return `<div class="${className}"><iframe src="${escapeHtml(video.url)}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
+  return `<div class="${className}"><iframe src="${escapeHtml(videoEmbedUrl(video) || video.url)}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
 }
 
 export function formatDatePtBr(isoDate) {

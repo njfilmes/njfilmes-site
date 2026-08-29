@@ -185,6 +185,13 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/excluir$/)) && method === 'POST') return Admin.personDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/mover$/)) && method === 'POST') return Admin.personMove(req, res, await parseBody(req), Number(m[1]));
 
+    if (pathname === '/admin/depoimentos' && method === 'GET') return Admin.testimonialsPage(req, res, admin);
+    if (pathname === '/admin/depoimentos/criar' && method === 'POST') return Admin.testimonialCreate(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/editar$/)) && method === 'GET') return Admin.testimonialEditPage(req, res, admin, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.testimonialUpdate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.testimonialDelete(req, res, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/mover$/)) && method === 'POST') return Admin.testimonialMove(req, res, await parseBody(req), Number(m[1]));
+
     if (pathname === '/admin/links' && method === 'GET') return Admin.linksPage(req, res, admin);
     if (pathname === '/admin/links/criar' && method === 'POST') return Admin.linkCreate(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/links\/(\d+)\/excluir$/)) && method === 'POST') return Admin.linkDelete(req, res, Number(m[1]));

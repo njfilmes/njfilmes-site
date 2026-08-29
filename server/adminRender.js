@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/admin/servicos', label: 'Serviços', icon: '✦' },
   { href: '/admin/marcas', label: 'Marcas', icon: '◈' },
   { href: '/admin/pessoas', label: 'Pessoas', icon: '☻' },
+  { href: '/admin/depoimentos', label: 'Depoimentos', icon: '▶' },
   { href: '/admin/links', label: 'Links externos', icon: '⛓' },
   { href: '/admin/bio', label: 'Biografia / Sobre', icon: '☺' },
   { href: '/admin/configuracoes', label: 'Configurações', icon: '⚙' },
@@ -32,23 +33,23 @@ export function adminLayout({ title, activePath, admin, content, flash = null })
 </head>
 <body class="admin-body">
 <div class="admin-shell">
-  <aside class="admin-sidebar">
-    <a href="/" class="admin-logo" target="_blank">NJ<span>FILMES</span></a>
-    <nav class="admin-nav">${nav}</nav>
-    <div class="admin-sidebar-footer">
-      <div class="admin-user">${escapeHtml(admin?.name || admin?.email || '')}</div>
-      <form method="post" action="/admin/logout"><button class="admin-link-btn" type="submit">Sair</button></form>
-      <a href="/" target="_blank" class="admin-view-site">Ver site ↗</a>
-    </div>
-  </aside>
-  <div class="admin-main">
-    <header class="admin-topbar">
-      <button class="admin-menu-toggle" data-admin-menu-toggle aria-label="Menu">☰</button>
-      <h1>${escapeHtml(title)}</h1>
-    </header>
-    ${flash ? `<div class="admin-flash admin-flash-${flash.type}">${escapeHtml(flash.message)}</div>` : ''}
-    <div class="admin-content">${content}</div>
-  </div>
+<aside class="admin-sidebar">
+<a href="/" class="admin-logo" target="_blank">NJ<span>FILMES</span></a>
+<nav class="admin-nav">${nav}</nav>
+<div class="admin-sidebar-footer">
+<div class="admin-user">${escapeHtml(admin?.name || admin?.email || '')}</div>
+<form method="post" action="/admin/logout"><button class="admin-link-btn" type="submit">Sair</button></form>
+<a href="/" target="_blank" class="admin-view-site">Ver site ↗</a>
+</div>
+</aside>
+<div class="admin-main">
+<header class="admin-topbar">
+<button class="admin-menu-toggle" data-admin-menu-toggle aria-label="Menu">☰</button>
+<h1>${escapeHtml(title)}</h1>
+</header>
+${flash ? `<div class="admin-flash admin-flash-${flash.type}">${escapeHtml(flash.message)}</div>` : ''}
+<div class="admin-content">${content}</div>
+</div>
 </div>
 <script src="/js/admin.js" defer></script>
 </body>
@@ -69,10 +70,10 @@ export function loginLayout({ title, content }) {
 <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="admin-login-body">
-  <div class="admin-login-box">
-    <a href="/" class="logo" style="margin-bottom:28px;display:inline-block;">NJ<span>FILMES</span></a>
-    ${content}
-  </div>
+<div class="admin-login-box">
+<a href="/" class="logo" style="margin-bottom:28px;display:inline-block;">NJ<span>FILMES</span></a>
+${content}
+</div>
 </body>
 </html>`;
 }
@@ -85,17 +86,17 @@ export function field({ label, name, value = '', type = 'text', required = false
     ? `<textarea name="${name}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" ${req}>${val}</textarea>`
     : `<input type="${type}" name="${name}" value="${val}" placeholder="${escapeHtml(placeholder)}" ${req}>`;
   return `<div class="form-field">
-    <label>${escapeHtml(label)}</label>
-    ${input}
-    ${help ? `<small>${escapeHtml(help)}</small>` : ''}
-  </div>`;
+<label>${escapeHtml(label)}</label>
+${input}
+${help ? `<small>${escapeHtml(help)}</small>` : ''}
+</div>`;
 }
 
 export function checkboxField({ label, name, checked = false, help = '' }) {
   return `<div class="form-field form-check">
-    <label><input type="checkbox" name="${name}" value="1" ${checked ? 'checked' : ''}> ${escapeHtml(label)}</label>
-    ${help ? `<small>${escapeHtml(help)}</small>` : ''}
-  </div>`;
+<label><input type="checkbox" name="${name}" value="1" ${checked ? 'checked' : ''}> ${escapeHtml(label)}</label>
+${help ? `<small>${escapeHtml(help)}</small>` : ''}
+</div>`;
 }
 
 export function selectField({ label, name, options, selected = '', help = '' }) {
@@ -103,8 +104,8 @@ export function selectField({ label, name, options, selected = '', help = '' }) 
     .map((o) => `<option value="${escapeHtml(o.value)}" ${String(o.value) === String(selected) ? 'selected' : ''}>${escapeHtml(o.label)}</option>`)
     .join('');
   return `<div class="form-field">
-    <label>${escapeHtml(label)}</label>
-    <select name="${name}">${opts}</select>
-    ${help ? `<small>${escapeHtml(help)}</small>` : ''}
-  </div>`;
+<label>${escapeHtml(label)}</label>
+<select name="${name}">${opts}</select>
+${help ? `<small>${escapeHtml(help)}</small>` : ''}
+</div>`;
 }
