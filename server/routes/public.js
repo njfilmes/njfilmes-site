@@ -54,7 +54,7 @@ export function homePage(req, res) {
 
   const heroVideo = settings.hero_video_url
     ? `<video autoplay muted loop playsinline poster="/img/hero-poster.jpg" src="${escapeHtml(settings.hero_video_url)}"></video>`
-    : `<img src="/img/hero-poster.jpg" alt="NJFILMES">`;
+    : `<div class="hero-photo-split"><img class="hero-photo-a" src="/img/hero-poster.jpg" alt="NJFILMES"><img class="hero-photo-b" src="/img/hero-poster.jpg" alt="NJFILMES"></div>`;
 
   // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
   // sempre coloridos — sem preto e branco.
