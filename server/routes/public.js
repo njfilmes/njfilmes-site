@@ -43,6 +43,11 @@ function heroHeadlineHtml(text) {
   return `${escapeHtml(rest)} <span class="text-accent">${escapeHtml(last)}</span>`;
 }
 
+// Versao do arquivo do hero, usada como "carimbo" (?v=) na URL da foto/poster
+// pra forcar navegadores e CDNs a buscarem a versao mais nova sempre que a
+// foto for trocada pelo painel/commit, sem precisar de Ctrl+F5 no cliente.
+const HERO_IMG_VERSION = '20260829b';
+
 export function homePage(req, res) {
   const settings = getSettings();
   const categories = listCategories();
@@ -52,16 +57,21 @@ export function homePage(req, res) {
   const brands = listBrands();
   const people = listPeople();
 
+  const heroPosterUrl = `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
   const heroVideo = settings.hero_video_url
-    ? `<video autoplay muted loop playsinline poster="/img/hero-poster.jpg" src="${escapeHtml(settings.hero_video_url)}"></video>`
-    : `<div class="hero-photo-split"><img class="hero-photo-a" src="/img/hero-poster.jpg" alt="NJFILMES"><img class="hero-photo-b" src="/img/hero-poster.jpg" alt="NJFILMES"></div>`;
+    ? `<video autoplay muted loop playsinline poster="${heroPosterUrl}" src="${escapeHtml(settings.hero_video_url)}"></video>`
+    : `<div class="hero-photo-split"><img class="hero-photo-a" src="${heroPosterUrl}" alt="NJFILMES"><img class="hero-photo-b" src="${heroPosterUrl}" alt="NJFILMES"></div>`;
 
   // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
   // sempre coloridos — sem preto e branco.
   const marqueeChips = [
     ...brands.map(
-      (b) =>
-        `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><div class="brand-chip-logo"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></div><span>${escapeHtml(b.name)}</span></a>`
+      (b) => {
+        // Excecao: logos que ja vem com moldura/fundo proprio (ex: Rockhair Barbearia)
+        // nao ganham o circulo branco padrao e aparecem um pouco maiores.
+        const isPlainLogo = b.name === 'Rockhair Barbearia';
+        return `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><div class="brand-chip-logo${isPlainLogo ? ' no-frame' : ''}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></div><span>${escapeHtml(b.name)}</span></a>`;
+      }
     ),
     ...people.map(
       (p) =>
@@ -513,12 +523,12 @@ export function contactPage(req, res) {
         <div class="contact-card reveal">
           <h3>Outros canais</h3>
           <ul style="display:flex;flex-direction:column;gap:14px;"><li><a href="mailto:contato@njfilmes.com.br">contato@njfilmes.com.br</a></li>
-            ${settings.instagram_url ? `<li><a href="${escapeHtml(settings.instagram_url)}" target="_blank" rel="noopener noreferrer">Instagram</a></li>` : ''}
-            ${settings.youtube_url ? `<li><a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>YouTube</a></li>` : ''}
-            ${settings.vimeo_url ? `<li><a href="${escapeHtml(settings.vimeo_url)}" target="_blank" rel="noopener noreferrer">Vimeo</a></li>` : ''}
-            ${settings.tiktok_url ? `<li><a href="${escapeHtml(settings.tiktok_url)}" target="_blank" rel="noopener noreferrer">TikTok</a></li>` : ''}
-            ${settings.facebook_url ? `<li><a href="${escapeHtml(settings.facebook_url)}" target="_blank" rel="noopener noreferrer">Facebook</a></li>` : ''}
-            ${links.map((l) => `<li><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a></li>`).join('')}
+          ${settings.instagram_url ? `<li><a href="${escapeHtml(settings.instagram_url)}" target="_blank" rel="noopener noreferrer">Instagram</a></li>` : ''}
+          ${settings.youtube_url ? `<li><a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>YouTube</a></li>` : ''}
+          ${settings.vimeo_url ? `<li><a href="${escapeHtml(settings.vimeo_url)}" target="_blank" rel="noopener noreferrer">Vimeo</a></li>` : ''}
+          ${settings.tiktok_url ? `<li><a href="${escapeHtml(settings.tiktok_url)}" target="_blank" rel="noopener noreferrer">TikTok</a></li>` : ''}
+          ${settings.facebook_url ? `<li><a href="${escapeHtml(settings.facebook_url)}" target="_blank" rel="noopener noreferrer">Facebook</a></li>` : ''}
+          ${links.map((l) => `<li><a href="${escapeHtml(l.url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(l.name)}</a></li>`).join('')}
           </ul>
         </div>
       </div>
