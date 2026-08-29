@@ -84,7 +84,7 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
 <div class="noise-overlay" aria-hidden="true"></div>
 <header class="site-header" data-header>
   <div class="container header-inner">
-    <a href="/" class="logo">NJ<span>FILMES</span></a>
+    <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
     <nav class="main-nav" data-nav>
       <ul>
         <li><a href="/">Home</a></li>
@@ -110,7 +110,7 @@ ${content}
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <a href="/" class="logo">NJ<span>FILMES</span></a>
+      <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
       <p>${escapeHtml(settings.footer_text || '')}</p>
     </div>
     <div class="footer-links">
