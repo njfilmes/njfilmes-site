@@ -127,7 +127,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      font-size: 1.6rem;
      letter-spacing: 0.05em;
 }
-.logo span { color: var(--accent); }
+.logo span { color: var(--accent); } .logo-img { display: inline-flex; align-items: center; transition: transform 0.35s var(--ease), opacity 0.35s var(--ease); } .logo-img:hover { transform: scale(1.05); opacity: 0.9; } .logo-img-el { height: 34px; width: auto; display: block; } .site-footer .logo-img-el { height: 30px; }
 .main-nav > ul { display: flex; gap: 34px; }
 .main-nav a {
      text-transform: uppercase;
