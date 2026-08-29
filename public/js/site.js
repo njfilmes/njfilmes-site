@@ -160,4 +160,4 @@
       if (e.key === 'ArrowLeft') prev();
     });
   }
-})();
+const tiltEls = document.querySelectorAll('[data-work-card], .service-card, .person-card, .contact-card, .about-split img'); if (tiltEls.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) { tiltEls.forEach((el) => { el.addEventListener('mousemove', (e) => { const r = el.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; el.style.transform = `perspective(900px) rotateX(${(py * -7).toFixed(2)}deg) rotateY(${(px * 7).toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`; }); el.addEventListener('mouseleave', () => { el.style.transform = ''; }); }); } })();
