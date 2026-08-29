@@ -157,6 +157,22 @@ CREATE INDEX IF NOT EXISTS idx_videos_project ON project_videos(project_id);
 db.exec(`INSERT OR IGNORE INTO settings (id) VALUES (1);`);
 db.exec(`INSERT OR IGNORE INTO bio (id) VALUES (1);`);
 
+// Ajuste pontual de conteúdo (pedido pelo usuário em 29/08/2026): troca a frase de
+// destaque do hero, mas só se ela ainda estiver exatamente com o texto anterior —
+// assim, se você já tiver editado essa frase pelo painel depois disso, este trecho
+// não sobrescreve o que você escreveu. É seguro deixar este código no ar: depois da
+// primeira troca ele nunca mais faz nada.
+try {
+  const HERO_ANTERIOR = 'Nem todos os momentos podem ser capturados. Os que podem, merecem ser eternizados.';
+  const HERO_NOVA = 'Vamos tirar sua ideia do papel?';
+  const row = db.prepare('SELECT hero_headline FROM settings WHERE id = 1').get();
+  if (row && row.hero_headline === HERO_ANTERIOR) {
+    db.prepare('UPDATE settings SET hero_headline = ? WHERE id = 1').run(HERO_NOVA);
+  }
+} catch (err) {
+  console.error('[patch] falha ao tentar atualizar hero_headline:', err);
+}
+
 export function nowIso() {
   return new Date().toISOString();
 }
