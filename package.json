@@ -11,6 +11,7 @@
     "create-admin": "node scripts/create-admin.js"
   },
   "dependencies": {
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "@vercel/blob": "latest"
   }
 }
