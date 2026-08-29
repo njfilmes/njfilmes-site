@@ -2,7 +2,7 @@
    NJFILMES - Design system cinematografico
    Referencias: sand.black (contraste alto, tipografia forte,
    video em destaque) + cajal.com.br (narrativa, provas sociais)
-   ========================================================= */
+========================================================= */
 
 :root {
   --bg: #0a0a0b;
@@ -437,6 +437,43 @@ section { padding: 110px 0; position: relative; }
 }
 .person-card .person-info b { font-size: 0.95rem; }
 .person-card .person-info span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+
+/* ---------- Bastidores (galeria de fotos rolando sozinha na pagina Sobre) ----------
+   Pedido do usuario em 29/08/2026: fotos dele trabalhando, rolando pro lado sozinhas,
+   igual a faixa de clientes/marcas - mas com fotos maiores em vez de chips redondos. */
+.bio-gallery {
+  margin-top: 48px;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+}
+.bio-gallery-track {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: max-content;
+  animation: marquee-scroll 46s linear infinite;
+}
+.bio-gallery:hover .bio-gallery-track { animation-play-state: paused; }
+.bio-gallery-item {
+  flex-shrink: 0;
+  width: 230px;
+  height: 340px;
+  overflow: hidden;
+  background: var(--bg-card);
+}
+.bio-gallery-item img {
+  width: 100%; height: 100%; object-fit: cover;
+  filter: grayscale(10%);
+  transition: filter 0.4s ease, transform 0.6s var(--ease);
+}
+.bio-gallery-item:hover img { filter: grayscale(0%); transform: scale(1.04); }
+@media (prefers-reduced-motion: reduce) {
+  .bio-gallery-track { animation: none; }
+}
+@media (max-width: 720px) {
+  .bio-gallery-item { width: 168px; height: 248px; }
+}
 
 /* ---------- Depoimentos em video (feedback de clientes) ----------
    Faixa horizontal com rolagem manual (o visitante rola para o lado e vai
