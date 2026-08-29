@@ -61,7 +61,7 @@ export function homePage(req, res) {
   const marqueeChips = [
     ...brands.map(
       (b) =>
-        `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></a>`
+        `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"><span>${escapeHtml(b.name)}</span></a>`
     ),
     ...people.map(
       (p) =>
