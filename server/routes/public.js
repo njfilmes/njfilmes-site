@@ -411,6 +411,22 @@ export function aboutPage(req, res) {
   const totalProjects = listProjects({ onlyPublished: true }).length;
   const people = listPeople();
 
+  // Galeria de bastidores (fotos do NJ trabalhando) que rola sozinha na horizontal,
+  // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026.
+  const bioGalleryImages = [
+    '/img/bio/bio-1.jpg',
+    '/img/bio/bio-2.jpg',
+    '/img/bio/bio-3.jpg',
+    '/img/bio/bio-4.jpg',
+    '/img/bio/bio-5.jpg',
+    '/img/bio/bio-6.jpg',
+    '/img/bio/bio-7.jpg',
+    '/img/bio/bio-8.jpg',
+    '/img/bio/bio-9.jpg',
+    '/img/bio/bio-10.jpg',
+    '/img/bio/bio-11.jpg',
+  ];
+
   const content = `
     <section class="simple-hero">
       <div class="container about-split">
@@ -431,19 +447,31 @@ export function aboutPage(req, res) {
       </div>
     </section>
 
-    ${bio.trajectory ? `<section class="alt-bg"><div class="container" style="max-width:820px;">
+    <section class="alt-bg">
+      <div class="container">
+        <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Bastidores</span>
+        <h2 class="reveal text-center">No set com a NJFILMES</h2>
+        <div class="bio-gallery reveal">
+          <div class="bio-gallery-track">
+            ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<div class="bio-gallery-item"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    ${bio.trajectory ? `<section><div class="container" style="max-width:820px;">
       <span class="eyebrow reveal">Trajetória</span>
       <h2 class="reveal">Uma jornada pela imagem</h2>
       <p class="reveal">${nl2br(bio.trajectory)}</p>
     </div></section>` : ''}
 
-    ${bio.equipment ? `<section><div class="container" style="max-width:820px;">
+    ${bio.equipment ? `<section class="${bio.trajectory ? 'alt-bg' : ''}"><div class="container" style="max-width:820px;">
       <span class="eyebrow reveal">Estrutura</span>
       <h2 class="reveal">Equipamentos</h2>
       <p class="reveal">${nl2br(bio.equipment)}</p>
     </div></section>` : ''}
 
-    ${people.length ? `<section class="${bio.trajectory || bio.equipment ? '' : 'alt-bg'}">
+    ${people.length ? `<section class="${(bio.trajectory ? 1 : 0) + (bio.equipment ? 1 : 0) === 1 ? 'alt-bg' : ''}">
       <div class="container">
         <span class="eyebrow reveal">Quem já passou pela câmera</span>
         <h2 class="reveal">Pessoas que já trabalhei</h2>
