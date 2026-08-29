@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseBody } from './body.js';
-import { getSessionIdFromReq, getSessionAdmin } from './auth.js';
+import { getSessionIdFromReq, getSessionAdmin, findAdminByEmail, createAdminUser, hashPassword } from './auth.js';
+import { db } from './db.js';
 import * as Pub from './routes/public.js';
 import * as Admin from './routes/admin.js';
 import { listCategories, getSettings, listAllProjectsForAdmin } from './queries.js';
@@ -15,6 +16,23 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const PORT = process.env.PORT || 3000;
+
+// Reset/criação de admin controlado por variável de ambiente (uso pontual, via painel do Render).
+// Defina ADMIN_RESET_EMAIL e ADMIN_RESET_PASSWORD nas Environment Variables e faça o deploy;
+// depois de logar, remova essas duas variáveis para não deixar a senha exposta em texto puro.
+if (process.env.ADMIN_RESET_EMAIL && process.env.ADMIN_RESET_PASSWORD) {
+  const email = process.env.ADMIN_RESET_EMAIL;
+  const password = process.env.ADMIN_RESET_PASSWORD;
+  const existing = findAdminByEmail(email);
+  if (existing) {
+    const { hash, salt } = hashPassword(password);
+    db.prepare('UPDATE admin_users SET password_hash = ?, salt = ? WHERE id = ?').run(hash, salt, existing.id);
+    console.log(`[admin-reset] Senha atualizada para: ${email}`);
+  } else {
+    createAdminUser({ email, password, name: 'Administrador' });
+    console.log(`[admin-reset] Administrador criado: ${email}`);
+  }
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
