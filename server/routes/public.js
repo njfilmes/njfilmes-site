@@ -154,7 +154,7 @@ export function homePage(req, res) {
     <section class="alt-bg">
       <div class="container">
         <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Conheça alguns</span>
-        <h2 class="reveal text-center">Marcas &amp; Artistas</h2>
+        <h2 class="reveal text-center">Clientes</h2>
         <div class="marquee reveal">
           <div class="marquee-track">
             ${[...marqueeChips, ...marqueeChips].join('')}
