@@ -61,7 +61,7 @@ export function homePage(req, res) {
   const marqueeChips = [
     ...brands.map(
       (b) =>
-        `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"><span>${escapeHtml(b.name)}</span></a>`
+        `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><div class="brand-chip-logo"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></div><span>${escapeHtml(b.name)}</span></a>`
     ),
     ...people.map(
       (p) =>
@@ -379,7 +379,7 @@ export function aboutPage(req, res) {
   const content = `
     <section class="simple-hero">
       <div class="container about-split">
-        <img class="reveal" src="${escapeHtml(bio.profile_photo || '/img/about-placeholder.jpg')}" alt="${escapeHtml(bio.name || 'NJFILMES')}">
+        <div class="about-photos reveal"><img class="about-photo-main" src="${escapeHtml(bio.profile_photo || '/img/about-placeholder.jpg')}" alt="${escapeHtml(bio.name || 'NJFILMES')}"><img class="about-photo-second" src="/img/about-photo-2.jpg" alt="${escapeHtml(bio.name || 'NJFILMES')}"></div>
         <div class="reveal">
           <span class="eyebrow">Sobre a NJFILMES</span>
           <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>
