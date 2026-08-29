@@ -11,6 +11,7 @@ import {
   getProjectBySlug,
   listBrands,
   listPeople,
+  listTestimonials,
 } from '../queries.js';
 
 function coverUrl(project) {
@@ -56,6 +57,7 @@ export function homePage(req, res) {
   const services = listServices({ onlyPublished: true }).slice(0, 6);
   const brands = listBrands();
   const people = listPeople();
+  const testimonials = listTestimonials();
 
   const heroPosterUrl = `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
   const heroVideo = settings.hero_video_url
@@ -78,6 +80,18 @@ export function homePage(req, res) {
         `<div class="person-chip"><div class="person-chip-photo"><img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" loading="lazy"></div><span>${escapeHtml(p.name)}</span></div>`
     ),
   ];
+
+  // Faixa de depoimentos em vídeo (feedback de clientes): rolagem manual, um vídeo
+  // "passando" atrás do outro conforme a pessoa arrasta/rola pro lado.
+  const testimonialCards = testimonials.map(
+    (t) => `<div class="testimonial-card reveal">
+      ${videoEmbedHtml({ provider: t.provider, video_id: t.video_id, url: t.video_url, title: t.client_name }, { className: 'testimonial-video video-embed' })}
+      <div class="testimonial-info">
+        <b>${escapeHtml(t.client_name)}</b>
+        ${t.role ? `<span>${escapeHtml(t.role)}</span>` : ''}
+      </div>
+    </div>`
+  );
 
   const content = `
     <section class="hero">
@@ -169,6 +183,17 @@ export function homePage(req, res) {
           <div class="marquee-track">
             ${[...marqueeChips, ...marqueeChips].join('')}
           </div>
+        </div>
+      </div>
+    </section>` : ''}
+
+    ${testimonialCards.length ? `
+    <section>
+      <div class="container">
+        <span class="eyebrow reveal text-center" style="display:block;text-align:center;">O que dizem</span>
+        <h2 class="reveal text-center">Feedback de clientes</h2>
+        <div class="testimonials-scroll">
+          ${testimonialCards.join('')}
         </div>
       </div>
     </section>` : ''}
@@ -389,7 +414,7 @@ export function aboutPage(req, res) {
   const content = `
     <section class="simple-hero">
       <div class="container about-split">
-        <div class="about-photos reveal"><img class="about-photo-main" src="${escapeHtml(bio.profile_photo || '/img/about-placeholder.jpg')}" alt="${escapeHtml(bio.name || 'NJFILMES')}"><img class="about-photo-second" src="/img/about-photo-2.jpg" alt="${escapeHtml(bio.name || 'NJFILMES')}"></div>
+        <div class="about-photos reveal"><div class="about-photos-track"><img class="about-photo-main" src="${escapeHtml(bio.profile_photo || '/img/about-placeholder.jpg')}" alt="${escapeHtml(bio.name || 'NJFILMES')}"><img class="about-photo-second" src="/img/about-photo-2.jpg" alt="${escapeHtml(bio.name || 'NJFILMES')}"></div></div>
         <div class="reveal">
           <span class="eyebrow">Sobre a NJFILMES</span>
           <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>

@@ -538,6 +538,117 @@ export function personMove(req, res, body, id) {
   redirect(res, '/admin/pessoas');
 }
 
+// ---------------- Depoimentos (feedback de clientes em vídeo) ----------------
+
+export function testimonialsPage(req, res, admin) {
+  const flash = readFlash(req);
+  const testimonials = Q.listTestimonials();
+  const rows = testimonials
+    .map(
+      (t, i) => `<tr>
+      <td>${escapeHtml(t.client_name)}</td>
+      <td class="muted">${escapeHtml(t.role || '—')}</td>
+      <td class="muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.video_url)}</td>
+      <td>
+        <form method="post" action="/admin/depoimentos/${t.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+        <form method="post" action="/admin/depoimentos/${t.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === testimonials.length - 1 ? 'disabled' : ''}>↓</button></form>
+      </td>
+      <td class="row-actions">
+        <a class="btn-a btn-a-sm" href="/admin/depoimentos/${t.id}/editar">Editar</a>
+        <form method="post" action="/admin/depoimentos/${t.id}/excluir" data-confirm="Excluir o depoimento de \\"${t.client_name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+      </td>
+    </tr>`
+    )
+    .join('');
+  const content = `
+  <div class="panel">
+    <h2>Novo depoimento</h2>
+    <p class="muted" style="margin-top:-8px;">Vídeos de feedback de clientes. Cole o link do YouTube, Vimeo ou Mega (link de compartilhamento do arquivo) — o site identifica e incorpora automaticamente. Aparece na Home, numa faixa que a pessoa rola para ver um depoimento após o outro.</p>
+    ${testimonialForm({ action: '/admin/depoimentos/criar' })}
+  </div>
+  <div class="panel">
+    <h2>Depoimentos (${testimonials.length})</h2>
+    ${testimonials.length ? `<table class="admin-table"><thead><tr><th>Cliente</th><th>Contexto</th><th>Vídeo</th><th>Ordem</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '<p class="empty-hint">Nenhum depoimento cadastrado ainda.</p>'}
+  </div>`;
+  res.end(adminLayout({ title: 'Depoimentos', activePath: '/admin/depoimentos', admin, content, flash }));
+}
+
+function testimonialForm({ action, testimonial = {} }) {
+  return `<form method="post" action="${action}">
+    ${field({ label: 'Nome do cliente', name: 'client_name', value: testimonial.client_name, required: true, placeholder: 'Ex: Maria Silva' })}
+    ${field({ label: 'Contexto (opcional)', name: 'role', value: testimonial.role, placeholder: 'Ex: Casamento · Evento corporativo · Ensaio' })}
+    ${field({ label: 'Link do vídeo (YouTube, Vimeo ou Mega)', name: 'video_url', value: testimonial.video_url, required: true, placeholder: 'https://...' })}
+    <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
+  </form>`;
+}
+
+export function testimonialEditPage(req, res, admin, id) {
+  const testimonial = Q.getTestimonial(id);
+  if (!testimonial) return redirect(res, '/admin/depoimentos');
+  const content = `<div class="panel"><h2>Editar depoimento</h2>${testimonialForm({ action: `/admin/depoimentos/${id}/atualizar`, testimonial })}</div>`;
+  res.end(adminLayout({ title: 'Editar depoimento', activePath: '/admin/depoimentos', admin, content }));
+}
+
+export function testimonialCreate(req, res, body) {
+  const clientName = (body.client_name || '').trim();
+  if (!clientName) return redirect(res, '/admin/depoimentos' + withFlash(res, 'error', 'Informe o nome do cliente.'));
+  const parsed = parseVideoUrl(body.video_url);
+  if (!parsed) return redirect(res, '/admin/depoimentos' + withFlash(res, 'error', 'Link de vídeo inválido.'));
+  const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM testimonials').get().m;
+  Q.createTestimonial({
+    client_name: clientName,
+    role: body.role || '',
+    provider: parsed.provider,
+    video_id: parsed.videoId,
+    video_url: parsed.url,
+    sort_order: maxOrder + 1,
+  });
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento adicionado.'));
+}
+
+export function testimonialUpdate(req, res, body, id) {
+  const testimonial = Q.getTestimonial(id);
+  if (!testimonial) return redirect(res, '/admin/depoimentos');
+  const clientName = (body.client_name || testimonial.client_name).trim();
+  let provider = testimonial.provider;
+  let videoId = testimonial.video_id;
+  let videoUrl = testimonial.video_url;
+  if (body.video_url && body.video_url.trim() !== testimonial.video_url) {
+    const parsed = parseVideoUrl(body.video_url);
+    if (!parsed) return redirect(res, `/admin/depoimentos/${id}/editar` + withFlash(res, 'error', 'Link de vídeo inválido.'));
+    provider = parsed.provider;
+    videoId = parsed.videoId;
+    videoUrl = parsed.url;
+  }
+  Q.updateTestimonial(id, {
+    client_name: clientName,
+    role: body.role || '',
+    provider,
+    video_id: videoId,
+    video_url: videoUrl,
+    sort_order: testimonial.sort_order,
+  });
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento atualizado.'));
+}
+
+export function testimonialDelete(req, res, id) {
+  Q.deleteTestimonial(id);
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento excluído.'));
+}
+
+export function testimonialMove(req, res, body, id) {
+  const items = Q.listTestimonials();
+  const idx = items.findIndex((t) => t.id === id);
+  if (idx === -1) return redirect(res, '/admin/depoimentos');
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, '/admin/depoimentos');
+  const a = items[idx], b = items[swapWith];
+  db.prepare('UPDATE testimonials SET sort_order = ? WHERE id = ?').run(b.sort_order, a.id);
+  db.prepare('UPDATE testimonials SET sort_order = ? WHERE id = ?').run(a.sort_order, b.id);
+  redirect(res, '/admin/depoimentos');
+}
+
 // ---------------- Links externos ----------------
 
 export function linksPage(req, res, admin) {
@@ -853,10 +964,10 @@ export function projectEditPage(req, res, admin, id, tab = 'info') {
     <div class="panel">
       <h2>Vídeos do projeto (${project.videos.length})</h2>
       ${project.videos.length ? project.videos.map((v) => `
-        <div class="video-item">
-          <div class="vi-info"><b>${escapeHtml(v.title || v.provider)}</b><span>${escapeHtml(v.url)}</span></div>
-          <form method="post" action="/admin/projetos/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger">Remover</button></form>
-        </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
+      <div class="video-item">
+        <div class="vi-info"><b>${escapeHtml(v.title || v.provider)}</b><span>${escapeHtml(v.url)}</span></div>
+        <form method="post" action="/admin/projetos/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger">Remover</button></form>
+      </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
     </div>`;
   } else if (tab === 'fotos') {
     body = `
@@ -876,21 +987,21 @@ export function projectEditPage(req, res, admin, id, tab = 'info') {
       ${project.photos.length ? `<div class="photo-grid">${project.photos
         .map(
           (p, i) => `<div class="photo-card">
-          <img src="${escapeHtml(p.thumb_filename)}" alt="">
-          <div class="pc-body">
-            ${p.is_cover ? '<span class="is-cover-badge">Capa</span>' : ''}
-            <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/legenda">
-              <input type="text" name="caption" value="${escapeHtml(p.caption || '')}" placeholder="Legenda (opcional)">
-              <button class="btn-a btn-a-sm" type="submit">Salvar legenda</button>
-            </form>
-            <div class="pc-actions">
-              ${!p.is_cover ? `<form method="post" action="/admin/projetos/${id}/fotos/${p.id}/capa"><button class="btn-a btn-a-sm">Definir capa</button></form>` : ''}
-              <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
-              <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === project.photos.length - 1 ? 'disabled' : ''}>↓</button></form>
-              <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
-            </div>
+        <img src="${escapeHtml(p.thumb_filename)}" alt="">
+        <div class="pc-body">
+          ${p.is_cover ? '<span class="is-cover-badge">Capa</span>' : ''}
+          <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/legenda">
+            <input type="text" name="caption" value="${escapeHtml(p.caption || '')}" placeholder="Legenda (opcional)">
+            <button class="btn-a btn-a-sm" type="submit">Salvar legenda</button>
+          </form>
+          <div class="pc-actions">
+            ${!p.is_cover ? `<form method="post" action="/admin/projetos/${id}/fotos/${p.id}/capa"><button class="btn-a btn-a-sm">Definir capa</button></form>` : ''}
+            <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+            <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === project.photos.length - 1 ? 'disabled' : ''}>↓</button></form>
+            <form method="post" action="/admin/projetos/${id}/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
           </div>
-        </div>`
+        </div>
+      </div>`
         )
         .join('')}</div>` : '<p class="empty-hint">Nenhuma foto enviada ainda.</p>'}
     </div>`;
