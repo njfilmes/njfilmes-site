@@ -173,6 +173,6 @@ try {
   console.error('[patch] falha ao tentar atualizar hero_headline:', err);
 }
 
-export function nowIso() {
+try { const rowYt = db.prepare('SELECT youtube_url FROM settings WHERE id = 1').get(); if (rowYt && !rowYt.youtube_url) { db.prepare('UPDATE settings SET youtube_url = ? WHERE id = 1').run('https://www.youtube.com/@njfilmesproduções'); } } catch (err) { console.error('[patch] falha ao tentar atualizar youtube_url:', err); } try { const bioRow = db.prepare('SELECT specialties FROM bio WHERE id = 1').get(); if (bioRow && bioRow.specialties && !/v[ií]deos?\s+corporativos?/i.test(bioRow.specialties)) { db.prepare('UPDATE bio SET specialties = ? WHERE id = 1').run(bioRow.specialties.trim() + ', Vídeos corporativos'); } } catch (err) { console.error('[patch] falha ao tentar atualizar specialties:', err); } export function nowIso() {
   return new Date().toISOString();
 }
