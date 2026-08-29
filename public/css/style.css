@@ -331,11 +331,30 @@ section { padding: 110px 0; position: relative; }
 .about-split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 72px; align-items: center; }
 .about-split img { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(15%); }
 .about-split .quote { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 2.1rem); text-transform: none; color: var(--fg); border-left: 2px solid var(--accent); padding-left: 24px; margin: 24px 0; }
-.about-photos { position: relative; }
-.about-photos .about-photo-main { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(15%); }
-.about-photos .about-photo-second { position: absolute; width: 55%; aspect-ratio: 4/5; object-fit: cover; right: -28px; bottom: -28px; border: 6px solid var(--bg); filter: grayscale(15%); box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-@media (max-width: 720px) {
-  .about-photos .about-photo-second { width: 48%; right: -12px; bottom: -12px; border-width: 4px; }
+/* Slide automatico entre as duas fotos (pedido do usuario em 29/08/2026: nao mais uma
+   sobreposta na outra em diagonal - em vez disso, uma foto desliza sozinha pra dar
+   lugar a outra, mostrando as duas ao mesmo tempo durante a transicao). */
+.about-photos { position: relative; overflow: hidden; aspect-ratio: 4/5; filter: grayscale(15%); }
+.about-photos-track {
+  display: flex;
+  width: 200%;
+  height: 100%;
+  animation: aboutPhotosSlide 9s ease-in-out infinite;
+}
+.about-photos:hover .about-photos-track { animation-play-state: paused; }
+.about-photos-track img {
+  width: 50%;
+  height: 100%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+@keyframes aboutPhotosSlide {
+  0%, 42% { transform: translateX(0); }
+  50%, 92% { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .about-photos-track { animation: none; }
 }
 .stats-row { display: flex; gap: 48px; margin-top: 36px; flex-wrap: wrap; }
 .stat b { font-family: var(--font-display); font-size: 2.4rem; display: block; color: var(--accent); }
@@ -418,6 +437,34 @@ section { padding: 110px 0; position: relative; }
 }
 .person-card .person-info b { font-size: 0.95rem; }
 .person-card .person-info span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+
+/* ---------- Depoimentos em video (feedback de clientes) ----------
+   Faixa horizontal com rolagem manual (o visitante rola para o lado e vai
+   vendo um depoimento em video apos o outro), diferente do marquee de logos
+   que rola sozinho — aqui o video precisa ficar parado pra poder assistir. */
+.testimonials-scroll {
+  display: flex;
+  gap: 26px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 10px 4px 26px;
+  margin-top: 48px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+.testimonials-scroll::-webkit-scrollbar { height: 6px; }
+.testimonials-scroll::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+.testimonial-card {
+  flex: 0 0 360px;
+  scroll-snap-align: start;
+}
+.testimonial-card .video-embed { margin-bottom: 16px; }
+.testimonial-info { display: flex; flex-direction: column; gap: 4px; }
+.testimonial-info b { font-size: 0.95rem; }
+.testimonial-info span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
+@media (max-width: 720px) {
+  .testimonial-card { flex: 0 0 84vw; }
+}
 
 /* ---------- CTA final ---------- */
 .cta-section { text-align: center; }
