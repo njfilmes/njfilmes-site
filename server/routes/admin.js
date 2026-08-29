@@ -1131,3 +1131,31 @@ export function projectPhotoMove(req, res, body, id, photoId) {
   Q.setPhotoOrder(b.id, a.sort_order);
   redirect(res, `/admin/projetos/${id}/fotos`);
 }
+
+
+// ---------------- Recuperacao de acesso (self-service, protegida por chave secreta) ----------------
+// Pedido do usuario em 29/08/2026: uma pagina no proprio site pra trocar o e-mail/senha do admin
+// sem precisar mexer nas Environment Variables do Render toda vez. Protegida pela variavel de
+// ambiente ADMIN_RECOVERY_KEY (defina ela uma vez no Render e guarde em local seguro).
+
+export function recoverPage(req, res) {
+  const flash = readFlash(req);
+  res.end(loginLayout({ title: 'Recuperar acesso', content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperacao para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${flash.type}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperacao', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>` }));
+}
+
+export function recoverSubmit(req, res, body) {
+  const key = process.env.ADMIN_RECOVERY_KEY;
+  if (!key) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Recuperacao nao configurada neste site.'));
+  if (!body.recovery_key || body.recovery_key !== key) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Chave de recuperacao incorreta.'));
+  const email = String(body.email || '').toLowerCase().trim();
+  const password = String(body.password || '');
+  if (!email || password.length < 8) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Preencha e-mail e uma senha com pelo menos 8 caracteres.'));
+  const existing = findAdminByEmail(email);
+  if (existing) {
+    const h = hashPassword(password);
+    db.prepare('UPDATE admin_users SET password_hash = ?, salt = ? WHERE id = ?').run(h.hash, h.salt, existing.id);
+  } else {
+    createAdminUser({ email, password, name: 'Administrador' });
+  }
+  return redirect(res, '/admin/login' + withFlash(res, 'success', 'Acesso atualizado! Entre com o novo e-mail e senha.'));
+}
