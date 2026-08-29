@@ -148,6 +148,14 @@ async function router(req, res) {
     if (pathname === '/admin/logout' && method === 'POST') {
       return Admin.logoutSubmit(req, res, sessionId);
     }
+    // Recuperação de acesso self-service: protegida por uma chave secreta fixa
+    // (variável de ambiente ADMIN_RECOVERY_KEY), pedido do usuário em 29/08/2026
+    // para não precisar mais mexer nas Environment Variables do Render toda vez
+    // que precisar trocar a senha do admin.
+    if (pathname === '/admin/recuperar-senha') {
+      if (method === 'GET') return Admin.recoverPage(req, res);
+      if (method === 'POST') return Admin.recoverSubmit(req, res, await parseBody(req));
+    }
 
     if (!admin) {
       res.statusCode = 302;
