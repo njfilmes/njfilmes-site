@@ -221,4 +221,17 @@
       btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
     });
   }
+
+  // ---------- Fotos da pagina Sobre passando sozinhas (crossfade, adicionado 30/08/2026) ----------
+  // Antes so tinha 2 fotos fixas. Agora o usuario pode enviar quantas fotos quiser pelo
+  // painel, e aqui a gente vai trocando de uma pra outra, todas na mesma posicao (crossfade).
+  const aboutSlides = document.querySelectorAll('.about-photo-slide');
+  if (aboutSlides.length > 1) {
+    let aboutIndex = 0;
+    setInterval(() => {
+      aboutSlides[aboutIndex].classList.remove('is-active');
+      aboutIndex = (aboutIndex + 1) % aboutSlides.length;
+      aboutSlides[aboutIndex].classList.add('is-active');
+    }, 3500);
+  }
 })();
