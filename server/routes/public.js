@@ -12,6 +12,7 @@ import {
   listBrands,
   listPeople,
   listTestimonials,
+  listBioPhotos,
 } from '../queries.js';
 
 function coverUrl(project) {
@@ -411,6 +412,14 @@ export function aboutPage(req, res) {
   const totalProjects = listProjects({ onlyPublished: true }).length;
   const people = listPeople();
 
+  // Fotos que ficam passando (crossfade) ao lado da biografia: a foto de perfil
+  // primeiro, depois todas as fotos que o usuario enviar no painel em "Fotos da
+  // pagina Sobre" — pedido do usuario em 30/08/2026 pra poder colocar mais de 2 fotos.
+  const aboutPhotoUrls = [
+    bio.profile_photo || '/img/about-placeholder.jpg',
+    ...listBioPhotos().map((p) => p.filename),
+  ].filter((src, idx, arr) => src && arr.indexOf(src) === idx);
+
   // Galeria de bastidores (fotos do NJ trabalhando) que rola sozinha na horizontal,
   // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026.
   const bioGalleryImages = [
@@ -430,7 +439,7 @@ export function aboutPage(req, res) {
   const content = `
     <section class="simple-hero">
       <div class="container about-split">
-        <div class="about-photos reveal"><div class="about-photos-track"><img class="about-photo-main" src="${escapeHtml(bio.profile_photo || '/img/about-placeholder.jpg')}" alt="${escapeHtml(bio.name || 'NJFILMES')}"><img class="about-photo-second" src="/img/about-photo-2.jpg" alt="${escapeHtml(bio.name || 'NJFILMES')}"></div></div>
+        <div class="about-photos reveal">${aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
         <div class="reveal">
           <span class="eyebrow">Sobre a NJFILMES</span>
           <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>
