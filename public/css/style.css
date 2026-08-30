@@ -751,8 +751,21 @@ section { padding: 110px 0; position: relative; }
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--fg-muted);
+    /* Pedido em 30/08/2026: diminuir ainda mais o "Entrar em contato" -
+       ja era so texto sublinhado, agora a fonte fica menor tambem. */
+    font-size: 0.62rem;
   }
   .hero .btn-row .btn-outline:hover { background: none; color: var(--fg); transform: none; }
+  /* Pedido em 30/08/2026: os textos do hero (legenda, titulo, paragrafo,
+     botoes) estavam colados na borda esquerda da tela no celular - o motivo
+     e que .hero-content zera o padding lateral (padding:0 0 90px, definido
+     mais acima) por cima do padding:0 24px que .container normalmente da
+     a todas as outras secoes (incluindo "Projeto em destaque" logo abaixo
+     do hero). Alinhando o padding-esquerdo do hero com esse mesmo valor de
+     24px, o titulo fica na mesma margem do texto "Projeto em destaque". */
+  .hero-content {
+    padding-left: 24px;
+  }
 }
 @media (max-width: 480px) {
   h1 { font-size: clamp(2.4rem, 12vw, 3.4rem); letter-spacing: -0.005em; }
