@@ -422,6 +422,19 @@ export function aboutPage(req, res) {
     .filter(Boolean);
   const totalProjects = listProjects({ onlyPublished: true }).length;
   const people = listPeople();
+  const brands = listBrands();
+
+  // Pedido em 30/08/2026: seção "Marcas" (mesma faixa rolando sozinha pro lado
+  // que já existia na home, só que aqui na Sobre com só as marcas, sem
+  // misturar com pessoas - fica logo abaixo de "Pessoas que já trabalhei").
+  // Alterna o fundo (alt-bg) acompanhando a mesma lógica em zebra que as
+  // seções anteriores da página já usam, pra continuar intercalando certinho
+  // mesmo quando trajetória/equipamentos estão vazios e somem da página.
+  let altBgToggle = true; // true = fundo alt-bg (a galeria de bastidores acima já começa assim)
+  if (bio.trajectory) altBgToggle = !altBgToggle;
+  if (bio.equipment) altBgToggle = !altBgToggle;
+  if (people.length) altBgToggle = !altBgToggle;
+  const brandsAltBg = altBgToggle;
 
   // Fotos que ficam passando (crossfade) ao lado da biografia: a foto de perfil
   // primeiro, depois todas as fotos que o usuario enviar no painel em "Fotos da
@@ -503,6 +516,21 @@ export function aboutPage(req, res) {
               ${p.role ? `<span>${escapeHtml(p.role)}</span>` : ''}
             </div>
           </div>`).join('')}
+        </div>
+      </div>
+    </section>` : ''}
+
+    ${brands.length ? `<section class="${brandsAltBg ? 'alt-bg' : ''}">
+      <div class="container">
+        <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Quem confia no meu trabalho</span>
+        <h2 class="reveal text-center">Marcas</h2>
+        <div class="marquee reveal">
+          <div class="marquee-track">
+            ${[...brands, ...brands].map((b) => {
+              const isPlainLogo = b.name === 'Rockhair Barbearia';
+              return `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><div class="brand-chip-logo${isPlainLogo ? ' no-frame' : ''}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></div><span>${escapeHtml(b.name)}</span></a>`;
+            }).join('')}
+          </div>
         </div>
       </div>
     </section>` : ''}
