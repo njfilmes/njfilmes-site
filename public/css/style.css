@@ -687,15 +687,43 @@ section { padding: 110px 0; position: relative; }
      continuava, mas sem nada acontecendo ali. Diminuindo a altura do hero no
      celular o texto sobe (fica menos "no fundo da tela") e esse vazio some. */
   .hero { min-height: 84svh; }
-  .hero-content { padding-bottom: 44px; }
   .hero-scroll { bottom: 18px; }
   /* Pedido em 30/08/2026: deixar a foto do hero com um ar mais "dark" no
-     celular. O degrade original (.hero-media::after acima) ja escurecia a
-     foto, mas leve - aqui so no celular a gente reforça esse degrade
-     (fica mais escuro do topo ao rodape) sem mexer na versao de PC nem
-     trocar a foto em si, so a camada escura por cima dela. */
+     celular - e depois pediu pra escurecer ainda mais. O degrade original
+     (.hero-media::after acima) ja escurecia a foto, mas leve - aqui so no
+     celular a gente reforça bem esse degrade (fica bem mais escuro do topo
+     ao rodape) sem mexer na versao de PC nem trocar a foto em si, so a
+     camada escura por cima dela. */
   .hero-media::after {
-    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.5) 35%, rgba(6,6,7,0.97) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.66) 35%, rgba(4,4,5,0.98) 100%);
+  }
+  /* Pedido em 30/08/2026: o texto do hero ainda estava perto demais do
+     rodape mesmo depois de diminuir a altura da secao - centralizando o
+     conteudo dentro do hero (em vez de grudado embaixo) ele sobe bem mais
+     pra perto do meio da tela. O "ROLE" continua no rodape porque tem
+     posicionamento proprio (absolute), nao e afetado por isso. */
+  .hero { align-items: center; }
+  .hero-content { padding-bottom: 0; }
+  /* Pedido em 30/08/2026: a legenda "Produção Audiovisual · Salvador, BA"
+     em cima do titulo estava grande e espaçada demais pro celular - deixando
+     menor e com menos espaço entre letras ela vira um detalhe discreto,
+     como devia ser, em vez de disputar atenção com o titulo. */
+  .hero .eyebrow {
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    margin-bottom: 0.6em;
+  }
+  /* Pedido em 30/08/2026: usar uma fonte parecida com a do site de
+     referencia que o usuario passou (silvertake.video). La eles usam
+     "Aktiv Grotesk", que e uma fonte paga - Hanken Grotesk e a alternativa
+     gratuita mais proxima (feita pra ficar parecida com ela), entao da pra
+     usar sem problema de licenca. Aplicando so no titulo/texto do hero no
+     celular pra nao mudar a identidade visual (Bebas Neue) do resto do
+     site. */
+  .hero-content h1 {
+    font-family: 'Hanken Grotesk', var(--font-body);
+    font-weight: 800;
+    letter-spacing: -0.01em;
   }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
