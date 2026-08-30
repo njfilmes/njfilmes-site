@@ -773,9 +773,10 @@ section { padding: 110px 0; position: relative; }
   /* Pedido em 30/08/2026: mesmo centralizado (align-items:center, acima),
      o texto ainda ficava baixo - pediu pra subir mais, quase na altura do
      rosto/nariz na foto. Um deslocamento extra pra cima por cima da
-     centralizacao ja existente. */
+     centralizacao ja existente. Primeira tentativa (-16vh) subiu demais,
+     ajustado pra um valor menor. */
   .hero-content {
-    transform: translateY(-16vh);
+    transform: translateY(-8vh);
   }
 }
 @media (max-width: 480px) {
