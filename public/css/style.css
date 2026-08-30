@@ -621,6 +621,31 @@ section { padding: 110px 0; position: relative; }
   .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 10px 0 0 16px; display: none; }
   .has-sub.open .sub-nav { display: block; }
   .nav-toggle { display: flex; }
+  /* Corrigido em 30/08/2026: o unico jeito de fechar o menu do celular era
+     clicando de novo no icone de hamburguer la no topo da tela - mas esse
+     icone fica dentro do cabecalho, que se esconde sozinho quando a pessoa
+     rola a pagina (pra dar mais espaco de tela). Resultado: se a pessoa abria
+     o menu e rolava, o botao pra fechar sumia junto e o menu ficava "preso"
+     aberto sem nenhuma saida visivel. Agora tem um X sempre visivel dentro do
+     proprio menu, um fundo escurecido atras que fecha ao tocar, e da pra
+     arrastar o menu pro lado (ou pra cima) que ele fecha tambem. */
+  .nav-close {
+    display: none;
+    position: absolute; top: 18px; right: 18px;
+    width: 40px; height: 40px; border-radius: 50%;
+    align-items: center; justify-content: center;
+    background: none; border: 1px solid var(--border-strong); color: var(--fg);
+    transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
+  }
+  .nav-close:hover { border-color: var(--accent); background: rgba(201,162,39,0.1); }
+  .main-nav.open .nav-close { display: flex; }
+  .nav-backdrop {
+    position: fixed; inset: 0; z-index: 390;
+    background: rgba(0,0,0,0.6);
+    opacity: 0; visibility: hidden;
+    transition: opacity 0.4s var(--ease), visibility 0.4s;
+  }
+  .nav-backdrop.open { opacity: 1; visibility: visible; }
   .work-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 220px; }
   .work-card, .work-card.tall, .work-card.wide, .work-card:nth-child(5n+1), .work-card:nth-child(5n+2), .work-card:nth-child(5n+3), .work-card:nth-child(5n+4), .work-card:nth-child(5n+5) { grid-column: span 1; grid-row: span 1; }
   .work-card:nth-child(4n+1) { grid-column: span 2; }
