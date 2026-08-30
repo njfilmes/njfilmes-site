@@ -82,6 +82,7 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
 </head>
 <body class="${escapeHtml(bodyClass)}">
 <div class="noise-overlay" aria-hidden="true"></div>
+<div class="grade-overlay" aria-hidden="true"></div>
 <header class="site-header" data-header>
 <div class="container header-inner">
 <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
