@@ -682,7 +682,13 @@ section { padding: 110px 0; position: relative; }
   .specialties-list span:not(:last-child)::after { content: ' · '; color: var(--fg-dim); }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
-  .hero-content { padding-bottom: 60px; }
+  /* Pedido em 30/08/2026 (com print do celular): tinha muito espaco vazio
+     embaixo do texto do hero antes da proxima secao comecar - a foto de fundo
+     continuava, mas sem nada acontecendo ali. Diminuindo a altura do hero no
+     celular o texto sobe (fica menos "no fundo da tela") e esse vazio some. */
+  .hero { min-height: 84svh; }
+  .hero-content { padding-bottom: 44px; }
+  .hero-scroll { bottom: 18px; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
      menos poluida): no hero, "Ver portfolio" e "Entrar em contato" tinham o
