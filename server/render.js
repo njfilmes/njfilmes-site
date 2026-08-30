@@ -86,6 +86,9 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
 <div class="container header-inner">
 <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
 <nav class="main-nav" data-nav>
+<button class="nav-close" data-nav-close type="button" aria-label="Fechar menu">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+</button>
 <ul>
 <li><a href="/">Home</a></li>
 <li class="has-sub">
@@ -97,6 +100,7 @@ ${navCats ? `<ul class="sub-nav">${navCats}</ul>` : ''}
 <li><a href="/contato">Contato</a></li>
 </ul>
 </nav>
+<div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
 <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false">
 <span></span><span></span><span></span>
 </button>
