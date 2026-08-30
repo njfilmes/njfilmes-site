@@ -70,14 +70,22 @@ button { font-family: inherit; cursor: pointer; }
    celular igual (essa regra vale pro site inteiro, sem media query). Tambem
    ganhou um movimento lento e continuo (gradeDrift, abaixo) - o fundo e maior
    que a tela (background-size 160%) e desliza devagar, dando a sensacao de
-   luz quente "respirando" sobre o site, nao so uma camada parada. */
+   luz quente "respirando" sobre o site, nao so uma camada parada.
+   Corrigido em 30/08/2026 (mesmo dia): o usuario reparou que o filtro só
+   aparecia em cima da foto do hero, "atras" do texto - o motivo era o
+   mix-blend-mode:soft-light, que quase nao tem efeito visual sobre cores bem
+   escuras (o fundo do site, quase preto) ou bem claras (o texto, quase
+   branco) - so aparece de verdade em tons intermediarios como os da foto.
+   Trocado pra mix-blend-mode:normal (pedido do usuario: "o fundo deixa
+   normal"), que pinta a cor por cima igual em qualquer parte da tela -
+   assim o filtro fica visivel na frente do texto tambem, nao so da foto. */
 .grade-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9998;
-  mix-blend-mode: soft-light;
-  background: linear-gradient(160deg, rgba(255,150,60,0.30) 0%, rgba(201,162,39,0.20) 45%, rgba(120,55,15,0.38) 100%);
+  mix-blend-mode: normal;
+  background: linear-gradient(160deg, rgba(255,150,60,0.20) 0%, rgba(201,162,39,0.14) 45%, rgba(120,55,15,0.26) 100%);
   background-size: 160% 160%;
 }
 .js .grade-overlay { animation: gradeDrift 16s ease-in-out infinite; }
