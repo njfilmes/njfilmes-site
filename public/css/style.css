@@ -689,6 +689,14 @@ section { padding: 110px 0; position: relative; }
   .hero { min-height: 84svh; }
   .hero-content { padding-bottom: 44px; }
   .hero-scroll { bottom: 18px; }
+  /* Pedido em 30/08/2026: deixar a foto do hero com um ar mais "dark" no
+     celular. O degrade original (.hero-media::after acima) ja escurecia a
+     foto, mas leve - aqui so no celular a gente reforça esse degrade
+     (fica mais escuro do topo ao rodape) sem mexer na versao de PC nem
+     trocar a foto em si, so a camada escura por cima dela. */
+  .hero-media::after {
+    background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.5) 35%, rgba(6,6,7,0.97) 100%);
+  }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
      menos poluida): no hero, "Ver portfolio" e "Entrar em contato" tinham o
