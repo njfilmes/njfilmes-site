@@ -172,6 +172,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
+/* Corrigido em 30/08/2026: faltava esconder o botao X e o fundo escurecido
+   do menu mobile fora do media query de celular (igual ja era feito com o
+   .nav-toggle acima) - por isso o X aparecia solto no topo da versao de PC. */
+.nav-close { display: none; }
+.nav-backdrop { display: none; }
+
 /* ---------- Hero ---------- */
 .hero {
   position: relative;
@@ -640,6 +646,7 @@ section { padding: 110px 0; position: relative; }
   .nav-close:hover { border-color: var(--accent); background: rgba(201,162,39,0.1); }
   .main-nav.open .nav-close { display: flex; }
   .nav-backdrop {
+    display: block;
     position: fixed; inset: 0; z-index: 390;
     background: rgba(0,0,0,0.6);
     opacity: 0; visibility: hidden;
