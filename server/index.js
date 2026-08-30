@@ -207,6 +207,8 @@ async function router(req, res) {
 
     if (pathname === '/admin/bio' && method === 'GET') return Admin.bioPage(req, res, admin);
     if (pathname === '/admin/bio/atualizar' && method === 'POST') return Admin.bioUpdate(req, res, await parseBody(req));
+    if (pathname === '/admin/bio/fotos/upload' && method === 'POST') return Admin.bioPhotosUpload(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/bio\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.bioPhotoDelete(req, res, Number(m[1]));
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
     if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req));
