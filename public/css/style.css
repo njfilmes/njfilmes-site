@@ -706,7 +706,7 @@ section { padding: 110px 0; position: relative; }
      ao rodape) sem mexer na versao de PC nem trocar a foto em si, so a
      camada escura por cima dela. */
   .hero-media::after {
-    background: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.66) 35%, rgba(4,4,5,0.98) 100%);
+    background: linear-gradient(180deg, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.8) 35%, rgba(2,2,3,0.99) 100%);
   }
   /* Pedido em 30/08/2026: o texto do hero ainda estava perto demais do
      rodape mesmo depois de diminuir a altura da secao - centralizando o
@@ -724,6 +724,11 @@ section { padding: 110px 0; position: relative; }
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
   }
+  /* Pedido em 30/08/2026: tirar o paragrafo abaixo do titulo do hero
+     ("Produção audiovisual, fotografia e drone...") no celular - o titulo
+     e os botoes ja dizem o essencial, esse texto so ocupava espaco. Some
+     so no celular; no PC continua aparecendo normalmente. */
+  .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
      menos poluida): no hero, "Ver portfolio" e "Entrar em contato" tinham o
