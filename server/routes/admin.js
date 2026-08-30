@@ -718,6 +718,7 @@ export function linkMove(req, res, body, id) {
 export function bioPage(req, res, admin) {
   const flash = readFlash(req);
   const bio = Q.getBio();
+  const bioPhotos = Q.listBioPhotos();
   const content = `
   <div class="panel">
     <form method="post" action="/admin/bio/atualizar">
@@ -738,6 +739,28 @@ export function bioPage(req, res, admin) {
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar biografia</button></div>
     </form>
+  </div>
+  <div class="panel">
+    <h2>Fotos da página Sobre (galeria que fica passando)</h2>
+    <p class="muted" style="margin-top:-8px;">Envie quantas fotos quiser aqui — elas vão passando (trocando) automaticamente na página Sobre, na foto grande ao lado da sua biografia.</p>
+    <div class="upload-drop" data-bio-photos-upload>
+      <input type="file" accept="image/*" multiple>
+      <p>Clique aqui ou arraste as fotos para enviar</p>
+      <div id="bio-photos-preview"></div>
+      <p data-bio-photos-status style="margin-top:10px;font-size:0.82rem;"></p>
+    </div>
+    ${bioPhotos.length ? `<div class="photo-grid">${bioPhotos
+      .map(
+        (p) => `<div class="photo-card">
+      <img src="${escapeHtml(p.filename)}" alt="">
+      <div class="pc-body">
+        <div class="pc-actions">
+          <form method="post" action="/admin/bio/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+        </div>
+      </div>
+    </div>`
+      )
+      .join('')}</div>` : '<p class="empty-hint">Nenhuma foto adicionada ainda.</p>'}
   </div>`;
   res.end(adminLayout({ title: 'Biografia / Sobre', activePath: '/admin/bio', admin, content, flash }));
 }
@@ -1132,15 +1155,47 @@ export function projectPhotoMove(req, res, body, id, photoId) {
   redirect(res, `/admin/projetos/${id}/fotos`);
 }
 
+// ---------------- Fotos da página Sobre (galeria com N fotos que ficam passando) ----------------
+// Pedido do usuario em 30/08/2026: antes so tinha 1 foto de perfil + 1 foto fixa travada no
+// codigo. Agora o usuario pode enviar quantas fotos quiser aqui, e todas ficam passando
+// (crossfade) na pagina Sobre, junto com a foto de perfil.
+export async function bioPhotosUpload(req, res, body) {
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let saved = 0;
+  for (const dataUrl of photos) {
+    try {
+      const url = await saveMiscImage(dataUrl);
+      Q.addBioPhoto(url);
+      saved += 1;
+    } catch (err) {
+      // pula fotos inválidas, mas continua as demais
+      console.error('Erro ao salvar foto da bio:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export function bioPhotoDelete(req, res, id) {
+  Q.deleteBioPhoto(id);
+  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Foto excluída.'));
+}
 
 // ---------------- Recuperacao de acesso (self-service, protegida por chave secreta) ----------------
 // Pedido do usuario em 29/08/2026: uma pagina no proprio site pra trocar o e-mail/senha do admin
 // sem precisar mexer nas Environment Variables do Render toda vez. Protegida pela variavel de
 // ambiente ADMIN_RECOVERY_KEY (defina ela uma vez no Render e guarde em local seguro).
-
 export function recoverPage(req, res) {
   const flash = readFlash(req);
-  res.end(loginLayout({ title: 'Recuperar acesso', content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperacao para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${flash.type}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperacao', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>` }));
+  res.end(loginLayout({
+    title: 'Recuperar acesso',
+    content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperacao para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${flash.type}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperacao', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>`
+  }));
 }
 
 export function recoverSubmit(req, res, body) {
