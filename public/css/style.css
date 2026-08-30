@@ -56,6 +56,23 @@ button { font-family: inherit; cursor: pointer; }
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
+/* Pedido em 30/08/2026: "pelicula" puxando pro laranja no site inteiro (PC e
+   celular, todas as paginas - por isso fica no layout base junto com o
+   .noise-overlay acima, nao dentro de uma secao especifica). E uma div nova
+   (server/render.js), fixa e por cima de tudo (pointer-events:none pra nao
+   atrapalhar clique em nada), com mix-blend-mode:soft-light - isso deixa a
+   cor se misturar com o que ja esta na tela (dando aquele ar quente/macio de
+   "grade" cinematografica) em vez de simplesmente pintar por cima lavando as
+   cores originais. Uso o dourado da marca (--accent) e um laranja mais
+   queimado nas pontas pra reforcar o "puxando pro laranja" pedido. */
+.grade-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: soft-light;
+  background: linear-gradient(160deg, rgba(255,150,60,0.16) 0%, rgba(201,162,39,0.10) 45%, rgba(120,55,15,0.22) 100%);
+}
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
@@ -78,6 +95,46 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   font-weight: 600;
   margin-bottom: 1em;
   display: inline-block;
+}
+/* Pedido em 30/08/2026: espalhar pelo site inteiro (PC e celular, varias
+   secoes) o mesmo tipo de "movimento de texto" que o usuario gostou no
+   titulo do hero - aqui nos labels dourados (legenda, categoria dos cards
+   do portfolio, numero dos servicos, cargo das pessoas). Flutuacao mais sutil
+   que a do hero (3px em vez de 6px) porque sao textos menores. */
+.js .eyebrow,
+.js .work-card .cat,
+.js .service-card .num,
+.js .person-card .person-info span {
+  animation: labelFloat 5s ease-in-out infinite;
+}
+@keyframes labelFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+/* Pedido em 30/08/2026: brilho pulsando de leve nos botoes solidos (call to
+   action principal, ex: "Ver portfolio") - reaproveita a mesma ideia do
+   brilho pulsante que ja existia no botao flutuante de WhatsApp (waPulse,
+   mais abaixo no arquivo), so que com a cor dourada da marca. */
+.js .btn-solid { animation: btnGlow 3s ease-in-out infinite; }
+@keyframes btnGlow { 0%, 100% { box-shadow: 0 0 0 rgba(201,162,39,0); } 50% { box-shadow: 0 0 18px rgba(201,162,39,0.4); } }
+/* Pedido em 30/08/2026: zoom bem lento e continuo nas fotos dos cards de
+   servico (mesma familia da animacao heroZoom usada na foto do hero) - da
+   um ar "vivo" tambem nessa secao. So aqui (service-card): as fotos do
+   portfolio (work-card), da galeria e das pessoas ja tem transform proprio
+   no hover, entao animar o transform delas tambem ia brigar com o hover e
+   deixar o movimento tremido - por isso nao mexi nessas. */
+.service-card img { animation: cardBreathe 9s ease-in-out infinite alternate; }
+@keyframes cardBreathe { from { transform: scale(1); } to { transform: scale(1.04); } }
+/* Acessibilidade: quem pediu menos movimento no sistema operacional (ou
+   navegador) nao recebe nenhuma dessas animacoes novas - mesmo padrao ja
+   usado no site para as outras animacoes (mais abaixo no arquivo). */
+@media (prefers-reduced-motion: reduce) {
+  .js .hero-content h1 .text-accent,
+  .js .eyebrow,
+  .js .work-card .cat,
+  .js .service-card .num,
+  .js .person-card .person-info span,
+  .js .btn-solid,
+  .service-card img {
+    animation: none;
+  }
 }
 
 /* Destaque dourado dentro de frases (usado na headline do hero e onde fizer sentido) */
@@ -788,7 +845,10 @@ section { padding: 110px 0; position: relative; }
      "Ver portfolio" fica solido como acao principal; "Entrar em contato" vira
      um link discreto ao lado dele - o botao de WhatsApp flutuante ja cobre
      esse contato rapido, entao nao precisa competir aqui tambem. */
-  .hero .btn-row { align-items: center; gap: 22px; }
+  /* Pedido em 30/08/2026: descer um pouco os botoes "Ver portfolio" e
+     "Entrar em contato" no celular - estavam grudados logo depois do
+     titulo, um respiro maior aqui embaixo deles fica mais equilibrado. */
+  .hero .btn-row { align-items: center; gap: 22px; margin-top: 14px; }
   /* Pedido em 30/08/2026: diminuir os botoes "Ver portfolio" e "Entrar em
      contato" no celular - ficavam grandes/largos pro tamanho da tela. So
      no celular (padding e fonte menores); no PC continuam do tamanho
