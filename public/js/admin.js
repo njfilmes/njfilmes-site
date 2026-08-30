@@ -68,8 +68,21 @@
         });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Falha ao enviar fotos.');
-        statusEl.textContent = `${files.length} foto(s) enviada(s) com sucesso! Atualizando...`;
-        setTimeout(() => window.location.reload(), 600);
+        // Corrigido em 30/08/2026: antes essa mensagem usava files.length (quantos arquivos
+        // você escolheu), não data.saved (quantos o servidor realmente conseguiu salvar) —
+        // por isso podia aparecer "sucesso" mesmo quando nenhuma foto era salva de verdade
+        // (ex: token de armazenamento inválido). Agora mostra o número real e avisa se
+        // alguma falhou.
+        if (data.saved > 0) {
+          statusEl.textContent = data.saved === files.length
+            ? `${data.saved} foto(s) enviada(s) com sucesso! Atualizando...`
+            : `${data.saved} de ${files.length} foto(s) enviada(s). Algumas falharam — tente reenviar.`;
+          statusEl.style.color = '';
+          setTimeout(() => window.location.reload(), 900);
+        } else {
+          statusEl.textContent = 'Nenhuma foto foi salva. Pode ser um problema no servidor de armazenamento — avise quem cuida do site.';
+          statusEl.style.color = '#d0503a';
+        }
       } catch (err) {
         statusEl.textContent = 'Erro: ' + err.message;
         statusEl.style.color = '#d0503a';
@@ -127,8 +140,18 @@
         });
         const data = await res.json();
         if (!res.ok || !data.ok) throw new Error(data.error || 'Falha ao enviar fotos.');
-        statusEl.textContent = `${files.length} foto(s) enviada(s) com sucesso! Atualizando...`;
-        setTimeout(() => window.location.reload(), 600);
+        // Mesma correção do upload de fotos de projeto (ver comentário lá em cima):
+        // mostra quantas fotos o servidor realmente salvou, não quantas você selecionou.
+        if (data.saved > 0) {
+          statusEl.textContent = data.saved === files.length
+            ? `${data.saved} foto(s) enviada(s) com sucesso! Atualizando...`
+            : `${data.saved} de ${files.length} foto(s) enviada(s). Algumas falharam — tente reenviar.`;
+          statusEl.style.color = '';
+          setTimeout(() => window.location.reload(), 900);
+        } else {
+          statusEl.textContent = 'Nenhuma foto foi salva. Pode ser um problema no servidor de armazenamento — avise quem cuida do site.';
+          statusEl.style.color = '#d0503a';
+        }
       } catch (err) {
         statusEl.textContent = 'Erro: ' + err.message;
         statusEl.style.color = '#d0503a';
