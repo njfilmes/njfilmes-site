@@ -63,6 +63,13 @@ CREATE TABLE IF NOT EXISTS bio (
   cta_text TEXT DEFAULT 'Vamos criar algo juntos?'
 );
 
+CREATE TABLE IF NOT EXISTS bio_photos (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  filename TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS categories (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
