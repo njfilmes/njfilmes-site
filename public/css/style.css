@@ -246,6 +246,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   font-weight: 800;
   letter-spacing: -0.01em;
 }
+/* Pedido em 30/08/2026: diminuir um pouco o tamanho do titulo do hero no PC
+   ("Vamos tirar sua ideia do papel?") - so o valor maximo do clamp muda (o
+   minimo continua 3.4rem, que e o que o celular usa - la a tela e estreita
+   demais pro "maximo" do clamp entrar em jogo, entao o celular nao muda). */
+.hero-content h1 { font-size: clamp(3.4rem, 9vw, 8.5rem); }
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 .hero-scroll {
   position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
