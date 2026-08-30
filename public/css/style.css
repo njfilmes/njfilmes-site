@@ -653,10 +653,33 @@ section { padding: 110px 0; position: relative; }
     transition: opacity 0.4s var(--ease), visibility 0.4s;
   }
   .nav-backdrop.open { opacity: 1; visibility: visible; }
-  .work-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 220px; }
-  .work-card, .work-card.tall, .work-card.wide, .work-card:nth-child(5n+1), .work-card:nth-child(5n+2), .work-card:nth-child(5n+3), .work-card:nth-child(5n+4), .work-card:nth-child(5n+5) { grid-column: span 1; grid-row: span 1; }
-  .work-card:nth-child(4n+1) { grid-column: span 2; }
+  /* Mais minimalista em 30/08/2026 (pedido explicito): o grid de portfolio
+     era um mosaico de blocos de tamanhos diferentes (tipo quebra-cabeca),
+     bonito no PC mas denso demais no celular - virava um monte de recortes
+     pequenos grudados. Agora e uma coluna so, cada projeto com o tamanho
+     dele (retrato 4:5) e espaco de sobra entre um e outro - rola mais, mas
+     cada foto/video respira e fica facil de olhar um de cada vez. */
+  .work-grid { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 20px; }
+  .work-card, .work-card.tall, .work-card.wide, .work-card:nth-child(5n+1), .work-card:nth-child(5n+2), .work-card:nth-child(5n+3), .work-card:nth-child(5n+4), .work-card:nth-child(5n+5) {
+    grid-column: span 1; grid-row: auto; aspect-ratio: 4/5;
+  }
+  /* object-fit:contain (padrao do card no PC, onde os tamanhos variados do
+     mosaico absorviam a proporcao de cada foto) deixaria faixas vazias nos
+     cards agora que todos tem a mesma proporcao 4:5 - mesmo problema que ja
+     resolvemos no hero. Aqui a foto preenche o card inteiro. */
+  .work-card img { object-fit: cover; }
+  /* Servicos e especialidades mais enxutos no celular: sem foto (o texto
+     e o numero ja contam a historia) e sem caixinha com borda em cada tag -
+     so o nome separado por um ponto, como uma frase corrida. */
   .services-grid { grid-template-columns: 1fr; }
+  .service-card { padding: 32px 4px; }
+  .service-card img { display: none; }
+  .specialties-list { gap: 0; }
+  .specialties-list span {
+    border: none; padding: 0; text-transform: none; letter-spacing: 0.01em;
+    font-size: 0.86rem; color: var(--fg-muted);
+  }
+  .specialties-list span:not(:last-child)::after { content: ' · '; color: var(--fg-dim); }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
   .hero-content { padding-bottom: 60px; }
