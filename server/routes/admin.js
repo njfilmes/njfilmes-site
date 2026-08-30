@@ -312,23 +312,27 @@ export function serviceEditPage(req, res, admin, id) {
 
 export async function serviceCreate(req, res, body) {
   let image = '';
+  let imageFailed = false;
   if (body.image_data) {
-    try { image = await saveMiscImage(body.image_data); } catch { /* ignora imagem inválida */ }
+    try { image = await saveMiscImage(body.image_data); } catch (e) { imageFailed = true; console.error('Erro ao salvar imagem do serviço:', e.message); }
   }
   const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM services').get().m;
   Q.createService({ title: body.title, description: body.description, image, sort_order: maxOrder + 1, published: !!body.published });
-  redirect(res, '/admin/servicos' + withFlash(res, 'success', 'Serviço criado.'));
+  // Corrigido em 30/08/2026: antes, se a imagem falhasse ao salvar (ex: token de
+  // armazenamento inválido), o serviço era criado sem foto e nada avisava sobre isso.
+  redirect(res, '/admin/servicos' + withFlash(res, imageFailed ? 'error' : 'success', imageFailed ? 'Serviço criado, mas a imagem não pôde ser salva (tente enviar de novo).' : 'Serviço criado.'));
 }
 
 export async function serviceUpdate(req, res, body, id) {
   const service = Q.getService(id);
   if (!service) return redirect(res, '/admin/servicos');
   let image = body.image_existing || service.image;
+  let imageFailed = false;
   if (body.image_data) {
-    try { image = await saveMiscImage(body.image_data); } catch { /* mantém imagem anterior */ }
+    try { image = await saveMiscImage(body.image_data); } catch (e) { imageFailed = true; console.error('Erro ao salvar imagem do serviço:', e.message); }
   }
   Q.updateService(id, { title: body.title, description: body.description, image, sort_order: service.sort_order, published: !!body.published });
-  redirect(res, '/admin/servicos');
+  redirect(res, '/admin/servicos' + (imageFailed ? withFlash(res, 'error', 'Serviço atualizado, mas a nova imagem não pôde ser salva (a antiga foi mantida).') : ''));
 }
 
 export function serviceDelete(req, res, id) {
@@ -419,11 +423,12 @@ export async function brandUpdate(req, res, body, id) {
   const brand = Q.getBrand(id);
   if (!brand) return redirect(res, '/admin/marcas');
   let logo = body.logo_existing || brand.logo;
+  let logoFailed = false;
   if (body.logo_data) {
-    try { logo = await saveMiscImage(body.logo_data); } catch { /* mantém logo anterior */ }
+    try { logo = await saveMiscImage(body.logo_data); } catch (e) { logoFailed = true; console.error('Erro ao salvar logo da marca:', e.message); }
   }
   Q.updateBrand(id, { name: body.name, logo, url: body.url, sort_order: brand.sort_order });
-  redirect(res, '/admin/marcas');
+  redirect(res, '/admin/marcas' + (logoFailed ? withFlash(res, 'error', 'Marca atualizada, mas a nova logo não pôde ser salva (a antiga foi mantida).') : ''));
 }
 
 export function brandDelete(req, res, id) {
@@ -514,11 +519,12 @@ export async function personUpdate(req, res, body, id) {
   const person = Q.getPerson(id);
   if (!person) return redirect(res, '/admin/pessoas');
   let photo = body.photo_existing || person.photo;
+  let photoFailed = false;
   if (body.photo_data) {
-    try { photo = await saveMiscImage(body.photo_data); } catch { /* mantém foto anterior */ }
+    try { photo = await saveMiscImage(body.photo_data); } catch (e) { photoFailed = true; console.error('Erro ao salvar foto da pessoa:', e.message); }
   }
   Q.updatePerson(id, { name: body.name, role: body.role, photo, sort_order: person.sort_order });
-  redirect(res, '/admin/pessoas');
+  redirect(res, '/admin/pessoas' + (photoFailed ? withFlash(res, 'error', 'Pessoa atualizada, mas a nova foto não pôde ser salva (a antiga foi mantida).') : ''));
 }
 
 export function personDelete(req, res, id) {
@@ -768,8 +774,9 @@ export function bioPage(req, res, admin) {
 export async function bioUpdate(req, res, body) {
   const bio = Q.getBio();
   let profile_photo = bio.profile_photo;
+  let photoFailed = false;
   if (body.profile_photo_data) {
-    try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch { /* mantém foto anterior */ }
+    try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch (e) { photoFailed = true; console.error('Erro ao salvar foto de perfil:', e.message); }
   }
   Q.updateBio({
     name: body.name || '',
@@ -781,7 +788,7 @@ export async function bioUpdate(req, res, body) {
     profile_photo,
     cta_text: body.cta_text || '',
   });
-  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Biografia atualizada.'));
+  redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
 }
 
 // ---------------- Configurações ----------------
