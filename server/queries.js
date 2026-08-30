@@ -23,6 +23,18 @@ export function updateBio(fields) {
   db.prepare(`UPDATE bio SET ${set} WHERE id = 1`).run(...keys.map((k) => fields[k]));
 }
 
+// ---------- Fotos da página Sobre (galeria que fica passando, além da foto de perfil) ----------
+export function listBioPhotos() {
+  return db.prepare('SELECT * FROM bio_photos ORDER BY sort_order ASC, id ASC').all();
+}
+export function addBioPhoto(filename) {
+  const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM bio_photos').get().m;
+  return db.prepare('INSERT INTO bio_photos (filename, sort_order) VALUES (?, ?)').run(filename, maxOrder + 1).lastInsertRowid;
+}
+export function deleteBioPhoto(id) {
+  db.prepare('DELETE FROM bio_photos WHERE id = ?').run(id);
+}
+
 export function listCategories() {
   return db.prepare('SELECT * FROM categories ORDER BY sort_order ASC, name ASC').all();
 }
