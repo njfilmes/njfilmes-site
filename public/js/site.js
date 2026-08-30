@@ -234,4 +234,20 @@
       aboutSlides[aboutIndex].classList.add('is-active');
     }, 3500);
   }
+
+  // ---------- Botao "voltar ao topo" (adicionado 30/08/2026) ----------
+  // Fica escondido ate a pessoa rolar um pouco a pagina, depois aparece no
+  // canto inferior esquerdo e leva de volta ao topo com rolagem suave.
+  const backToTop = document.querySelector('[data-back-to-top]');
+  if (backToTop) {
+    const toggleBackToTop = () => {
+      if (window.scrollY > window.innerHeight * 0.6) backToTop.classList.add('is-visible');
+      else backToTop.classList.remove('is-visible');
+    };
+    toggleBackToTop();
+    window.addEventListener('scroll', toggleBackToTop, { passive: true });
+    backToTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
 })();
