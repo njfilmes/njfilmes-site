@@ -86,8 +86,16 @@ export function videoEmbedUrl(video) {
   const videoId = video.video_id || video.videoId;
   if (video.provider === 'youtube' && videoId) return `https://www.youtube.com/embed/${videoId}`;
   if (video.provider === 'vimeo' && videoId) return `https://player.vimeo.com/video/${videoId}`;
-  if (video.provider === 'mega' && videoId && (video.video_key || video.videoKey)) {
-    return `https://mega.nz/embed/${videoId}#${video.video_key || video.videoKey}`;
+  if (video.provider === 'mega' && videoId) {
+    // A chave de decriptação do Mega não é guardada em coluna própria no banco (só o id do
+    // arquivo), mas ela continua presente na própria URL original salva (depois do #).
+    // Corrigido em 30/08/2026: antes isso dependia de um campo video_key que nunca existia,
+    // então o vídeo do Mega nunca tocava embutido — caía no link de compartilhamento cru,
+    // que o Mega bloqueia dentro de iframe.
+    const stored = video.video_key || video.videoKey;
+    const fromUrl = (String(video.url || '').match(/#([a-zA-Z0-9_-]+)/) || [])[1];
+    const key = stored || fromUrl;
+    if (key) return `https://mega.nz/embed/${videoId}#${key}`;
   }
   return video.url || '';
 }
