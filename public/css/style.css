@@ -64,14 +64,26 @@ button { font-family: inherit; cursor: pointer; }
    cor se misturar com o que ja esta na tela (dando aquele ar quente/macio de
    "grade" cinematografica) em vez de simplesmente pintar por cima lavando as
    cores originais. Uso o dourado da marca (--accent) e um laranja mais
-   queimado nas pontas pra reforcar o "puxando pro laranja" pedido. */
+   queimado nas pontas pra reforcar o "puxando pro laranja" pedido.
+   Pedido novamente em 30/08/2026: o filtro estava sutil demais - aumentada a
+   opacidade de cada cor (quase o dobro) pra ficar bem mais visivel, em PC e
+   celular igual (essa regra vale pro site inteiro, sem media query). Tambem
+   ganhou um movimento lento e continuo (gradeDrift, abaixo) - o fundo e maior
+   que a tela (background-size 160%) e desliza devagar, dando a sensacao de
+   luz quente "respirando" sobre o site, nao so uma camada parada. */
 .grade-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9998;
   mix-blend-mode: soft-light;
-  background: linear-gradient(160deg, rgba(255,150,60,0.16) 0%, rgba(201,162,39,0.10) 45%, rgba(120,55,15,0.22) 100%);
+  background: linear-gradient(160deg, rgba(255,150,60,0.30) 0%, rgba(201,162,39,0.20) 45%, rgba(120,55,15,0.38) 100%);
+  background-size: 160% 160%;
+}
+.js .grade-overlay { animation: gradeDrift 16s ease-in-out infinite; }
+@keyframes gradeDrift {
+  0%, 100% { background-position: 0% 0%; }
+  50% { background-position: 100% 45%; }
 }
 
 h1, h2, h3, h4 {
@@ -107,13 +119,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .js .person-card .person-info span {
   animation: labelFloat 5s ease-in-out infinite;
 }
-@keyframes labelFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes labelFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 /* Pedido em 30/08/2026: brilho pulsando de leve nos botoes solidos (call to
    action principal, ex: "Ver portfolio") - reaproveita a mesma ideia do
    brilho pulsante que ja existia no botao flutuante de WhatsApp (waPulse,
    mais abaixo no arquivo), so que com a cor dourada da marca. */
 .js .btn-solid { animation: btnGlow 3s ease-in-out infinite; }
-@keyframes btnGlow { 0%, 100% { box-shadow: 0 0 0 rgba(201,162,39,0); } 50% { box-shadow: 0 0 18px rgba(201,162,39,0.4); } }
+@keyframes btnGlow { 0%, 100% { box-shadow: 0 0 0 rgba(201,162,39,0); } 50% { box-shadow: 0 0 26px rgba(201,162,39,0.65); } }
 /* Pedido em 30/08/2026: zoom bem lento e continuo nas fotos dos cards de
    servico (mesma familia da animacao heroZoom usada na foto do hero) - da
    um ar "vivo" tambem nessa secao. So aqui (service-card): as fotos do
@@ -121,7 +133,25 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    no hover, entao animar o transform delas tambem ia brigar com o hover e
    deixar o movimento tremido - por isso nao mexi nessas. */
 .service-card img { animation: cardBreathe 9s ease-in-out infinite alternate; }
-@keyframes cardBreathe { from { transform: scale(1); } to { transform: scale(1.04); } }
+@keyframes cardBreathe { from { transform: scale(1); } to { transform: scale(1.08); } }
+/* Pedido novamente em 30/08/2026: "coloca mais ainda movimentacao nos textos,
+   fotos, etc, tanto no PC quanto no celular" - flutuacao continua tambem no
+   paragrafo de destaque do hero e nos numeros de estatistica da pagina
+   Sobre (ex: "40+ Projetos"), pra nenhum texto ficar totalmente parado. */
+.js .hero-content .lead { display: inline-block; animation: labelFloat 6s ease-in-out infinite; }
+.js .stat b { display: inline-block; animation: heroAccentFloat 5s ease-in-out infinite; }
+/* Pedido novamente em 30/08/2026: no celular nao existe "hover", entao as
+   fotos que so se moviam ao passar o mouse (portfolio, pessoas, galeria da
+   bio) ficavam paradas nas telas de toque. Aqui (hover: none) cobre celular
+   e tablet sem bagunçar a animacao de hover que continua so pra quem tem
+   mouse de verdade (regra em @media (hover: hover), mais abaixo). */
+@media (hover: none) {
+  .js .work-card img,
+  .js .person-card img,
+  .js .gallery-grid img {
+    animation: cardBreathe 10s ease-in-out infinite alternate;
+  }
+}
 /* Acessibilidade: quem pediu menos movimento no sistema operacional (ou
    navegador) nao recebe nenhuma dessas animacoes novas - mesmo padrao ja
    usado no site para as outras animacoes (mais abaixo no arquivo). */
@@ -132,7 +162,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .service-card .num,
   .js .person-card .person-info span,
   .js .btn-solid,
-  .service-card img {
+  .js .hero-content .lead,
+  .js .stat b,
+  .js .grade-overlay,
+  .service-card img,
+  .js .work-card img,
+  .js .person-card img,
+  .js .gallery-grid img {
     animation: none;
   }
 }
@@ -258,9 +294,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      do jeito que um fundo de hero normalmente funciona - igual no PC. */
   object-position: center center;
   transform: scale(0.98);
-  animation: heroZoom 18s ease-in-out infinite alternate;
+  animation: heroZoom 14s ease-in-out infinite alternate;
 }
-@keyframes heroZoom { from { transform: scale(0.98);} to { transform: scale(1);} }
+@keyframes heroZoom { from { transform: scale(0.98);} to { transform: scale(1.07);} }
 /* Corrigido em 30/08/2026: quando nao ha video configurado, o hero usa duas
    fotos (.hero-photo-a e .hero-photo-b) como fallback, mas essas classes
    nunca tinham CSS proprio - ficavam empilhadas uma embaixo da outra (bloco
@@ -305,7 +341,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    4s) pra nao virar distracao. inline-block e necessario pro transform
    funcionar sem bagunçar a quebra de linha normal do texto ao redor. */
 .js .hero-content h1 .text-accent { display: inline-block; animation: heroAccentFloat 4s ease-in-out infinite; }
-@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 /* Pedido em 30/08/2026: usar no titulo do hero uma fonte parecida com a do
    site de referencia (silvertake.video). La eles usam "Aktiv Grotesk", que
    e uma fonte paga - Hanken Grotesk e a alternativa gratuita mais proxima
@@ -355,7 +391,7 @@ section { padding: 110px 0; position: relative; }
    simples pra cima. Como essa regra e usada em quase todo o site (.reveal
    aparece em varias secoes), o efeito fica mais vivo em geral, nao so no
    hero. */
-.js .reveal { opacity: 0; transform: perspective(900px) translateY(48px) rotateX(6deg) scale(0.97); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+.js .reveal { opacity: 0; transform: perspective(900px) translateY(66px) rotateX(11deg) scale(0.92); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
 .js .reveal.in-view { opacity: 1; transform: perspective(900px) translateY(0) rotateX(0deg) scale(1); }
 .reveal-delay-1.in-view { transition-delay: 0.08s; }
 .reveal-delay-2.in-view { transition-delay: 0.16s; }
@@ -440,7 +476,14 @@ section { padding: 110px 0; position: relative; }
      (o filtro hover:hover ja usado aqui em cima evita isso no celular, onde
      nao existe "passar o mouse"). */
   .work-card { transition: transform 0.5s var(--ease); }
-  .work-card:hover { transform: perspective(900px) rotateX(2deg) scale(1.015); z-index: 2; }
+  .work-card:hover { transform: perspective(900px) rotateX(4deg) scale(1.03); z-index: 2; }
+  /* Pedido novamente em 30/08/2026: mais movimento no PC tambem nos cards de
+     servico e nas pessoas (pagina Sobre) - mesmo giro/aproximacao 3D leve dos
+     cards do portfolio, so em quem tem mouse de verdade. */
+  .service-card { transition: background 0.4s var(--ease), transform 0.5s var(--ease); }
+  .service-card:hover { transform: perspective(900px) rotateX(3deg) scale(1.02); }
+  .person-card { transition: transform 0.5s var(--ease); }
+  .person-card:hover { transform: perspective(900px) rotateX(3deg) scale(1.03); z-index: 2; }
 }
 
 /* ---------- Filtros de categoria ---------- */
