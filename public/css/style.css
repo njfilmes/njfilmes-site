@@ -231,6 +231,17 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 }
 .hero-content h1 { max-width: 900px; }
 .hero-content h1 .text-accent { color: var(--accent); }
+/* Pedido em 30/08/2026: usar no titulo do hero uma fonte parecida com a do
+   site de referencia (silvertake.video). La eles usam "Aktiv Grotesk", que
+   e uma fonte paga - Hanken Grotesk e a alternativa gratuita mais proxima
+   (feita pra ficar parecida com ela), entao da pra usar sem problema de
+   licenca. Pedido pra valer no PC tambem, entao essa regra e global (nao
+   fica so dentro do media query de celular). */
+.hero-content h1 {
+  font-family: 'Hanken Grotesk', var(--font-body);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 .hero-scroll {
   position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
@@ -712,18 +723,6 @@ section { padding: 110px 0; position: relative; }
     font-size: 0.62rem;
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
-  }
-  /* Pedido em 30/08/2026: usar uma fonte parecida com a do site de
-     referencia que o usuario passou (silvertake.video). La eles usam
-     "Aktiv Grotesk", que e uma fonte paga - Hanken Grotesk e a alternativa
-     gratuita mais proxima (feita pra ficar parecida com ela), entao da pra
-     usar sem problema de licenca. Aplicando so no titulo/texto do hero no
-     celular pra nao mudar a identidade visual (Bebas Neue) do resto do
-     site. */
-  .hero-content h1 {
-    font-family: 'Hanken Grotesk', var(--font-body);
-    font-weight: 800;
-    letter-spacing: -0.01em;
   }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
