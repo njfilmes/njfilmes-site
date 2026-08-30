@@ -160,4 +160,65 @@
       if (e.key === 'ArrowLeft') prev();
     });
   }
-const tiltEls = document.querySelectorAll('[data-work-card], .service-card, .person-card, .contact-card, .about-split img'); if (tiltEls.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) { tiltEls.forEach((el) => { el.addEventListener('mousemove', (e) => { const r = el.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; el.style.transform = `perspective(900px) rotateX(${(py * -7).toFixed(2)}deg) rotateY(${(px * 7).toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`; }); el.addEventListener('mouseleave', () => { el.style.transform = ''; }); }); } })();
+  const tiltEls = document.querySelectorAll('[data-work-card], .service-card, .person-card, .contact-card, .about-split img'); if (tiltEls.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) { tiltEls.forEach((el) => { el.addEventListener('mousemove', (e) => { const r = el.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; el.style.transform = `perspective(900px) rotateX(${(py * -7).toFixed(2)}deg) rotateY(${(px * 7).toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`; }); el.addEventListener('mouseleave', () => { el.style.transform = ''; }); }); }
+
+  // ---------- Barra de progresso de rolagem (adicionado 30/08/2026: mostra o quanto falta pra rolar a pagina) ----------
+  const scrollBar = document.createElement('div');
+  scrollBar.className = 'scroll-progress';
+  document.body.appendChild(scrollBar);
+  const updateScrollBar = () => {
+    const doc = document.documentElement;
+    const scrollable = doc.scrollHeight - doc.clientHeight;
+    const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
+    scrollBar.style.width = pct + '%';
+  };
+  updateScrollBar();
+  window.addEventListener('scroll', updateScrollBar, { passive: true });
+  window.addEventListener('resize', updateScrollBar);
+
+  // ---------- Contador animado nas estatisticas da pagina Sobre (numeros que sobem do zero ao aparecer na tela) ----------
+  const statEls = document.querySelectorAll('.stat b');
+  if (statEls.length && 'IntersectionObserver' in window) {
+    const animateCount = (el) => {
+      const raw = el.textContent.trim();
+      const match = raw.match(/^(\d+)(.*)$/);
+      if (!match) return;
+      const target = parseInt(match[1], 10);
+      const suffix = match[2] || '';
+      if (!target || target > 9999) return;
+      const duration = 1100;
+      const start = performance.now();
+      const step = (now) => {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(target * eased) + suffix;
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target + suffix;
+      };
+      requestAnimationFrame(step);
+    };
+    const statIo = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          animateCount(entry.target);
+          statIo.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.4 });
+    statEls.forEach((el) => statIo.observe(el));
+  }
+
+  // ---------- Efeito magnetico sutil nos botoes (o botao acompanha um pouco o cursor ao passar perto) ----------
+  const magneticBtns = document.querySelectorAll('.btn');
+  if (magneticBtns.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    magneticBtns.forEach((btn) => {
+      btn.addEventListener('mousemove', (e) => {
+        const r = btn.getBoundingClientRect();
+        const mx = (e.clientX - r.left - r.width / 2) * 0.25;
+        const my = (e.clientY - r.top - r.height / 2) * 0.35;
+        btn.style.transform = `translate(${mx}px, ${my - 2}px)`;
+      });
+      btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
+    });
+  }
+})();
