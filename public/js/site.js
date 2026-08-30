@@ -45,14 +45,50 @@
     });
   }
 
-  // Menu mobile
+  // Menu mobile (corrigido 30/08/2026: agora tem 3 jeitos de fechar - o X
+  // dentro do proprio menu, tocar no fundo escurecido, ou arrastar o menu pro
+  // lado/pra cima - antes so dava pra fechar clicando nao icone de hamburguer
+  // la em cima, que podia sumir da tela quando a pessoa rolava a pagina)
   const nav = document.querySelector('[data-nav]');
   const toggle = document.querySelector('[data-nav-toggle]');
+  const navClose = document.querySelector('[data-nav-close]');
+  const navBackdrop = document.querySelector('[data-nav-backdrop]');
   if (nav && toggle) {
+    const openNav = () => {
+      nav.classList.add('open');
+      navBackdrop?.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    };
+    const closeNav = () => {
+      nav.classList.remove('open');
+      navBackdrop?.classList.remove('open');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    };
     toggle.addEventListener('click', () => {
-      const isOpen = nav.classList.toggle('open');
-      toggle.setAttribute('aria-expanded', String(isOpen));
+      if (nav.classList.contains('open')) closeNav();
+      else openNav();
     });
+    navClose?.addEventListener('click', closeNav);
+    navBackdrop?.addEventListener('click', closeNav);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
+    });
+
+    // Arrastar o menu pro lado ou pra cima fecha, igual a maioria dos apps
+    let touchStartX = 0;
+    let touchStartY = 0;
+    nav.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    nav.addEventListener('touchend', (e) => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      const dy = e.changedTouches[0].clientY - touchStartY;
+      if (dx > 50 || dy < -50) closeNav();
+    }, { passive: true });
+
     // Em telas pequenas, o submenu de categorias abre/fecha ao tocar no link "Portfólio"
     document.querySelectorAll('.has-sub > a').forEach((link) => {
       link.addEventListener('click', (e) => {
