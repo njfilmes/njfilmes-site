@@ -35,14 +35,25 @@ function workCard(project, opts = {}) {
 // Renderiza a frase de destaque do hero destacando a última palavra em dourado
 // (a cor de marca --accent), pra dar um toque visual sem precisar mexer em HTML
 // toda vez que o texto for editado pelo painel administrativo.
+// Pedido em 30/08/2026: dar uma "margem de respiro" antes da pontuação final
+// (ex: o "?" de "papel?") - sem isso ela fica colada na última letra da
+// palavra. Se a última palavra terminar em pontuação, ela agora vem separada
+// num span próprio (.hero-punct) só pra poder dar esse espacinho via CSS,
+// sem precisar mexer no resto da palavra.
 function heroHeadlineHtml(text) {
   const trimmed = String(text || '').trim();
   if (!trimmed) return '';
   const lastSpace = trimmed.lastIndexOf(' ');
-  if (lastSpace === -1) return `<span class="text-accent">${escapeHtml(trimmed)}</span>`;
+  const wrapAccent = (word) => {
+    const match = word.match(/^(.*?)([?!.,;:]+)$/);
+    if (!match) return `<span class="text-accent">${escapeHtml(word)}</span>`;
+    const [, core, punct] = match;
+    return `<span class="text-accent">${escapeHtml(core)}<span class="hero-punct">${escapeHtml(punct)}</span></span>`;
+  };
+  if (lastSpace === -1) return wrapAccent(trimmed);
   const rest = trimmed.slice(0, lastSpace);
   const last = trimmed.slice(lastSpace + 1);
-  return `${escapeHtml(rest)} <span class="text-accent">${escapeHtml(last)}</span>`;
+  return `${escapeHtml(rest)} ${wrapAccent(last)}`;
 }
 
 // Versao do arquivo do hero, usada como "carimbo" (?v=) na URL da foto/poster
