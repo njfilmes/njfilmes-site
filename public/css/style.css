@@ -195,6 +195,21 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   animation: heroZoom 18s ease-in-out infinite alternate;
 }
 @keyframes heroZoom { from { transform: scale(0.98);} to { transform: scale(1);} }
+/* Corrigido em 30/08/2026: quando nao ha video configurado, o hero usa duas
+   fotos (.hero-photo-a e .hero-photo-b) como fallback, mas essas classes
+   nunca tinham CSS proprio - ficavam empilhadas uma embaixo da outra (bloco
+   normal), o que so nao aparecia quebrado no PC porque a tela larga escondia
+   a segunda copia. Sem isso, no celular a foto aparecia duplicada, uma em
+   cima da outra. Posicionando as duas em cima uma da outra (absolute/inset:0)
+   elas sobrepoem perfeitamente, exatamente como o video faria nesse mesmo
+   lugar - funciona igual em qualquer tamanho de tela. */
+.hero-photo-split {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+}
+.hero-photo-a, .hero-photo-b {
+  position: absolute; inset: 0;
+}
 .hero-media::after {
   content: '';
   position: absolute; inset: 0;
