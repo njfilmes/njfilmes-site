@@ -624,3 +624,16 @@ section { padding: 110px 0; position: relative; }
   h1 { font-size: clamp(2.4rem, 12vw, 3.4rem); letter-spacing: -0.005em; }
   h2 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
 }
+
+
+/* ---------- Barra de progresso de rolagem (adicionado 30/08/2026 - mais uma camada de animacao no site) ---------- */
+.scroll-progress {
+   position: fixed;
+   top: 0; left: 0;
+   height: 3px;
+   width: 0%;
+   background: var(--accent);
+   z-index: 1000;
+   transition: width 0.12s linear;
+   pointer-events: none;
+}
