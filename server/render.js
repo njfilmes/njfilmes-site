@@ -134,6 +134,9 @@ ${wa ? `<a class="btn btn-outline footer-wa" href="${escapeHtml(wa)}" target="_b
 </div>
 </footer>
 
+<button class="back-to-top" data-back-to-top type="button" aria-label="Voltar ao topo">
+<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+</button>
 ${settings.instagram_url ? `<a href="${escapeHtml(settings.instagram_url)}" class="instagram-float" target="_blank" rel="noopener noreferrer" aria-label="Seguir no Instagram">
 <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.5" y2="6.5"></line></svg>
 </a>` : ''}
