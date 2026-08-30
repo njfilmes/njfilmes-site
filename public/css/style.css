@@ -660,6 +660,23 @@ section { padding: 110px 0; position: relative; }
   h2 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
 }
 
+/* Corrigido em 30/08/2026 (pedido do usuario): no celular os botoes de
+   WhatsApp e Instagram estavam grandes e um pouco desalinhados entre si (o
+   circulo do WhatsApp e maior que o do Instagram, entao os centros nao
+   batiam). Agora os dois usam exatamente o mesmo tamanho e o mesmo
+   alinhamento no celular, so a posicao vertical muda - ficam menores e
+   perfeitamente um embaixo do outro. */
+@media (max-width: 720px) {
+  .whatsapp-float, .instagram-float {
+    width: 42px; height: 42px;
+    right: 16px;
+  }
+  .whatsapp-float { bottom: 16px; }
+  .instagram-float { bottom: 66px; }
+  .whatsapp-float svg { width: 20px; height: 20px; }
+  .instagram-float svg { width: 17px; height: 17px; }
+}
+
 /* ---------- Barra de progresso de rolagem (o site.js ja criava essa div,
    mas faltava o CSS - por isso ela nunca aparecia) ---------- */
 .scroll-progress {
