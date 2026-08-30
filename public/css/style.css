@@ -737,6 +737,14 @@ section { padding: 110px 0; position: relative; }
      um link discreto ao lado dele - o botao de WhatsApp flutuante ja cobre
      esse contato rapido, entao nao precisa competir aqui tambem. */
   .hero .btn-row { align-items: center; gap: 22px; }
+  /* Pedido em 30/08/2026: diminuir os botoes "Ver portfolio" e "Entrar em
+     contato" no celular - ficavam grandes/largos pro tamanho da tela. So
+     no celular (padding e fonte menores); no PC continuam do tamanho
+     original. */
+  .hero .btn-row .btn {
+    padding: 11px 20px;
+    font-size: 0.7rem;
+  }
   .hero .btn-row .btn-outline {
     border-color: transparent;
     padding-left: 0; padding-right: 0;
