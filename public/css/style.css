@@ -300,6 +300,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   padding: 0 0 90px;
 }
 .hero-content h1 { max-width: 850px; }
+/* Sem o texto pequeno acima do título (removido a pedido), o título ficava colado demais no
+   topo — essa margem devolve um respiro ali em cima. */
+.hero-title-no-eyebrow { margin-top: 0.35em; }
 .hero-content h1 .text-accent { color: var(--accent); }
 .js .hero-content h1 .text-accent { display: inline-block; animation: heroAccentFloat 4s ease-in-out infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
@@ -801,6 +804,7 @@ section { padding: 110px 0; position: relative; }
   .hero-content h1 {
     font-size: 2.72rem;
   }
+  .hero-title-no-eyebrow { margin-top: 0.8em; }
   .hero-content h1 .hero-punct {
     margin-left: 0.08em;
   }
