@@ -205,7 +205,9 @@ export async function initSchema() {
                                           specialties TEXT DEFAULT '',
                                                 equipment TEXT DEFAULT '',
                                                       profile_photo TEXT DEFAULT '',
-                                                            cta_text TEXT DEFAULT 'Vamos criar algo juntos?'
+                                                            cta_text TEXT DEFAULT 'Vamos criar algo juntos?',
+                                                                  gallery_title TEXT DEFAULT 'No set com a NJFILMES',
+                                                                        trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'
                                                                 );
                                                                   `);
 
@@ -320,6 +322,18 @@ export async function initSchema() {
                                   );
                                     `);
 
+  // Galeria "Bastidores" da página Sobre (faixa de fotos rolando sozinha). Antes eram 11 arquivos
+  // fixos em /img/bio/ que só eu conseguia trocar mexendo no código — pedido do usuário em
+  // 02/09/2026 pra poder trocar essas fotos direto pelo painel, igual às outras galerias.
+  await query(`
+      CREATE TABLE IF NOT EXISTS bio_gallery_photos (
+            id SERIAL PRIMARY KEY,
+                  filename TEXT NOT NULL,
+                        sort_order INTEGER NOT NULL DEFAULT 0,
+                              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                  );
+                                    `);
+
   // Depoimentos em vídeo de clientes, exibidos numa faixa de rolagem manual na Home.
   await query(`
       CREATE TABLE IF NOT EXISTS testimonials (
@@ -358,9 +372,29 @@ export async function initSchema() {
           await query('ALTER TABLE projects ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
     }
 
+  const bioCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'bio'")).map(
+        (c) => c.column_name
+      );
+    if (!bioCols.includes('gallery_title')) {
+          await query("ALTER TABLE bio ADD COLUMN gallery_title TEXT DEFAULT 'No set com a NJFILMES'");
+    }
+    if (!bioCols.includes('trajectory_title')) {
+          await query("ALTER TABLE bio ADD COLUMN trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'");
+    }
+
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).
   await query('INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;');
     await query('INSERT INTO bio (id) VALUES (1) ON CONFLICT (id) DO NOTHING;');
+
+  // Migra as 11 fotos de bastidores que antes eram arquivos fixos em /img/bio/ para a tabela
+  // editável — só na primeira vez (se a tabela ainda estiver vazia), pra ninguém perder as fotos
+  // que já estavam no ar quando essa versão for publicada.
+  const galleryCountRow = await queryOne('SELECT COUNT(*)::int as n FROM bio_gallery_photos');
+    if (galleryCountRow.n === 0) {
+          for (let i = 1; i <= 11; i += 1) {
+                  await query('INSERT INTO bio_gallery_photos (filename, sort_order) VALUES ($1, $2)', [`/img/bio/bio-${i}.jpg`, i]);
+          }
+    }
 }
 
 export function nowIso() {

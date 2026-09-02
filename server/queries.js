@@ -40,6 +40,22 @@ export async function deleteBioPhoto(id) {
   await query('DELETE FROM bio_photos WHERE id = $1', [id]);
 }
 
+// ---------- Galeria "Bastidores" da página Sobre (faixa rolando sozinha) ----------
+export async function listBioGalleryPhotos() {
+  return queryRows('SELECT * FROM bio_gallery_photos ORDER BY sort_order ASC, id ASC');
+}
+export async function addBioGalleryPhoto(filename) {
+  const maxRow = await queryOne('SELECT COALESCE(MAX(sort_order),0) as m FROM bio_gallery_photos');
+  const row = await queryOne('INSERT INTO bio_gallery_photos (filename, sort_order) VALUES ($1, $2) RETURNING id', [
+    filename,
+    Number(maxRow.m) + 1,
+  ]);
+  return row.id;
+}
+export async function deleteBioGalleryPhoto(id) {
+  await query('DELETE FROM bio_gallery_photos WHERE id = $1', [id]);
+}
+
 export async function listCategories() {
   return queryRows('SELECT * FROM categories ORDER BY sort_order ASC, name ASC');
 }

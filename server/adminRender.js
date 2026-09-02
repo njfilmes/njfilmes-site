@@ -47,7 +47,7 @@ export function adminLayout({ title, activePath, admin, content, flash = null })
       <button class="admin-menu-toggle" data-admin-menu-toggle aria-label="Menu">☰</button>
       <h1>${escapeHtml(title)}</h1>
     </header>
-    ${flash ? `<div class="admin-flash admin-flash-${flash.type}">${escapeHtml(flash.message)}</div>` : ''}
+    ${flash ? `<div class="admin-flash admin-flash-${escapeHtml(flash.type)}">${escapeHtml(flash.message)}</div>` : ''}
     <div class="admin-content">${content}</div>
   </div>
 </div>
