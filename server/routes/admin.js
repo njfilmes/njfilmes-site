@@ -221,7 +221,7 @@ export async function categoryEditPage(req, res, admin, id) {
 export async function categoryCreate(req, res, body) {
   const name = (body.name || '').trim();
   if (!name) return redirect(res, '/admin/categorias');
-  const slug = await uniqueSlug('categories', name);
+  const slug = await uniqueSlug(['categories', 'projects'], name);
   const maxOrder = await maxSortOrder('categories');
   await Q.createCategory({ name, slug, sort_order: maxOrder + 1 });
   redirect(res, '/admin/categorias' + withFlash(res, 'success', 'Categoria criada.'));
@@ -231,7 +231,7 @@ export async function categoryUpdate(req, res, body, id) {
   const category = await Q.getCategory(id);
   if (!category) return redirect(res, '/admin/categorias');
   const name = (body.name || category.name).trim();
-  const slug = (body.slug || '').trim() || (await uniqueSlug('categories', name, id));
+  const slug = await uniqueSlug(['categories', 'projects'], (body.slug || '').trim() || name, id);
   await Q.updateCategory(id, { name, slug, sort_order: category.sort_order });
   redirect(res, '/admin/categorias');
 }
@@ -832,6 +832,14 @@ export async function settingsPage(req, res, admin) {
       ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Link direto para um arquivo de vídeo .mp4 hospedado (ex: no seu storage). Deixe vazio para usar imagem.' })}
       ${field({ label: 'Título para o Google (meta title)', name: 'meta_title', value: s.meta_title })}
       ${field({ label: 'Descrição para o Google (meta description)', name: 'meta_description', value: s.meta_description, textarea: true, rows: 2 })}
+      <div class="form-field" data-single-upload>
+        <label>Imagem de compartilhamento (aparece quando alguém envia o link do site no WhatsApp, Instagram etc.)</label>
+        <input type="file" accept="image/*">
+        <input type="hidden" name="og_image_data">
+        ${s.og_image ? `<img data-preview src="${escapeHtml(s.og_image)}" style="max-width:280px;border-radius:6px;margin-top:8px;display:block;">` : `<img data-preview src="" style="max-width:280px;border-radius:6px;margin-top:8px;display:none;">`}
+        <input type="hidden" name="og_image_existing" value="${escapeHtml(s.og_image || '')}">
+        <small>Tamanho ideal: 1200x630px. Se não enviar nenhuma, o site usa a imagem padrão (logo NJFILMES).</small>
+      </div>
       ${field({ label: 'Texto do rodapé', name: 'footer_text', value: s.footer_text })}
       <h2 style="margin-top:32px;">Contato</h2>
       ${field({ label: 'E-mail de contato', name: 'contact_email', value: s.contact_email, type: 'email', placeholder: 'contato@njfilmes.com.br', help: 'Aparece na página de Contato do site.' })}
@@ -883,6 +891,12 @@ export async function changePasswordSubmit(req, res, body, admin) {
 }
 
 export async function settingsUpdate(req, res, body) {
+  // Imagem de compartilhamento (og_image): mantém a atual se nada de novo for enviado;
+  // se o upload falhar (arquivo inválido/grande demais), também mantém a atual em vez de apagar.
+  let og_image = body.og_image_existing || '';
+  if (body.og_image_data) {
+    try { og_image = await saveMiscImage(body.og_image_data); } catch { /* mantém imagem anterior */ }
+  }
   await Q.updateSettings({
     site_name: body.site_name || 'NJFILMES',
     tagline: body.tagline || '',
@@ -891,6 +905,7 @@ export async function settingsUpdate(req, res, body) {
     hero_video_url: body.hero_video_url || '',
     meta_title: body.meta_title || '',
     meta_description: body.meta_description || '',
+    og_image,
     footer_text: body.footer_text || '',
     contact_email: body.contact_email || '',
     whatsapp_number: body.whatsapp_number || '',
@@ -968,7 +983,7 @@ export async function projectNewPage(req, res, admin) {
 export async function projectCreate(req, res, body) {
   const title = (body.title || '').trim();
   if (!title) return redirect(res, '/admin/projetos/novo');
-  const slug = (body.slug || '').trim() ? await uniqueSlug('projects', body.slug) : await uniqueSlug('projects', title);
+  const slug = await uniqueSlug(['projects', 'categories'], (body.slug || '').trim() || title);
   const id = await Q.createProject({
     title,
     slug,
@@ -1076,7 +1091,7 @@ export async function projectUpdate(req, res, body, id) {
   const project = await Q.getProject(id);
   if (!project) return redirect(res, '/admin/projetos');
   const title = (body.title || project.title).trim();
-  const slug = (body.slug || '').trim() ? await uniqueSlug('projects', body.slug, id) : project.slug;
+  const slug = (body.slug || '').trim() ? await uniqueSlug(['projects', 'categories'], body.slug, id) : project.slug;
   await Q.updateProject(id, {
     title,
     slug,
