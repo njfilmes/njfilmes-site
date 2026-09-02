@@ -8,10 +8,11 @@
     "start": "node server/index.js",
     "dev": "node server/index.js",
     "seed": "node scripts/seed.js",
-    "create-admin": "node scripts/create-admin.js"
+    "create-admin": "node scripts/create-admin.js",
+    "build-static": "node scripts/build-static.js"
   },
   "dependencies": {
     "sharp": "^0.34.5",
-    "@vercel/blob": "latest"
+    "@vercel/blob": "^2.8.0"
   }
 }
