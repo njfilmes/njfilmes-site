@@ -1176,6 +1176,7 @@ export async function projectPhotoCaption(req, res, body, id, photoId) {
 
 export async function projectPhotoMove(req, res, body, id, photoId) {
   const project = await Q.getProject(id);
+  if (!project) return redirect(res, '/admin/projetos');
   const photos = project.photos;
   const idx = photos.findIndex((p) => p.id === photoId);
   if (idx === -1) return redirect(res, `/admin/projetos/${id}/fotos`);
