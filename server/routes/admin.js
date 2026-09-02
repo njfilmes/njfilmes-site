@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { adminLayout, loginLayout, field, checkboxField, selectField } from '../adminRender.js';
 import { escapeHtml } from '../util.js';
 import { parseVideoUrl, videoEmbedHtml, uniqueSlug, formatDatePtBr } from '../util.js';
@@ -22,6 +23,18 @@ function redirect(res, location) {
   res.end();
 }
 
+// Compara a chave de recuperação sem vazar, pelo tempo de resposta, quantos caracteres bateram
+// certo — mesma ideia do verifyPassword em auth.js, só que pra string simples (não hash).
+function timingSafeStringEqual(a, b) {
+  const bufA = Buffer.from(String(a));
+  const bufB = Buffer.from(String(b));
+  if (bufA.length !== bufB.length) {
+    crypto.timingSafeEqual(bufA, bufA); // gasta um tempo parecido, não retorna cedo demais
+    return false;
+  }
+  return crypto.timingSafeEqual(bufA, bufB);
+}
+
 function withFlash(res, type, message) {
   // Flash simples via query string (funciona sem sessão extra de flash messages)
   return `?flash=${type}:${encodeURIComponent(message)}`;
@@ -32,7 +45,14 @@ function readFlash(req) {
   const raw = url.searchParams.get('flash');
   if (!raw) return null;
   const idx = raw.indexOf(':');
-  return { type: raw.slice(0, idx), message: decodeURIComponent(raw.slice(idx + 1)) };
+  // O "type" vira classe CSS (admin-flash-${type}) sem passar por escapeHtml no layout, então
+  // é preciso restringir a um valor fixo conhecido aqui — senão alguém poderia montar um link
+  // tipo /admin/recuperar-senha?flash=x"><script>...</script>:x e injetar HTML/JS na página
+  // (funciona até sem estar logado, porque a recuperação de senha é pública). Descoberto e
+  // corrigido em 02/09/2026 numa varredura de segurança.
+  const rawType = raw.slice(0, idx);
+  const type = rawType === 'success' ? 'success' : 'error';
+  return { type, message: decodeURIComponent(raw.slice(idx + 1)) };
 }
 
 async function maxSortOrder(table, whereCol = null, whereVal = null) {
@@ -722,6 +742,7 @@ export async function bioPage(req, res, admin) {
   const flash = readFlash(req);
   const bio = await Q.getBio();
   const bioPhotos = await Q.listBioPhotos();
+  const galleryPhotos = await Q.listBioGalleryPhotos();
   const content = `
   <div class="panel">
     <form method="post" action="/admin/bio/atualizar">
@@ -740,6 +761,10 @@ export async function bioPage(req, res, admin) {
         <img data-preview src="${escapeHtml(bio.profile_photo || '')}" style="max-width:160px;border-radius:6px;margin-top:8px;display:${bio.profile_photo ? 'block' : 'none'};">
       </div>
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
+      <div class="form-row">
+        ${field({ label: 'Título da galeria de bastidores', name: 'gallery_title', value: bio.gallery_title, placeholder: 'Ex: No set com a NJFILMES', help: 'Aparece acima da faixa de fotos "Bastidores", na página Sobre.' })}
+        ${field({ label: 'Título da seção Trajetória', name: 'trajectory_title', value: bio.trajectory_title, placeholder: 'Ex: Uma jornada pela imagem', help: 'Aparece acima do texto de trajetória, na página Sobre.' })}
+      </div>
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar biografia</button></div>
     </form>
   </div>
@@ -759,6 +784,30 @@ export async function bioPage(req, res, admin) {
         <div class="pc-body">
           <div class="pc-actions">
             <form method="post" action="/admin/bio/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+          </div>
+        </div>
+      </div>`
+      )
+      .join('')}</div>` : '<p class="empty-hint">Nenhuma foto adicionada ainda.</p>'}
+  </div>
+  <div class="panel">
+    <h2>Fotos da galeria "Bastidores" (faixa que rola sozinha)</h2>
+    <p class="muted" style="margin-top:-8px;">Essas são as fotos da faixa "${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}", na página Sobre. Envie, reordene com as setas ou exclua — sem precisar mexer em código.</p>
+    <div class="upload-drop" data-bio-gallery-upload>
+      <input type="file" accept="image/*" multiple>
+      <p>Clique aqui ou arraste as fotos para enviar</p>
+      <div id="bio-gallery-preview"></div>
+      <p data-bio-gallery-status style="margin-top:10px;font-size:0.82rem;"></p>
+    </div>
+    ${galleryPhotos.length ? `<div class="photo-grid">${galleryPhotos
+      .map(
+        (p, i) => `<div class="photo-card">
+        <img src="${escapeHtml(p.filename)}" alt="">
+        <div class="pc-body">
+          <div class="pc-actions">
+            <form method="post" action="/admin/bio/galeria/${p.id}/mover"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" type="submit" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+            <form method="post" action="/admin/bio/galeria/${p.id}/mover"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" type="submit" ${i === galleryPhotos.length - 1 ? 'disabled' : ''}>↓</button></form>
+            <form method="post" action="/admin/bio/galeria/${p.id}/excluir" data-confirm="Excluir esta foto da galeria de bastidores?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
           </div>
         </div>
       </div>`
@@ -784,6 +833,8 @@ export async function bioUpdate(req, res, body) {
     equipment: body.equipment || '',
     profile_photo,
     cta_text: body.cta_text || '',
+    gallery_title: body.gallery_title || 'No set com a NJFILMES',
+    trajectory_title: body.trajectory_title || 'Uma jornada pela imagem',
   });
   redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
 }
@@ -812,6 +863,44 @@ export async function bioPhotosUpload(req, res, body) {
 export async function bioPhotoDelete(req, res, id) {
   await Q.deleteBioPhoto(id);
   redirect(res, '/admin/bio' + withFlash(res, 'success', 'Foto excluída.'));
+}
+
+export async function bioGalleryPhotosUpload(req, res, body) {
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let saved = 0;
+  for (const dataUrl of photos) {
+    try {
+      const url = await saveMiscImage(dataUrl);
+      await Q.addBioGalleryPhoto(url);
+      saved += 1;
+    } catch (err) {
+      console.error('Erro ao salvar foto da galeria de bastidores:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export async function bioGalleryPhotoDelete(req, res, id) {
+  await Q.deleteBioGalleryPhoto(id);
+  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Foto excluída.'));
+}
+
+export async function bioGalleryPhotoMove(req, res, body, id) {
+  const items = await Q.listBioGalleryPhotos();
+  const idx = items.findIndex((p) => p.id === id);
+  if (idx === -1) return redirect(res, '/admin/bio');
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, '/admin/bio');
+  const a = items[idx], b = items[swapWith];
+  await query('UPDATE bio_gallery_photos SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
+  await query('UPDATE bio_gallery_photos SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
+  redirect(res, '/admin/bio');
 }
 
 // ---------------- Configurações ----------------
@@ -1210,7 +1299,7 @@ export async function recoverPage(req, res) {
   res.end(
     loginLayout({
       title: 'Recuperar acesso',
-      content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperação para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${flash.type}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperação', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>`,
+      content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperação para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${escapeHtml(flash.type)}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperação', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>`,
     })
   );
 }
@@ -1218,7 +1307,7 @@ export async function recoverPage(req, res) {
 export async function recoverSubmit(req, res, body) {
   const key = process.env.ADMIN_RECOVERY_KEY;
   if (!key) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Recuperação não configurada neste site.'));
-  if (!body.recovery_key || body.recovery_key !== key) {
+  if (!body.recovery_key || !timingSafeStringEqual(body.recovery_key, key)) {
     return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Chave de recuperação incorreta.'));
   }
   const email = String(body.email || '').toLowerCase().trim();

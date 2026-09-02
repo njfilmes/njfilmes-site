@@ -13,6 +13,7 @@ import {
   listPeople,
   listTestimonials,
   listBioPhotos,
+  listBioGalleryPhotos,
   incrementProjectViews,
   incrementProjectLikes,
 } from '../queries.js';
@@ -491,20 +492,9 @@ export async function aboutPage(req, res) {
   ].filter((src, idx, arr) => src && arr.indexOf(src) === idx);
 
   // Galeria de bastidores (fotos do NJ trabalhando) que rola sozinha na horizontal,
-  // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026.
-  const bioGalleryImages = [
-    '/img/bio/bio-1.jpg',
-    '/img/bio/bio-2.jpg',
-    '/img/bio/bio-3.jpg',
-    '/img/bio/bio-4.jpg',
-    '/img/bio/bio-5.jpg',
-    '/img/bio/bio-6.jpg',
-    '/img/bio/bio-7.jpg',
-    '/img/bio/bio-8.jpg',
-    '/img/bio/bio-9.jpg',
-    '/img/bio/bio-10.jpg',
-    '/img/bio/bio-11.jpg',
-  ];
+  // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026. Editável pelo painel
+  // (menu Biografia / Sobre) desde 02/09/2026 — antes eram 11 arquivos fixos no código.
+  const bioGalleryImages = (await listBioGalleryPhotos()).map((p) => p.filename);
 
   const content = `
   <section class="simple-hero">
@@ -526,21 +516,21 @@ export async function aboutPage(req, res) {
     </div>
   </section>
 
-  <section class="alt-bg">
+  ${bioGalleryImages.length ? `<section class="alt-bg">
     <div class="container">
       <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Bastidores</span>
-      <h2 class="reveal text-center">No set com a NJFILMES</h2>
+      <h2 class="reveal text-center">${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}</h2>
       <div class="bio-gallery reveal">
         <div class="bio-gallery-track">
           ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<div class="bio-gallery-item"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"></div>`).join('')}
         </div>
       </div>
     </div>
-  </section>
+  </section>` : ''}
 
   ${bio.trajectory ? `<section><div class="container" style="max-width:820px;">
     <span class="eyebrow reveal">Trajetória</span>
-    <h2 class="reveal">Uma jornada pela imagem</h2>
+    <h2 class="reveal">${escapeHtml(bio.trajectory_title || 'Uma jornada pela imagem')}</h2>
     <p class="reveal">${nl2br(bio.trajectory)}</p>
   </div></section>` : ''}
 
@@ -669,7 +659,7 @@ export async function contactPage(req, res) {
       </div>
       <div class="contact-card reveal">
         <h3>Outros canais</h3>
-        <ul style="display:flex;flex-direction:column;gap:14px;"><li><a href="mailto:contato@njfilmes.com.br">contato@njfilmes.com.br</a></li>
+        <ul style="display:flex;flex-direction:column;gap:14px;"><li><a href="mailto:${escapeHtml(settings.contact_email || 'contato@njfilmes.com.br')}">${escapeHtml(settings.contact_email || 'contato@njfilmes.com.br')}</a></li>
           ${settings.instagram_url ? `<li><a href="${escapeHtml(settings.instagram_url)}" target="_blank" rel="noopener noreferrer">Instagram</a></li>` : ''}
           ${settings.youtube_url ? `<li><a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>YouTube</a></li>` : ''}
           ${settings.vimeo_url ? `<li><a href="${escapeHtml(settings.vimeo_url)}" target="_blank" rel="noopener noreferrer">Vimeo</a></li>` : ''}
