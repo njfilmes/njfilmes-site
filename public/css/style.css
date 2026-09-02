@@ -183,6 +183,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   transition: background 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.25s var(--ease);
 }
 .btn:hover { background: var(--fg); color: var(--bg); transform: translateY(-2px); }
+.btn:active { filter: brightness(0.88); transition-duration: 0.1s; }
 .btn-solid { background: var(--fg); color: var(--bg); }
 .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: #12100a; }
 .btn-outline { border-color: var(--border-strong); }
@@ -416,6 +417,64 @@ section { padding: 110px 0; position: relative; }
   .person-card:hover { transform: perspective(900px) rotateX(3deg) scale(1.03); z-index: 2; }
 }
 
+/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): brilho/reflexo que acompanha o mouse
+   nos cards com efeito de inclinacao 3D (JS em site.js atualiza --mx/--my a cada movimento do
+   mouse), reforcando a sensacao de profundidade/vidro. pointer-events:none pra nao atrapalhar
+   clique em nada, e so aparece em quem tem mouse de verdade (mesma logica do tilt em si). */
+@media (hover: hover) and (pointer: fine) {
+  [data-work-card], .service-card, .person-card, .contact-card {
+    --mx: 50%; --my: 50%;
+  }
+  [data-work-card]::after, .service-card::after, .person-card::after, .contact-card::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.18), transparent 55%);
+    opacity: 0;
+    transition: opacity 0.4s var(--ease);
+  }
+  [data-work-card]:hover::after, .service-card:hover::after, .person-card:hover::after, .contact-card:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Luz ambiente dourada que segue o cursor pela tela inteira (so PC, discreta) - mesmo padrao
+   de camada usada no noise-overlay/grade-overlay (fixo, pointer-events:none, blend mode),
+   so que reagindo a posicao do mouse via JS (site.js) pra dar mais profundidade ao site. */
+.cursor-glow {
+  position: fixed; top: 0; left: 0; width: 560px; height: 560px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(201,162,39,0.14), transparent 70%);
+  pointer-events: none; z-index: 9997; mix-blend-mode: screen; filter: blur(6px);
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .cursor-glow { display: none; }
+}
+
+/* ---------- Intro cinematografica (barras tipo "letterbox" + logo) ---------- */
+/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): abertura cinematografica ao entrar no
+   site pela primeira vez na visita (barras pretas tipo cinema + logo), combinando com o tema de
+   producao audiovisual da marca. So toca uma vez por visita (sessionStorage, marcado por um
+   script pequeno no <head>, antes de qualquer coisa renderizar - por isso nao pisca em quem ja
+   viu) e nunca em quem pediu menos movimento (prefers-reduced-motion). */
+.cine-intro { display: none; position: fixed; inset: 0; z-index: 10050; pointer-events: none; }
+.js .cine-intro { display: block; }
+html.no-intro .cine-intro { display: none; }
+.cine-intro-bar { position: fixed; left: 0; right: 0; height: 51vh; background: #000; z-index: 10050; }
+.cine-intro-bar-top { top: 0; }
+.cine-intro-bar-bottom { bottom: 0; }
+.cine-intro-logo { position: fixed; inset: 0; z-index: 10051; display: flex; align-items: center; justify-content: center; opacity: 0; }
+.cine-intro-logo img { width: 110px; filter: drop-shadow(0 0 24px rgba(201,162,39,0.4)); }
+@keyframes cineLogoIn { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: scale(1); } }
+@keyframes cineLogoOut { to { opacity: 0; transform: scale(1.08); } }
+@keyframes cineBarUp { to { transform: translateY(-100%); } }
+@keyframes cineBarDown { to { transform: translateY(100%); } }
+.js:not(.no-intro) .cine-intro-logo {
+  animation: cineLogoIn 0.55s var(--ease) 0.15s both, cineLogoOut 0.35s var(--ease) 1.05s both;
+}
+.js:not(.no-intro) .cine-intro-bar-top { animation: cineBarUp 0.6s var(--ease) 1s forwards; }
+.js:not(.no-intro) .cine-intro-bar-bottom { animation: cineBarDown 0.6s var(--ease) 1s forwards; }
+.cine-lock { overflow: hidden; }
+
 /* ---------- Filtros de categoria ---------- */
 .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 44px; }
 .filter-pill {
@@ -476,9 +535,16 @@ section { padding: 110px 0; position: relative; }
   animation: marquee-scroll 32s linear infinite;
 }
 .marquee:hover .marquee-track { animation-play-state: paused; }
+/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): a faixa que rola sozinha ganha uma
+   inclinacao 3D leve e constante (tipo prateleira/coverflow), mantida durante toda a rolagem
+   porque o rotateX faz parte do proprio keyframe (senao a rolagem apagaria a inclinacao). */
+.marquee { perspective: 1000px; }
 @keyframes marquee-scroll {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from { transform: translateX(0) rotateX(6deg); }
+  to { transform: translateX(-50%) rotateX(6deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee-track { transform: none; }
 }
 .brand-chip {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -714,7 +780,7 @@ section { padding: 110px 0; position: relative; }
 /* ---------- Pagina simples (contato etc) ---------- */
 .simple-hero { padding: 170px 0 60px; }
 .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
-.contact-card { border: 1px solid var(--border); padding: 40px; }
+.contact-card { border: 1px solid var(--border); padding: 40px; position: relative; }
 
 /* ---------- Utilitarios ---------- */
 .muted { color: var(--fg-dim); }
