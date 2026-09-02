@@ -111,8 +111,7 @@ export async function homePage(req, res) {
   <section class="hero">
     <div class="hero-media">${heroVideo}</div>
     <div class="container hero-content">
-      <span class="eyebrow reveal">Produção Audiovisual · Salvador, BA</span>
-      <h1 class="reveal reveal-delay-1">${heroHeadlineHtml(settings.hero_headline)}</h1>
+      <h1 class="reveal reveal-delay-1 hero-title-no-eyebrow">${heroHeadlineHtml(settings.hero_headline)}</h1>
       <p class="lead reveal reveal-delay-2">${escapeHtml(settings.hero_subheadline)}</p>
       <div class="btn-row reveal reveal-delay-3">
         <a href="/portfolio" class="btn btn-solid">Ver portfólio</a>
