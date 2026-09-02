@@ -8,6 +8,19 @@
   // relativos ao próprio domínio, sem nenhuma mudança de comportamento.
   var API_BASE = window.NJFILMES_API_BASE || '';
 
+  // Limpeza da intro cinematografica (barras + logo): a decisao de tocar ou nao ja foi tomada
+  // no script sincrono do <head> (classe no-intro), aqui so cuidamos de tirar a intro da tela
+  // (display:none) depois que a animacao termina, e destravar a rolagem da pagina nesse meio
+  // tempo (senao dava pra rolar "por baixo" das barras enquanto elas ainda estao saindo).
+  var cineIntro = document.querySelector('[data-cine-intro]');
+  if (cineIntro && !document.documentElement.classList.contains('no-intro')) {
+    document.body.classList.add('cine-lock');
+    setTimeout(function () {
+      document.body.classList.remove('cine-lock');
+      cineIntro.style.display = 'none';
+    }, 1650);
+  }
+
   // Header muda de estilo ao rolar, e se esconde ao descer / reaparece ao subir
   var header = document.querySelector('[data-header]');
   if (header) {
@@ -234,9 +247,35 @@
         var px = (e.clientX - r.left) / r.width - 0.5;
         var py = (e.clientY - r.top) / r.height - 0.5;
         el.style.transform = 'perspective(900px) rotateX(' + (py * -7).toFixed(2) + 'deg) rotateY(' + (px * 7).toFixed(2) + 'deg) scale3d(1.02, 1.02, 1.02)';
+        // Reflexo/brilho que acompanha o mouse (CSS le essas variaveis no ::after do card -
+        // ver style.css). Nao se aplica em .about-split img (e uma <img> sozinha, sem ::after).
+        el.style.setProperty('--mx', ((px + 0.5) * 100).toFixed(1) + '%');
+        el.style.setProperty('--my', ((py + 0.5) * 100).toFixed(1) + '%');
       });
       el.addEventListener('mouseleave', function () { el.style.transform = ''; });
     });
+  }
+
+  // Luz ambiente dourada que segue o cursor pela pagina inteira (so quem tem mouse de verdade,
+  // e nunca pra quem pediu menos movimento) - pedido em 02/09/2026 pra dar mais profundidade.
+  if (
+    window.matchMedia('(hover: hover) and (pointer: fine)').matches &&
+    !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  ) {
+    var glow = document.createElement('div');
+    glow.className = 'cursor-glow';
+    glow.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(glow);
+    var glowX = window.innerWidth / 2, glowY = window.innerHeight / 2;
+    var glowTX = glowX, glowTY = glowY;
+    window.addEventListener('mousemove', function (e) { glowTX = e.clientX; glowTY = e.clientY; }, { passive: true });
+    var glowLoop = function () {
+      glowX += (glowTX - glowX) * 0.09;
+      glowY += (glowTY - glowY) * 0.09;
+      glow.style.transform = 'translate(' + glowX + 'px, ' + glowY + 'px) translate(-50%, -50%)';
+      requestAnimationFrame(glowLoop);
+    };
+    requestAnimationFrame(glowLoop);
   }
 
   // Barra de progresso de rolagem
