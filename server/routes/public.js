@@ -646,19 +646,19 @@ export async function contactPage(req, res) {
   <section class="simple-hero">
     <div class="container">
       <span class="eyebrow reveal">Contato</span>
-      <h1 class="reveal">Vamos conversar sobre seu projeto</h1>
+      <h1 class="reveal">${escapeHtml(settings.contact_headline || 'Vamos conversar sobre seu projeto')}</h1>
     </div>
   </section>
   <section style="padding-top:0;">
     <div class="container contact-grid">
       <div class="contact-card reveal">
-        <h3>Orçamento rápido</h3>
-        <p>A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.</p>
-        ${waUrl ? `<a href="${escapeHtml(waUrl)}" class="btn btn-solid" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>`
+        <h3>${escapeHtml(settings.contact_budget_title || 'Orçamento rápido')}</h3>
+        <p>${escapeHtml(settings.contact_budget_text || 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.')}</p>
+        ${waUrl ? `<a href="${escapeHtml(waUrl)}" class="btn btn-solid" target="_blank" rel="noopener noreferrer">${escapeHtml(settings.contact_whatsapp_button_text || 'Falar no WhatsApp')}</a>`
           : `<p class="muted">Configure o número de WhatsApp no painel administrativo para ativar este botão.</p>`}
       </div>
       <div class="contact-card reveal">
-        <h3>Outros canais</h3>
+        <h3>${escapeHtml(settings.contact_channels_title || 'Outros canais')}</h3>
         <ul style="display:flex;flex-direction:column;gap:14px;"><li><a href="mailto:${escapeHtml(settings.contact_email || 'contato@njfilmes.com.br')}">${escapeHtml(settings.contact_email || 'contato@njfilmes.com.br')}</a></li>
           ${settings.instagram_url ? `<li><a href="${escapeHtml(settings.instagram_url)}" target="_blank" rel="noopener noreferrer">Instagram</a></li>` : ''}
           ${settings.youtube_url ? `<li><a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.7;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>YouTube</a></li>` : ''}

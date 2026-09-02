@@ -931,9 +931,14 @@ export async function settingsPage(req, res, admin) {
       </div>
       ${field({ label: 'Texto do rodapé', name: 'footer_text', value: s.footer_text })}
       <h2 style="margin-top:32px;">Contato</h2>
+      ${field({ label: 'Título da página de Contato', name: 'contact_headline', value: s.contact_headline, help: 'Aparece grande no topo da página de Contato.' })}
       ${field({ label: 'E-mail de contato', name: 'contact_email', value: s.contact_email, type: 'email', placeholder: 'contato@njfilmes.com.br', help: 'Aparece na página de Contato do site.' })}
       ${field({ label: 'Número do WhatsApp', name: 'whatsapp_number', value: s.whatsapp_number, placeholder: 'Ex: 5571986817816 (DDI+DDD+número, só números)' })}
       ${field({ label: 'Mensagem automática', name: 'whatsapp_message', value: s.whatsapp_message, textarea: true, rows: 2 })}
+      ${field({ label: 'Título do bloco "Orçamento rápido"', name: 'contact_budget_title', value: s.contact_budget_title })}
+      ${field({ label: 'Texto do bloco "Orçamento rápido"', name: 'contact_budget_text', value: s.contact_budget_text, textarea: true, rows: 3 })}
+      ${field({ label: 'Texto do botão do WhatsApp', name: 'contact_whatsapp_button_text', value: s.contact_whatsapp_button_text })}
+      ${field({ label: 'Título do bloco "Outros canais"', name: 'contact_channels_title', value: s.contact_channels_title })}
       <h2 style="margin-top:32px;">Redes sociais</h2>
       <div class="form-row">
         ${field({ label: 'Instagram', name: 'instagram_url', value: s.instagram_url, type: 'url' })}
@@ -996,9 +1001,14 @@ export async function settingsUpdate(req, res, body) {
     meta_description: body.meta_description || '',
     og_image,
     footer_text: body.footer_text || '',
+    contact_headline: body.contact_headline || '',
     contact_email: body.contact_email || '',
     whatsapp_number: body.whatsapp_number || '',
     whatsapp_message: body.whatsapp_message || '',
+    contact_budget_title: body.contact_budget_title || '',
+    contact_budget_text: body.contact_budget_text || '',
+    contact_whatsapp_button_text: body.contact_whatsapp_button_text || '',
+    contact_channels_title: body.contact_channels_title || '',
     instagram_url: body.instagram_url || '',
     youtube_url: body.youtube_url || '',
     vimeo_url: body.vimeo_url || '',
