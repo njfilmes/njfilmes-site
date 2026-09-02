@@ -191,7 +191,12 @@ export async function initSchema() {
                                                                                                 meta_description TEXT DEFAULT 'NJFILMES: produção de vídeos, fotografia, cobertura de eventos, casamentos, videoclipes e filmagens com drone em Salvador, BA.',
                                                                                                       og_image TEXT DEFAULT '',
                                                                                                             footer_text TEXT DEFAULT 'NJFILMES — Produção Audiovisual. Salvador, BA.',
-                                                                                                                  contact_email TEXT DEFAULT ''
+                                                                                                                  contact_email TEXT DEFAULT '',
+  contact_headline TEXT DEFAULT 'Vamos conversar sobre seu projeto',
+  contact_budget_title TEXT DEFAULT 'Orçamento rápido',
+  contact_budget_text TEXT DEFAULT 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.',
+  contact_whatsapp_button_text TEXT DEFAULT 'Falar no WhatsApp',
+  contact_channels_title TEXT DEFAULT 'Outros canais'
                                                                                                                       );
                                                                                                                         `);
 
@@ -360,6 +365,24 @@ export async function initSchema() {
       );
     if (!settingsCols.includes('contact_email')) {
           await query("ALTER TABLE settings ADD COLUMN contact_email TEXT DEFAULT ''");
+    }
+    // Textos da página Contato (título, "Orçamento rápido", texto do botão do WhatsApp, "Outros
+    // canais") que antes eram fixos no código e o cliente não conseguia editar. Adicionado em
+    // 02/09/2026 numa rodada de "deixar tudo editável".
+    if (!settingsCols.includes('contact_headline')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_headline TEXT DEFAULT 'Vamos conversar sobre seu projeto'");
+    }
+    if (!settingsCols.includes('contact_budget_title')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_budget_title TEXT DEFAULT 'Orçamento rápido'");
+    }
+    if (!settingsCols.includes('contact_budget_text')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_budget_text TEXT DEFAULT 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.'");
+    }
+    if (!settingsCols.includes('contact_whatsapp_button_text')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_whatsapp_button_text TEXT DEFAULT 'Falar no WhatsApp'");
+    }
+    if (!settingsCols.includes('contact_channels_title')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_channels_title TEXT DEFAULT 'Outros canais'");
     }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
