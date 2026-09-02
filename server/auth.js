@@ -1,7 +1,7 @@
 // Autenticação real do painel administrativo: hash de senha com scrypt (nativo do Node,
 // sem dependências externas) + sessões com token aleatório armazenado no banco de dados.
 import crypto from 'node:crypto';
-import { db, nowIso } from './db.js';
+import { query, queryOne } from './db.js';
 
 const SESSION_COOKIE = 'njfilmes_session';
 const SESSION_DAYS = 7;
@@ -20,47 +20,47 @@ export function verifyPassword(password, hash, salt) {
   return crypto.timingSafeEqual(a, b);
 }
 
-export function createAdminUser({ email, password, name }) {
+export async function createAdminUser({ email, password, name }) {
   const { hash, salt } = hashPassword(password);
-  const stmt = db.prepare(
-    'INSERT INTO admin_users (email, password_hash, salt, name) VALUES (?, ?, ?, ?)'
+  const row = await queryOne(
+    'INSERT INTO admin_users (email, password_hash, salt, name) VALUES ($1, $2, $3, $4) RETURNING id',
+    [String(email).toLowerCase().trim(), hash, salt, name || 'Administrador']
   );
-  const info = stmt.run(String(email).toLowerCase().trim(), hash, salt, name || 'Administrador');
-  return info.lastInsertRowid;
+  return row.id;
 }
 
-export function findAdminByEmail(email) {
-  return db.prepare('SELECT * FROM admin_users WHERE email = ?').get(String(email).toLowerCase().trim());
+export async function findAdminByEmail(email) {
+  return queryOne('SELECT * FROM admin_users WHERE email = $1', [String(email).toLowerCase().trim()]);
 }
 
-export function countAdmins() {
-  return db.prepare('SELECT COUNT(*) as c FROM admin_users').get().c;
+export async function countAdmins() {
+  const row = await queryOne('SELECT COUNT(*) as c FROM admin_users');
+  return Number(row.c);
 }
 
-export function createSession(adminId) {
+export async function createSession(adminId) {
   const id = crypto.randomBytes(32).toString('hex');
   const expires = new Date(Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000).toISOString();
-  db.prepare('INSERT INTO sessions (id, admin_id, expires_at) VALUES (?, ?, ?)').run(id, adminId, expires);
+  await query('INSERT INTO sessions (id, admin_id, expires_at) VALUES ($1, $2, $3)', [id, adminId, expires]);
   return { id, expires };
 }
 
-export function destroySession(sessionId) {
+export async function destroySession(sessionId) {
   if (!sessionId) return;
-  db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+  await query('DELETE FROM sessions WHERE id = $1', [sessionId]);
 }
 
-export function getSessionAdmin(sessionId) {
+export async function getSessionAdmin(sessionId) {
   if (!sessionId) return null;
-  const row = db
-    .prepare(
-      `SELECT s.id as session_id, s.expires_at, a.id, a.email, a.name
-       FROM sessions s JOIN admin_users a ON a.id = s.admin_id
-       WHERE s.id = ?`
-    )
-    .get(sessionId);
+  const row = await queryOne(
+    `SELECT s.id as session_id, s.expires_at, a.id, a.email, a.name
+     FROM sessions s JOIN admin_users a ON a.id = s.admin_id
+     WHERE s.id = $1`,
+    [sessionId]
+  );
   if (!row) return null;
   if (new Date(row.expires_at).getTime() < Date.now()) {
-    destroySession(sessionId);
+    await destroySession(sessionId);
     return null;
   }
   return { id: row.id, email: row.email, name: row.name };
@@ -96,4 +96,6 @@ export function clearSessionCookie(res) {
   res.setHeader('Set-Cookie', `${SESSION_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0`);
 }
 
-export { nowIso };
+export function nowIso() {
+  return new Date().toISOString();
+}

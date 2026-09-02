@@ -5,34 +5,17 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseBody } from './body.js';
-import { getSessionIdFromReq, getSessionAdmin, findAdminByEmail, createAdminUser, hashPassword } from './auth.js';
-import { db } from './db.js';
+import { getSessionIdFromReq, getSessionAdmin } from './auth.js';
 import * as Pub from './routes/public.js';
 import * as Admin from './routes/admin.js';
 import { listCategories, getSettings, listAllProjectsForAdmin } from './queries.js';
 import { layout } from './render.js';
+import { triggerStaticRebuild } from './deployHook.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const PORT = process.env.PORT || 3000;
-
-// Reset/criação de admin controlado por variável de ambiente (uso pontual, via painel do Render).
-// Defina ADMIN_RESET_EMAIL e ADMIN_RESET_PASSWORD nas Environment Variables e faça o deploy;
-// depois de logar, remova essas duas variáveis para não deixar a senha exposta em texto puro.
-if (process.env.ADMIN_RESET_EMAIL && process.env.ADMIN_RESET_PASSWORD) {
-  const email = process.env.ADMIN_RESET_EMAIL;
-  const password = process.env.ADMIN_RESET_PASSWORD;
-  const existing = findAdminByEmail(email);
-  if (existing) {
-    const { hash, salt } = hashPassword(password);
-    db.prepare('UPDATE admin_users SET password_hash = ?, salt = ? WHERE id = ?').run(hash, salt, existing.id);
-    console.log(`[admin-reset] Senha atualizada para: ${email}`);
-  } else {
-    createAdminUser({ email, password, name: 'Administrador' });
-    console.log(`[admin-reset] Administrador criado: ${email}`);
-  }
-}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -72,9 +55,9 @@ function serveStatic(req, res, pathname) {
   });
 }
 
-function notFoundPublic(req, res) {
-  const settings = getSettings();
-  const categories = listCategories();
+async function notFoundPublic(req, res) {
+  const settings = await getSettings();
+  const categories = await listCategories();
   res.statusCode = 404;
   res.end(
     layout({
@@ -89,12 +72,12 @@ function notFoundPublic(req, res) {
   );
 }
 
-function sitemapXml(req, res) {
+async function sitemapXml(req, res) {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
   const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
-  const categories = listCategories();
-  const projects = listAllProjectsForAdmin().filter((p) => p.published);
+  const categories = await listCategories();
+  const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
   const urls = [
     ...staticPaths.map((p) => `${base}${p}`),
     ...categories.map((c) => `${base}/portfolio/${c.slug}`),
@@ -104,6 +87,30 @@ function sitemapXml(req, res) {
     .map((u) => `  <url><loc>${u}</loc></url>`)
     .join('\n')}\n</urlset>`;
   res.end(xml);
+}
+
+// Quando o site público vira HTML estático, ele fica hospedado num domínio/serviço separado
+// deste backend — então o navegador faz uma chamada "cross-origin" pra curtir/visualizar, e o
+// backend precisa autorizar isso explicitamente (CORS), ou o navegador bloqueia a resposta.
+// Lista fechada de origens autorizadas — o domínio oficial do site e o endereço da Render
+// (útil pra testar antes do domínio próprio estar apontado). Pode ser ajustada por variável de
+// ambiente sem precisar mexer no código.
+const ALLOWED_ORIGINS = (
+  process.env.ALLOWED_ORIGINS ||
+  'https://njfilmes.com.br,https://www.njfilmes.com.br,https://njfilmes-site.onrender.com'
+)
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+function applyCors(req, res) {
+  const origin = req.headers.origin;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
 function robotsTxt(req, res) {
@@ -126,16 +133,34 @@ async function router(req, res) {
     pathname.startsWith('/uploads/') ||
     pathname === '/favicon.ico'
   ) {
-    return serveStatic(req, res, pathname === '/favicon.ico' ? '/img/favicon.svg' : pathname);
+    return serveStatic(req, res, pathname === '/favicon.ico' ? '/img/favicon.png' : pathname);
   }
 
   if (pathname === '/sitemap.xml' && method === 'GET') return sitemapXml(req, res);
   if (pathname === '/robots.txt' && method === 'GET') return robotsTxt(req, res);
 
+  // API pública simples (sem autenticação): curtir um projeto e somar 1 visualização (chamada
+  // pelo navegador ao carregar a página do projeto — necessário porque a página em si passa a
+  // ser HTML estático). As duas aceitam chamadas de outra origem (o site estático), por isso o
+  // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
+  if (pathname.match(/^\/api\/(curtir|visualizar)\/[a-z0-9-]+$/)) {
+    applyCors(req, res);
+    if (method === 'OPTIONS') {
+      res.statusCode = 204;
+      return res.end();
+    }
+  }
+  if ((m = pathname.match(/^\/api\/curtir\/([a-z0-9-]+)$/)) && method === 'POST') {
+    return Pub.likeProject(req, res, m[1]);
+  }
+  if ((m = pathname.match(/^\/api\/visualizar\/([a-z0-9-]+)$/)) && method === 'POST') {
+    return Pub.registerView(req, res, m[1]);
+  }
+
   // ---------------- Admin ----------------
   if (pathname.startsWith('/admin')) {
     const sessionId = getSessionIdFromReq(req);
-    const admin = getSessionAdmin(sessionId);
+    const admin = await getSessionAdmin(sessionId);
 
     if (pathname === '/admin/setup') {
       if (method === 'GET') return Admin.setupPage(req, res);
@@ -148,19 +173,23 @@ async function router(req, res) {
     if (pathname === '/admin/logout' && method === 'POST') {
       return Admin.logoutSubmit(req, res, sessionId);
     }
-    // Recuperação de acesso self-service: protegida por uma chave secreta fixa
-    // (variável de ambiente ADMIN_RECOVERY_KEY), pedido do usuário em 29/08/2026
-    // para não precisar mais mexer nas Environment Variables do Render toda vez
-    // que precisar trocar a senha do admin.
-    if (pathname === '/admin/recuperar-senha') {
-      if (method === 'GET') return Admin.recoverPage(req, res);
-      if (method === 'POST') return Admin.recoverSubmit(req, res, await parseBody(req));
-    }
 
     if (!admin) {
       res.statusCode = 302;
       res.setHeader('Location', '/admin/login');
       return res.end();
+    }
+
+    // Qualquer ação de POST que crie/edite/exclua/reordene conteúdo (categoria, projeto, foto,
+    // vídeo, serviço, marca, pessoa, link, bio ou configurações) dispara uma republicação do site
+    // estático assim que a resposta é enviada — sem isso, o visitante continuaria vendo a versão
+    // antiga do site depois de qualquer alteração no painel.
+    if (method === 'POST' && /\/(criar|atualizar|excluir|mover|upload|capa|legenda)$/.test(pathname)) {
+      const originalEnd = res.end.bind(res);
+      res.end = (...args) => {
+        triggerStaticRebuild();
+        return originalEnd(...args);
+      };
     }
 
     if (pathname === '/admin' && method === 'GET') return Admin.dashboardPage(req, res, admin);
@@ -193,13 +222,6 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/excluir$/)) && method === 'POST') return Admin.personDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/mover$/)) && method === 'POST') return Admin.personMove(req, res, await parseBody(req), Number(m[1]));
 
-    if (pathname === '/admin/depoimentos' && method === 'GET') return Admin.testimonialsPage(req, res, admin);
-    if (pathname === '/admin/depoimentos/criar' && method === 'POST') return Admin.testimonialCreate(req, res, await parseBody(req));
-    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/editar$/)) && method === 'GET') return Admin.testimonialEditPage(req, res, admin, Number(m[1]));
-    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.testimonialUpdate(req, res, await parseBody(req), Number(m[1]));
-    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.testimonialDelete(req, res, Number(m[1]));
-    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/mover$/)) && method === 'POST') return Admin.testimonialMove(req, res, await parseBody(req), Number(m[1]));
-
     if (pathname === '/admin/links' && method === 'GET') return Admin.linksPage(req, res, admin);
     if (pathname === '/admin/links/criar' && method === 'POST') return Admin.linkCreate(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/links\/(\d+)\/excluir$/)) && method === 'POST') return Admin.linkDelete(req, res, Number(m[1]));
@@ -207,8 +229,6 @@ async function router(req, res) {
 
     if (pathname === '/admin/bio' && method === 'GET') return Admin.bioPage(req, res, admin);
     if (pathname === '/admin/bio/atualizar' && method === 'POST') return Admin.bioUpdate(req, res, await parseBody(req));
-    if (pathname === '/admin/bio/fotos/upload' && method === 'POST') return Admin.bioPhotosUpload(req, res, await parseBody(req));
-    if ((m = pathname.match(/^\/admin\/bio\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.bioPhotoDelete(req, res, Number(m[1]));
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
     if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req));
