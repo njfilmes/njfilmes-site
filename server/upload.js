@@ -1,11 +1,14 @@
-// Upload real de imagens: recebe o arquivo (base64 vindo do navegador), otimiza e gera thumbnail
-// com sharp (já instalado neste ambiente).
+// Upload real de imagens: recebe o arquivo (base64 vindo do navegador), otimiza com sharp
+// e salva as fotos. Se a variável de ambiente BLOB_READ_WRITE_TOKEN estiver configurada,
+// as fotos vão para o Vercel Blob (armazenamento externo, permanente, funciona em qualquer
+// hospedagem — necessário porque o disco do Render é apagado a cada deploy/reinício). Sem
+// essa variável, cai de volta para salvar em disco local (uso em desenvolvimento, no seu
+// computador, ou nesta sandbox onde o pacote @vercel/blob não pode ser instalado).
 //
-// Armazenamento: em produção as fotos vão pro Vercel Blob (BLOB_READ_WRITE_TOKEN definido),
-// porque o disco do Render no plano gratuito é apagado a cada deploy/reinício — sem isso, as
-// fotos cadastradas pelo painel sumiriam. Se essa variável não estiver definida (por exemplo,
-// rodando localmente sem uma conta Vercel configurada), o upload cai automaticamente pro disco
-// local em public/uploads, exatamente como antes — útil só para desenvolvimento/testes.
+// O import do @vercel/blob é dinâmico (só acontece se BLOB_READ_WRITE_TOKEN estiver definida)
+// justamente pra continuar funcionando em ambientes sem esse pacote instalado — em produção,
+// com o pacote presente (declarado em package.json), o comportamento é idêntico a um import
+// estático normal.
 import sharp from 'sharp';
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -18,9 +21,11 @@ export const PHOTOS_DIR = path.join(UPLOADS_DIR, 'photos');
 export const THUMBS_DIR = path.join(UPLOADS_DIR, 'thumbs');
 export const MISC_DIR = path.join(UPLOADS_DIR, 'misc');
 
-const BLOB_TOKEN = process.env.BLOB_READ_WRITE_TOKEN || '';
+function useBlob() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
+}
 
-if (!BLOB_TOKEN) {
+if (!useBlob()) {
   for (const dir of [UPLOADS_DIR, PHOTOS_DIR, THUMBS_DIR, MISC_DIR]) {
     await fs.mkdir(dir, { recursive: true });
   }
@@ -28,55 +33,42 @@ if (!BLOB_TOKEN) {
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB por foto (antes da otimização)
 
-// Salva um buffer já processado, no Vercel Blob (produção) ou em disco (modo local de
-// desenvolvimento). Devolve a URL final a ser usada em <img src="...">: absoluta (Vercel Blob)
-// ou relativa ao site (/uploads/...), igual ao comportamento original.
-async function uploadBuffer(buffer, pathname, contentType) {
-  if (BLOB_TOKEN) {
-    const { put } = await import('@vercel/blob');
-    const blob = await put(pathname, buffer, {
-      access: 'public',
-      contentType,
-      addRandomSuffix: false,
-      token: BLOB_TOKEN,
-    });
-    return blob.url;
-  }
-  const abs = path.join(UPLOADS_DIR, pathname);
-  await fs.mkdir(path.dirname(abs), { recursive: true });
-  await fs.writeFile(abs, buffer);
-  return `/uploads/${pathname}`;
+function decodeDataUrl(dataUrl) {
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || '');
+  if (!match) return null;
+  return Buffer.from(match[2], 'base64');
 }
 
-async function deleteBlobOrFile(urlOrPath) {
-  if (!urlOrPath) return;
-  if (BLOB_TOKEN && /^https?:\/\//i.test(urlOrPath)) {
-    try {
-      const { del } = await import('@vercel/blob');
-      await del(urlOrPath, { token: BLOB_TOKEN });
-    } catch {
-      // já pode não existir mais; ignora
-    }
-    return;
+// Salva um buffer já otimizado, no Blob (se configurado) ou em disco local.
+// `relPath` é o caminho relativo dentro de public/uploads, ex: "photos/abc.webp".
+async function storeBuffer(buffer, relPath) {
+  if (useBlob()) {
+    const { put } = await import('@vercel/blob');
+    const { url } = await put(`uploads/${relPath}`, buffer, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: 'image/webp',
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    return url;
   }
-  const abs = path.join(__dirname, '..', 'public', String(urlOrPath).replace(/^\//, ''));
-  try {
-    await fs.unlink(abs);
-  } catch {
-    // arquivo pode já não existir; ignora
-  }
+  const abs = path.join(UPLOADS_DIR, relPath);
+  await fs.mkdir(path.dirname(abs), { recursive: true });
+  await fs.writeFile(abs, buffer);
+  return `/uploads/${relPath}`;
 }
 
 // dataUrl no formato "data:image/jpeg;base64,....."
 export async function saveProjectPhoto(dataUrl, originalName = 'foto') {
-  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || '');
-  if (!match) throw new Error('Formato de imagem inválido. Envie um arquivo de imagem (JPG, PNG ou WEBP).');
-  const buffer = Buffer.from(match[2], 'base64');
+  const buffer = decodeDataUrl(dataUrl);
+  if (!buffer) throw new Error('Formato de imagem inválido. Envie um arquivo de imagem (JPG, PNG ou WEBP).');
   if (buffer.length > MAX_UPLOAD_BYTES) {
     throw new Error('Arquivo muito grande. O limite é 20MB por foto.');
   }
 
   const id = crypto.randomBytes(8).toString('hex');
+  const filename = `${id}.webp`;
+  const thumbFilename = `${id}-thumb.webp`;
 
   // Imagem principal: redimensiona para no máximo 2200px no maior lado, comprime em WEBP
   // preservando boa qualidade (equilíbrio entre qualidade e performance de carregamento).
@@ -93,27 +85,52 @@ export async function saveProjectPhoto(dataUrl, originalName = 'foto') {
     .webp({ quality: 70 })
     .toBuffer();
 
-  const filename = await uploadBuffer(mainBuffer, `photos/${id}.webp`, 'image/webp');
-  const thumbFilename = await uploadBuffer(thumbBuffer, `thumbs/${id}-thumb.webp`, 'image/webp');
+  const [photoUrl, thumbUrl] = await Promise.all([
+    storeBuffer(mainBuffer, `photos/${filename}`),
+    storeBuffer(thumbBuffer, `thumbs/${thumbFilename}`),
+  ]);
 
-  return { filename, thumbFilename };
+  return {
+    filename: photoUrl,
+    thumbFilename: thumbUrl,
+  };
 }
 
 export async function saveMiscImage(dataUrl) {
-  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || '');
-  if (!match) throw new Error('Formato de imagem inválido.');
-  const buffer = Buffer.from(match[2], 'base64');
+  const buffer = decodeDataUrl(dataUrl);
+  if (!buffer) throw new Error('Formato de imagem inválido.');
   if (buffer.length > MAX_UPLOAD_BYTES) throw new Error('Arquivo muito grande (limite 20MB).');
   const id = crypto.randomBytes(8).toString('hex');
+  const filename = `${id}.webp`;
   const outBuffer = await sharp(buffer, { failOn: 'none' })
     .rotate()
     .resize({ width: 1600, height: 1600, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 84 })
     .toBuffer();
-  return uploadBuffer(outBuffer, `misc/${id}.webp`, 'image/webp');
+  return storeBuffer(outBuffer, `misc/${filename}`);
 }
 
 export async function deletePhotoFiles(filename, thumbFilename) {
-  await deleteBlobOrFile(filename);
-  await deleteBlobOrFile(thumbFilename);
+  const tryDelete = async (value) => {
+    if (!value) return;
+    if (/^https?:\/\//.test(value)) {
+      if (useBlob()) {
+        try {
+          const { del } = await import('@vercel/blob');
+          await del(value, { token: process.env.BLOB_READ_WRITE_TOKEN });
+        } catch {
+          // já pode não existir mais no Blob; ignora
+        }
+      }
+      return;
+    }
+    const abs = path.join(__dirname, '..', 'public', value.replace(/^\//, ''));
+    try {
+      await fs.unlink(abs);
+    } catch {
+      // arquivo pode já não existir; ignora
+    }
+  };
+  await tryDelete(filename);
+  await tryDelete(thumbFilename);
 }

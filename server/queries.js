@@ -24,6 +24,22 @@ export async function updateBio(fields) {
   await query(`UPDATE bio SET ${set} WHERE id = 1`, keys.map((k) => fields[k]));
 }
 
+// ---------- Fotos da página Sobre (galeria que fica passando, além da foto de perfil) ----------
+export async function listBioPhotos() {
+  return queryRows('SELECT * FROM bio_photos ORDER BY sort_order ASC, id ASC');
+}
+export async function addBioPhoto(filename) {
+  const maxRow = await queryOne('SELECT COALESCE(MAX(sort_order),0) as m FROM bio_photos');
+  const row = await queryOne('INSERT INTO bio_photos (filename, sort_order) VALUES ($1, $2) RETURNING id', [
+    filename,
+    Number(maxRow.m) + 1,
+  ]);
+  return row.id;
+}
+export async function deleteBioPhoto(id) {
+  await query('DELETE FROM bio_photos WHERE id = $1', [id]);
+}
+
 export async function listCategories() {
   return queryRows('SELECT * FROM categories ORDER BY sort_order ASC, name ASC');
 }
@@ -320,4 +336,28 @@ export async function setPhotoAsCover(projectId, photoId) {
   await query('UPDATE photos SET is_cover = 1 WHERE id = $1', [photoId]);
   const photo = await getPhoto(photoId);
   if (photo) await query('UPDATE projects SET cover_photo = $1 WHERE id = $2', [photo.filename, projectId]);
+}
+
+// ---------- Depoimentos (feedback de clientes em vídeo) ----------
+export async function listTestimonials() {
+  return queryRows('SELECT * FROM testimonials ORDER BY sort_order ASC, id ASC');
+}
+export async function getTestimonial(id) {
+  return queryOne('SELECT * FROM testimonials WHERE id = $1', [id]);
+}
+export async function createTestimonial({ client_name, role = '', provider, video_id = '', video_url, sort_order = 0 }) {
+  const row = await queryOne(
+    'INSERT INTO testimonials (client_name, role, provider, video_id, video_url, sort_order) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
+    [client_name, role || '', provider, video_id || '', video_url, sort_order]
+  );
+  return row.id;
+}
+export async function updateTestimonial(id, { client_name, role, provider, video_id, video_url, sort_order }) {
+  await query(
+    'UPDATE testimonials SET client_name=$1, role=$2, provider=$3, video_id=$4, video_url=$5, sort_order=$6 WHERE id=$7',
+    [client_name, role || '', provider, video_id || '', video_url, sort_order, id]
+  );
+}
+export async function deleteTestimonial(id) {
+  await query('DELETE FROM testimonials WHERE id = $1', [id]);
 }

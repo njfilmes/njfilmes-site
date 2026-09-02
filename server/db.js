@@ -265,6 +265,31 @@ export async function initSchema() {
     );
   `);
 
+  // Fotos da página Sobre que ficam passando (crossfade) ao lado da biografia — além da foto de
+  // perfil, o usuário pode enviar quantas quiser pelo painel (pedido em 30/08/2026).
+  await query(`
+    CREATE TABLE IF NOT EXISTS bio_photos (
+      id SERIAL PRIMARY KEY,
+      filename TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
+  // Depoimentos em vídeo de clientes, exibidos numa faixa de rolagem manual na Home.
+  await query(`
+    CREATE TABLE IF NOT EXISTS testimonials (
+      id SERIAL PRIMARY KEY,
+      client_name TEXT NOT NULL,
+      role TEXT DEFAULT '',
+      provider TEXT NOT NULL,
+      video_id TEXT DEFAULT '',
+      video_url TEXT NOT NULL,
+      sort_order INTEGER NOT NULL DEFAULT 0,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+  `);
+
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');
   await query('CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id);');
   await query('CREATE INDEX IF NOT EXISTS idx_videos_project ON project_videos(project_id);');

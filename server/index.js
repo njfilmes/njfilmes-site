@@ -5,7 +5,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseBody } from './body.js';
-import { getSessionIdFromReq, getSessionAdmin } from './auth.js';
+import { getSessionIdFromReq, getSessionAdmin, findAdminByEmail, createAdminUser, hashPassword } from './auth.js';
+import { query, initSchema } from './db.js';
 import * as Pub from './routes/public.js';
 import * as Admin from './routes/admin.js';
 import { listCategories, getSettings, listAllProjectsForAdmin } from './queries.js';
@@ -16,6 +17,27 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const PORT = process.env.PORT || 3000;
+
+// Garante que as tabelas existam antes de aceitar qualquer requisição (idempotente: usa
+// CREATE TABLE IF NOT EXISTS, então rodar de novo em cada deploy não tem efeito colateral).
+await initSchema();
+
+// Reset/criação de admin controlado por variável de ambiente (uso pontual, via painel do Render).
+// Defina ADMIN_RESET_EMAIL e ADMIN_RESET_PASSWORD nas Environment Variables e faça o deploy;
+// depois de logar, remova essas duas variáveis para não deixar a senha exposta em texto puro.
+if (process.env.ADMIN_RESET_EMAIL && process.env.ADMIN_RESET_PASSWORD) {
+  const email = process.env.ADMIN_RESET_EMAIL;
+  const password = process.env.ADMIN_RESET_PASSWORD;
+  const existing = await findAdminByEmail(email);
+  if (existing) {
+    const { hash, salt } = hashPassword(password);
+    await query('UPDATE admin_users SET password_hash = $1, salt = $2 WHERE id = $3', [hash, salt, existing.id]);
+    console.log(`[admin-reset] Senha atualizada para: ${email}`);
+  } else {
+    await createAdminUser({ email, password, name: 'Administrador' });
+    console.log(`[admin-reset] Administrador criado: ${email}`);
+  }
+}
 
 const MIME = {
   '.html': 'text/html; charset=utf-8',
@@ -133,7 +155,7 @@ async function router(req, res) {
     pathname.startsWith('/uploads/') ||
     pathname === '/favicon.ico'
   ) {
-    return serveStatic(req, res, pathname === '/favicon.ico' ? '/img/favicon.png' : pathname);
+    return serveStatic(req, res, pathname === '/favicon.ico' ? '/img/favicon.svg' : pathname);
   }
 
   if (pathname === '/sitemap.xml' && method === 'GET') return sitemapXml(req, res);
@@ -172,6 +194,14 @@ async function router(req, res) {
     }
     if (pathname === '/admin/logout' && method === 'POST') {
       return Admin.logoutSubmit(req, res, sessionId);
+    }
+    // Recuperação de acesso self-service: protegida por uma chave secreta fixa
+    // (variável de ambiente ADMIN_RECOVERY_KEY), pedido do usuário em 29/08/2026
+    // para não precisar mais mexer nas Environment Variables do Render toda vez
+    // que precisar trocar a senha do admin.
+    if (pathname === '/admin/recuperar-senha') {
+      if (method === 'GET') return Admin.recoverPage(req, res);
+      if (method === 'POST') return Admin.recoverSubmit(req, res, await parseBody(req));
     }
 
     if (!admin) {
@@ -222,6 +252,13 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/excluir$/)) && method === 'POST') return Admin.personDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/pessoas\/(\d+)\/mover$/)) && method === 'POST') return Admin.personMove(req, res, await parseBody(req), Number(m[1]));
 
+    if (pathname === '/admin/depoimentos' && method === 'GET') return Admin.testimonialsPage(req, res, admin);
+    if (pathname === '/admin/depoimentos/criar' && method === 'POST') return Admin.testimonialCreate(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/editar$/)) && method === 'GET') return Admin.testimonialEditPage(req, res, admin, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.testimonialUpdate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.testimonialDelete(req, res, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/mover$/)) && method === 'POST') return Admin.testimonialMove(req, res, await parseBody(req), Number(m[1]));
+
     if (pathname === '/admin/links' && method === 'GET') return Admin.linksPage(req, res, admin);
     if (pathname === '/admin/links/criar' && method === 'POST') return Admin.linkCreate(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/links\/(\d+)\/excluir$/)) && method === 'POST') return Admin.linkDelete(req, res, Number(m[1]));
@@ -229,6 +266,8 @@ async function router(req, res) {
 
     if (pathname === '/admin/bio' && method === 'GET') return Admin.bioPage(req, res, admin);
     if (pathname === '/admin/bio/atualizar' && method === 'POST') return Admin.bioUpdate(req, res, await parseBody(req));
+    if (pathname === '/admin/bio/fotos/upload' && method === 'POST') return Admin.bioPhotosUpload(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/bio\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.bioPhotoDelete(req, res, Number(m[1]));
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
     if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req));
