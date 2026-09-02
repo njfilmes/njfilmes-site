@@ -159,6 +159,73 @@
     }
   }
 
+  // -------- Upload de fotos da galeria "Bastidores" (mesmo esquema das fotos da Sobre) --------
+  const bioGalleryDrop = document.querySelector('[data-bio-gallery-upload]');
+  if (bioGalleryDrop) {
+    const input = bioGalleryDrop.querySelector('input[type=file]');
+    const preview = document.querySelector('#bio-gallery-preview');
+    const statusEl = document.querySelector('[data-bio-gallery-status]');
+
+    const openPicker = () => input.click();
+    bioGalleryDrop.addEventListener('click', openPicker);
+    ['dragover', 'dragenter'].forEach((evt) =>
+      bioGalleryDrop.addEventListener(evt, (e) => { e.preventDefault(); bioGalleryDrop.classList.add('dragover'); })
+    );
+    ['dragleave', 'drop'].forEach((evt) =>
+      bioGalleryDrop.addEventListener(evt, (e) => { e.preventDefault(); bioGalleryDrop.classList.remove('dragover'); })
+    );
+    bioGalleryDrop.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files.length) handleGalleryFiles(e.dataTransfer.files);
+    });
+    input.addEventListener('change', () => handleGalleryFiles(input.files));
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleGalleryFiles(fileList) {
+      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
+      if (!files.length) return;
+      preview.innerHTML = '';
+      files.forEach((f) => {
+        const img = document.createElement('img');
+        img.src = URL.createObjectURL(f);
+        preview.appendChild(img);
+      });
+      statusEl.textContent = `Enviando ${files.length} foto(s)...`;
+      statusEl.style.color = '';
+
+      try {
+        const dataUrls = await Promise.all(files.map(fileToDataUrl));
+        const res = await fetch('/admin/bio/galeria/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photos: dataUrls }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Falha ao enviar fotos.');
+        if (data.saved > 0) {
+          statusEl.textContent = data.saved === files.length
+            ? `${data.saved} foto(s) enviada(s) com sucesso! Atualizando...`
+            : `${data.saved} de ${files.length} foto(s) enviada(s). Algumas falharam — tente reenviar.`;
+          statusEl.style.color = '';
+          setTimeout(() => window.location.reload(), 900);
+        } else {
+          statusEl.textContent = 'Nenhuma foto foi salva. Pode ser um problema no servidor de armazenamento — avise quem cuida do site.';
+          statusEl.style.color = '#d0503a';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Erro: ' + err.message;
+        statusEl.style.color = '#d0503a';
+      }
+    }
+  }
+
   // -------- Upload de foto única (biografia / serviço) --------
   document.querySelectorAll('[data-single-upload]').forEach((wrapper) => {
     const input = wrapper.querySelector('input[type=file]');
