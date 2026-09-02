@@ -214,6 +214,17 @@
     });
   }
 
+  // Botão de tela cheia nos vídeos embutidos (Mega/YouTube/Vimeo/Drive). Fica fora da área do
+  // player pra não brigar com o play/pause dele; clicar chama fullscreen no próprio iframe.
+  document.querySelectorAll('[data-video-fullscreen]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var iframe = btn.parentElement && btn.parentElement.querySelector('iframe');
+      if (!iframe) return;
+      var request = iframe.requestFullscreen || iframe.webkitRequestFullscreen || iframe.mozRequestFullScreen || iframe.msRequestFullscreen;
+      if (request) request.call(iframe).catch(function () { /* alguns navegadores recusam sem gesto direto; ignora */ });
+    });
+  });
+
   // Leve efeito de inclinação 3D em cards ao passar o mouse (só quem tem mouse de verdade)
   var tiltEls = document.querySelectorAll('[data-work-card], .service-card, .person-card, .contact-card, .about-split img');
   if (tiltEls.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
