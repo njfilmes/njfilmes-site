@@ -75,7 +75,20 @@ export function layout({
   return `<!DOCTYPE html>
 <html lang="pt-BR" class="no-js">
 <head>
-<script>document.documentElement.classList.replace('no-js','js');</script>
+<script>
+document.documentElement.classList.replace('no-js','js');
+// Intro cinematografica (barras + logo) toca so na primeira pagina vista na visita (sessionStorage)
+// e nunca pra quem pediu menos movimento no aparelho/navegador. Roda aqui, sincrono, antes de
+// qualquer coisa pintar na tela, pra quem ja viu no-JS pisque a intro por uma fracao de segundo.
+try {
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduceMotion || sessionStorage.getItem('nj_intro_seen') === '1') {
+    document.documentElement.classList.add('no-intro');
+  } else {
+    sessionStorage.setItem('nj_intro_seen', '1');
+  }
+} catch (e) {}
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${escapeHtml(fullTitle)}</title>
@@ -101,6 +114,11 @@ ${noindex ? '<meta name="robots" content="noindex, nofollow">' : '<meta name="ro
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
 </head>
 <body class="${escapeHtml(bodyClass)}">
+<div class="cine-intro" data-cine-intro aria-hidden="true">
+  <div class="cine-intro-bar cine-intro-bar-top"></div>
+  <div class="cine-intro-bar cine-intro-bar-bottom"></div>
+  <div class="cine-intro-logo"><img src="/img/nj-logo.png" alt=""></div>
+</div>
 <div class="noise-overlay" aria-hidden="true"></div>
 <div class="grade-overlay" aria-hidden="true"></div>
 <header class="site-header" data-header>
