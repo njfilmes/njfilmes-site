@@ -74,7 +74,14 @@ export function parseCookies(req) {
     const idx = part.indexOf('=');
     if (idx === -1) return;
     const k = part.slice(0, idx).trim();
-    const v = decodeURIComponent(part.slice(idx + 1).trim());
+    // Um cookie malformado (ex.: "%" sozinho) faz decodeURIComponent lançar erro — nesse caso
+    // simplesmente ignora esse cookie em vez de derrubar a requisição inteira com um 500.
+    let v;
+    try {
+      v = decodeURIComponent(part.slice(idx + 1).trim());
+    } catch {
+      return;
+    }
     out[k] = v;
   });
   return out;
