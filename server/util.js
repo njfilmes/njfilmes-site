@@ -28,15 +28,28 @@ export function slugify(text) {
     .replace(/^-|-$/g, '');
 }
 
-export async function uniqueSlug(table, base, ignoreId = null) {
+// `tables` pode ser o nome de uma tabela (comportamento antigo) ou uma lista de tabelas —
+// nesse caso o slug gerado é único em TODAS elas ao mesmo tempo. Isso evita que, por exemplo,
+// um projeto receba o mesmo slug de uma categoria: como /portfolio/:slug tenta achar primeiro
+// uma categoria com aquele slug e só depois um projeto, um projeto com slug igual ao de uma
+// categoria existente fica "escondido" atrás da página da categoria e nunca aparece no site —
+// mesmo publicado e salvo corretamente no painel. `ignoreId` só é aplicado na primeira tabela da
+// lista (a que está sendo editada); as demais são sempre checadas por completo.
+export async function uniqueSlug(tables, base, ignoreId = null) {
+  const tableList = Array.isArray(tables) ? tables : [tables];
+  const primaryTable = tableList[0];
   let slug = slugify(base) || 'item';
   let n = 1;
   // eslint-disable-next-line no-constant-condition
   while (true) {
-    const row = ignoreId
-      ? await queryOne(`SELECT id FROM ${table} WHERE slug = $1 AND id != $2`, [slug, ignoreId])
-      : await queryOne(`SELECT id FROM ${table} WHERE slug = $1`, [slug]);
-    if (!row) return slug;
+    let taken = false;
+    for (const table of tableList) {
+      const row = ignoreId && table === primaryTable
+        ? await queryOne(`SELECT id FROM ${table} WHERE slug = $1 AND id != $2`, [slug, ignoreId])
+        : await queryOne(`SELECT id FROM ${table} WHERE slug = $1`, [slug]);
+      if (row) { taken = true; break; }
+    }
+    if (!taken) return slug;
     n += 1;
     slug = `${slugify(base)}-${n}`;
   }
@@ -139,21 +152,35 @@ function guessLinkLabel(url) {
   return 'link externo';
 }
 
+// Botão de tela cheia sobreposto ao player embutido. Existe porque o iframe do player (Mega,
+// YouTube, Vimeo, Drive) é de outro domínio — nossa página não consegue "ouvir" duplo clique
+// nem nenhum outro evento que aconteça DENTRO do iframe (limitação do navegador, não é bug).
+// Por isso a tela cheia é acionada por um botão pequeno no canto, fora da área de play/pause
+// do player: colocar um overlay transparente cobrindo o vídeo inteiro para capturar duplo
+// clique bloquearia os cliques de play/pause do player por baixo, o que pioraria o problema.
+// O botão chama requestFullscreen() no próprio iframe — funciona para qualquer um desses
+// provedores, sem depender do JS interno de cada um. Ver public/js/site.js.
+function fullscreenButtonHtml() {
+  return `<button type="button" class="video-embed-fullscreen" data-video-fullscreen aria-label="Ver vídeo em tela cheia" title="Tela cheia">⛶</button>`;
+}
+
 export function videoEmbedHtml(video, opts = {}) {
   const { className = 'video-embed' } = opts;
   if (!video) return '';
   if (video.provider === 'youtube' || video.provider === 'vimeo') {
-    return `<div class="${className}"><iframe src="${escapeHtml(videoEmbedUrl(video))}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>`;
+    return `<div class="${className}"><iframe src="${escapeHtml(videoEmbedUrl(video))}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>${fullscreenButtonHtml()}</div>`;
   }
   if (video.provider === 'mega-embed' || video.provider === 'drive-embed') {
     // Embed automático de Mega/Drive: toca dentro da página. Depende do arquivo estar com
     // permissão pública ("qualquer pessoa com o link"); por isso deixamos um link de reserva
     // logo abaixo, caso o embed apareça em branco por causa de permissão.
-    return `<div class="${className}"><iframe src="${escapeHtml(videoEmbedUrl(video))}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allow="autoplay" allowfullscreen loading="lazy"></iframe></div>
+    return `<div class="${className}"><iframe src="${escapeHtml(videoEmbedUrl(video))}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allow="autoplay" allowfullscreen loading="lazy"></iframe>${fullscreenButtonHtml()}</div>
     <p class="video-embed-fallback"><a href="${escapeHtml(video.url)}" target="_blank" rel="noopener noreferrer">O vídeo não carregou? Abrir no ${escapeHtml(video.providerLabel || guessLinkLabel(video.url))} ↗</a></p>`;
   }
   if (video.provider === 'file') {
-    return `<div class="${className}"><video controls preload="metadata" playsinline src="${escapeHtml(video.url)}"></video></div>`;
+    // <video> nativo já tem tela cheia embutida nos controles do navegador; duplo clique já
+    // funciona nativamente aqui, sem precisar de botão extra.
+    return `<div class="${className}"><video controls preload="metadata" playsinline src="${escapeHtml(video.url)}" ondblclick="this.requestFullscreen && this.requestFullscreen()"></video></div>`;
   }
   if (video.provider === 'linkonly') {
     const label = video.providerLabel || guessLinkLabel(video.url);
@@ -163,7 +190,7 @@ export function videoEmbedHtml(video, opts = {}) {
       </a>
     </div>`;
   }
-  return `<div class="${className}"><iframe src="${escapeHtml(video.url)}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allowfullscreen loading="lazy"></iframe></div>`;
+  return `<div class="${className}"><iframe src="${escapeHtml(video.url)}" title="${escapeHtml(video.title || 'Vídeo')}" frameborder="0" allowfullscreen loading="lazy"></iframe>${fullscreenButtonHtml()}</div>`;
 }
 
 export function formatDatePtBr(isoDate) {
