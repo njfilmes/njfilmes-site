@@ -48,9 +48,20 @@ export function layout({
     )
     .join('');
 
+  // Link do YouTube no rodapé: pedido em 02/09/2026 pra ficar com a logo vermelha e uma
+  // setinha de mouse "clicando" (chamando atenção pra clicar), diferente dos outros links
+  // do rodapé que são só texto. Aparece em todas as páginas porque o rodapé é o mesmo em
+  // todo o site (essa função layout() é usada por toda página pública).
+  const youtubeFooterLink = settings.youtube_url ? `<a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" class="footer-youtube" aria-label="Ver canal no YouTube">
+    <span class="footer-youtube-icon">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="#FF0000"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>
+      <svg class="footer-youtube-cursor" viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path d="M3 2l7 17 2-7 7-2z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>
+    </span>
+    YouTube
+  </a>` : '';
+
   const socials = [
     ['Instagram', settings.instagram_url],
-    ['YouTube', settings.youtube_url],
     ['Vimeo', settings.vimeo_url],
     ['TikTok', settings.tiktok_url],
     ['Facebook', settings.facebook_url],
@@ -58,6 +69,8 @@ export function layout({
     .filter(([, url]) => url)
     .map(([label, url]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`)
     .join('');
+
+  const allSocials = youtubeFooterLink + socials;
 
   return `<!DOCTYPE html>
 <html lang="pt-BR" class="no-js">
@@ -137,7 +150,7 @@ ${content}
     </div>
     <div class="footer-social">
       <h4>Redes sociais</h4>
-      <div class="social-links">${socials || '<span class="muted">—</span>'}</div>
+      <div class="social-links">${allSocials || '<span class="muted">—</span>'}</div>
       ${wa ? `<a class="btn btn-outline footer-wa" href="${escapeHtml(wa)}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
     </div>
   </div>
