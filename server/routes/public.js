@@ -512,6 +512,10 @@ export async function aboutPage(req, res) {
         </div>
         ${specialties.length ? `<div class="specialties-list">${specialties.map((s) => `<span>${escapeHtml(s)}</span>`).join('')}</div>` : ''}
         <div class="btn-row" style="margin-top:32px;"><a href="/contato" class="btn btn-solid">${escapeHtml(bio.cta_text || 'Vamos criar algo juntos?')}</a></div>
+        ${settings.youtube_url ? `<a href="${escapeHtml(settings.youtube_url)}" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:6px;margin-top:16px;color:var(--fg-dim);font-size:0.85rem;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.8;flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>
+          Ver no YouTube
+        </a>` : ''}
       </div>
     </div>
   </section>
