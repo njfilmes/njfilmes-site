@@ -681,6 +681,17 @@ section { padding: 110px 0; position: relative; }
 .video-embed-fallback { font-size: 0.82rem; color: var(--fg-muted); margin-top: -8px; }
 .video-embed-fallback a { color: var(--accent); }
 .video-embed-linkonly { display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; background: var(--bg-card); }
+/* Botão de tela cheia: fica num canto, fora da área central do player, pra nunca atrapalhar o
+   play/pause do vídeo por baixo (ver comentário em server/util.js sobre por que não dá pra usar
+   duplo clique direto no vídeo quando ele é um iframe de outro site). */
+.video-embed-fullscreen {
+  position: absolute; top: 10px; right: 10px; z-index: 2;
+  width: 36px; height: 36px; border-radius: 8px; border: none;
+  background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 1.1rem; line-height: 1;
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.video-embed-fullscreen:hover { background: var(--accent); color: #12100a; transform: scale(1.06); }
 
 /* ---------- Pagina simples (contato etc) ---------- */
 .simple-hero { padding: 170px 0 60px; }
