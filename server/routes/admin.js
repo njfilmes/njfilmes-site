@@ -175,7 +175,7 @@ export async function categoriesPage(req, res, admin) {
       </td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/categorias/${c.id}/editar">Editar</a>
-        <form method="post" action="/admin/categorias/${c.id}/excluir" data-confirm="Excluir a categoria \\"${c.name}\\"? Os projetos dela ficam sem categoria."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/categorias/${c.id}/excluir" data-confirm="Excluir a categoria &quot;${escapeHtml(c.name)}&quot;? Os projetos dela ficam sem categoria."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -271,7 +271,7 @@ export async function servicesPage(req, res, admin) {
       </td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/servicos/${s.id}/editar">Editar</a>
-        <form method="post" action="/admin/servicos/${s.id}/excluir" data-confirm="Excluir o serviço \\"${s.title}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/servicos/${s.id}/excluir" data-confirm="Excluir o serviço &quot;${escapeHtml(s.title)}&quot;?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -367,7 +367,7 @@ export async function brandsPage(req, res, admin) {
       </td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/marcas/${b.id}/editar">Editar</a>
-        <form method="post" action="/admin/marcas/${b.id}/excluir" data-confirm="Excluir a marca \\"${b.name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/marcas/${b.id}/excluir" data-confirm="Excluir a marca &quot;${escapeHtml(b.name)}&quot;?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -463,7 +463,7 @@ export async function peoplePage(req, res, admin) {
       </td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/pessoas/${p.id}/editar">Editar</a>
-        <form method="post" action="/admin/pessoas/${p.id}/excluir" data-confirm="Excluir \\"${p.name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/pessoas/${p.id}/excluir" data-confirm="Excluir &quot;${escapeHtml(p.name)}&quot;?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -558,7 +558,7 @@ export async function testimonialsPage(req, res, admin) {
       </td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/depoimentos/${t.id}/editar">Editar</a>
-        <form method="post" action="/admin/depoimentos/${t.id}/excluir" data-confirm="Excluir o depoimento de \\"${t.client_name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/depoimentos/${t.id}/excluir" data-confirm="Excluir o depoimento de &quot;${escapeHtml(t.client_name)}&quot;?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -667,7 +667,7 @@ export async function linksPage(req, res, admin) {
         <form method="post" action="/admin/links/${l.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === links.length - 1 ? 'disabled' : ''}>↓</button></form>
       </td>
       <td class="row-actions">
-        <form method="post" action="/admin/links/${l.id}/excluir" data-confirm="Excluir o link \\"${l.name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/links/${l.id}/excluir" data-confirm="Excluir o link &quot;${escapeHtml(l.name)}&quot;?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -932,7 +932,7 @@ function renderProjectsTable(projects) {
       <td>${p.published ? '<span class="tag tag-published">Publicado</span>' : '<span class="tag tag-draft">Rascunho</span>'} ${p.featured ? '<span class="tag tag-featured">Destaque</span>' : ''}</td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/projetos/${p.id}">Editar</a>
-        <form method="post" action="/admin/projetos/${p.id}/excluir" data-confirm="Excluir o projeto \\"${p.title}\\"? Isso remove também as fotos e vídeos dele."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        <form method="post" action="/admin/projetos/${p.id}/excluir" data-confirm="Excluir o projeto &quot;${escapeHtml(p.title)}&quot;? Isso remove também as fotos e vídeos dele."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
       </td>
     </tr>`
     )
@@ -1080,7 +1080,7 @@ export async function projectEditPage(req, res, admin, id, tab = 'info') {
     <div class="panel">
       <h3>Excluir projeto</h3>
       <p class="muted">Essa ação remove o projeto, suas fotos e vídeos permanentemente.</p>
-      <form method="post" action="/admin/projetos/${id}/excluir" data-confirm="Excluir o projeto \\"${project.title}\\" e todo o seu conteúdo?"><button class="btn-a btn-a-danger" type="submit">Excluir projeto</button></form>
+      <form method="post" action="/admin/projetos/${id}/excluir" data-confirm="Excluir o projeto &quot;${escapeHtml(project.title)}&quot; e todo o seu conteúdo?"><button class="btn-a btn-a-danger" type="submit">Excluir projeto</button></form>
     </div>`;
   }
 
