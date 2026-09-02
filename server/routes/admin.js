@@ -541,6 +541,117 @@ export async function personMove(req, res, body, id) {
   redirect(res, '/admin/pessoas');
 }
 
+// ---------------- Depoimentos (feedback de clientes em vídeo) ----------------
+
+export async function testimonialsPage(req, res, admin) {
+  const flash = readFlash(req);
+  const testimonials = await Q.listTestimonials();
+  const rows = testimonials
+    .map(
+      (t, i) => `<tr>
+      <td>${escapeHtml(t.client_name)}</td>
+      <td class="muted">${escapeHtml(t.role || '—')}</td>
+      <td class="muted" style="max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(t.video_url)}</td>
+      <td>
+        <form method="post" action="/admin/depoimentos/${t.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+        <form method="post" action="/admin/depoimentos/${t.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === testimonials.length - 1 ? 'disabled' : ''}>↓</button></form>
+      </td>
+      <td class="row-actions">
+        <a class="btn-a btn-a-sm" href="/admin/depoimentos/${t.id}/editar">Editar</a>
+        <form method="post" action="/admin/depoimentos/${t.id}/excluir" data-confirm="Excluir o depoimento de \\"${t.client_name}\\"?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+      </td>
+    </tr>`
+    )
+    .join('');
+  const content = `
+  <div class="panel">
+    <h2>Novo depoimento</h2>
+    <p class="muted" style="margin-top:-8px;">Vídeos de feedback de clientes. Cole o link do YouTube, Vimeo ou Mega (link de compartilhamento do arquivo) — o site identifica e incorpora automaticamente. Aparece na Home, numa faixa que a pessoa rola para ver um depoimento após o outro.</p>
+    ${testimonialForm({ action: '/admin/depoimentos/criar' })}
+  </div>
+  <div class="panel">
+    <h2>Depoimentos (${testimonials.length})</h2>
+    ${testimonials.length ? `<table class="admin-table"><thead><tr><th>Cliente</th><th>Contexto</th><th>Vídeo</th><th>Ordem</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '<p class="empty-hint">Nenhum depoimento cadastrado ainda.</p>'}
+  </div>`;
+  res.end(adminLayout({ title: 'Depoimentos', activePath: '/admin/depoimentos', admin, content, flash }));
+}
+
+function testimonialForm({ action, testimonial = {} }) {
+  return `<form method="post" action="${action}">
+    ${field({ label: 'Nome do cliente', name: 'client_name', value: testimonial.client_name, required: true, placeholder: 'Ex: Maria Silva' })}
+    ${field({ label: 'Contexto (opcional)', name: 'role', value: testimonial.role, placeholder: 'Ex: Casamento · Evento corporativo · Ensaio' })}
+    ${field({ label: 'Link do vídeo (YouTube, Vimeo ou Mega)', name: 'video_url', value: testimonial.video_url, required: true, placeholder: 'https://...' })}
+    <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
+  </form>`;
+}
+
+export async function testimonialEditPage(req, res, admin, id) {
+  const testimonial = await Q.getTestimonial(id);
+  if (!testimonial) return redirect(res, '/admin/depoimentos');
+  const content = `<div class="panel"><h2>Editar depoimento</h2>${testimonialForm({ action: `/admin/depoimentos/${id}/atualizar`, testimonial })}</div>`;
+  res.end(adminLayout({ title: 'Editar depoimento', activePath: '/admin/depoimentos', admin, content }));
+}
+
+export async function testimonialCreate(req, res, body) {
+  const clientName = (body.client_name || '').trim();
+  if (!clientName) return redirect(res, '/admin/depoimentos' + withFlash(res, 'error', 'Informe o nome do cliente.'));
+  const parsed = parseVideoUrl(body.video_url);
+  if (!parsed) return redirect(res, '/admin/depoimentos' + withFlash(res, 'error', 'Link de vídeo inválido.'));
+  const maxOrder = await maxSortOrder('testimonials');
+  await Q.createTestimonial({
+    client_name: clientName,
+    role: body.role || '',
+    provider: parsed.provider,
+    video_id: parsed.videoId,
+    video_url: parsed.url,
+    sort_order: maxOrder + 1,
+  });
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento adicionado.'));
+}
+
+export async function testimonialUpdate(req, res, body, id) {
+  const testimonial = await Q.getTestimonial(id);
+  if (!testimonial) return redirect(res, '/admin/depoimentos');
+  const clientName = (body.client_name || testimonial.client_name).trim();
+  let provider = testimonial.provider;
+  let videoId = testimonial.video_id;
+  let videoUrl = testimonial.video_url;
+  if (body.video_url && body.video_url.trim() !== testimonial.video_url) {
+    const parsed = parseVideoUrl(body.video_url);
+    if (!parsed) return redirect(res, `/admin/depoimentos/${id}/editar` + withFlash(res, 'error', 'Link de vídeo inválido.'));
+    provider = parsed.provider;
+    videoId = parsed.videoId;
+    videoUrl = parsed.url;
+  }
+  await Q.updateTestimonial(id, {
+    client_name: clientName,
+    role: body.role || '',
+    provider,
+    video_id: videoId,
+    video_url: videoUrl,
+    sort_order: testimonial.sort_order,
+  });
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento atualizado.'));
+}
+
+export async function testimonialDelete(req, res, id) {
+  await Q.deleteTestimonial(id);
+  redirect(res, '/admin/depoimentos' + withFlash(res, 'success', 'Depoimento excluído.'));
+}
+
+export async function testimonialMove(req, res, body, id) {
+  const items = await Q.listTestimonials();
+  const idx = items.findIndex((t) => t.id === id);
+  if (idx === -1) return redirect(res, '/admin/depoimentos');
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, '/admin/depoimentos');
+  const a = items[idx], b = items[swapWith];
+  await query('UPDATE testimonials SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
+  await query('UPDATE testimonials SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
+  redirect(res, '/admin/depoimentos');
+}
+
 // ---------------- Links externos ----------------
 
 export async function linksPage(req, res, admin) {
@@ -610,6 +721,7 @@ export async function linkMove(req, res, body, id) {
 export async function bioPage(req, res, admin) {
   const flash = readFlash(req);
   const bio = await Q.getBio();
+  const bioPhotos = await Q.listBioPhotos();
   const content = `
   <div class="panel">
     <form method="post" action="/admin/bio/atualizar">
@@ -630,6 +742,28 @@ export async function bioPage(req, res, admin) {
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar biografia</button></div>
     </form>
+  </div>
+  <div class="panel">
+    <h2>Fotos da página Sobre (galeria que fica passando)</h2>
+    <p class="muted" style="margin-top:-8px;">Envie quantas fotos quiser aqui — elas vão passando (trocando) automaticamente na página Sobre, na foto grande ao lado da sua biografia.</p>
+    <div class="upload-drop" data-bio-photos-upload>
+      <input type="file" accept="image/*" multiple>
+      <p>Clique aqui ou arraste as fotos para enviar</p>
+      <div id="bio-photos-preview"></div>
+      <p data-bio-photos-status style="margin-top:10px;font-size:0.82rem;"></p>
+    </div>
+    ${bioPhotos.length ? `<div class="photo-grid">${bioPhotos
+      .map(
+        (p) => `<div class="photo-card">
+        <img src="${escapeHtml(p.filename)}" alt="">
+        <div class="pc-body">
+          <div class="pc-actions">
+            <form method="post" action="/admin/bio/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+          </div>
+        </div>
+      </div>`
+      )
+      .join('')}</div>` : '<p class="empty-hint">Nenhuma foto adicionada ainda.</p>'}
   </div>`;
   res.end(adminLayout({ title: 'Biografia / Sobre', activePath: '/admin/bio', admin, content, flash }));
 }
@@ -637,8 +771,9 @@ export async function bioPage(req, res, admin) {
 export async function bioUpdate(req, res, body) {
   const bio = await Q.getBio();
   let profile_photo = bio.profile_photo;
+  let photoFailed = false;
   if (body.profile_photo_data) {
-    try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch { /* mantém foto anterior */ }
+    try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch (e) { photoFailed = true; console.error('Erro ao salvar foto de perfil:', e.message); }
   }
   await Q.updateBio({
     name: body.name || '',
@@ -650,7 +785,33 @@ export async function bioUpdate(req, res, body) {
     profile_photo,
     cta_text: body.cta_text || '',
   });
-  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Biografia atualizada.'));
+  redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
+}
+
+export async function bioPhotosUpload(req, res, body) {
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let saved = 0;
+  for (const dataUrl of photos) {
+    try {
+      const url = await saveMiscImage(dataUrl);
+      await Q.addBioPhoto(url);
+      saved += 1;
+    } catch (err) {
+      console.error('Erro ao salvar foto da bio:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export async function bioPhotoDelete(req, res, id) {
+  await Q.deleteBioPhoto(id);
+  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Foto excluída.'));
 }
 
 // ---------------- Configurações ----------------
@@ -1024,4 +1185,37 @@ export async function projectPhotoMove(req, res, body, id, photoId) {
   await Q.setPhotoOrder(a.id, b.sort_order);
   await Q.setPhotoOrder(b.id, a.sort_order);
   redirect(res, `/admin/projetos/${id}/fotos`);
+}
+
+// ---------------- Recuperação de acesso ----------------
+
+export async function recoverPage(req, res) {
+  const flash = readFlash(req);
+  res.end(
+    loginLayout({
+      title: 'Recuperar acesso',
+      content: `<h1>Recuperar acesso</h1><p class="sub">Use a chave de recuperação para definir um novo e-mail e senha de administrador.</p>${flash ? `<div class="admin-flash admin-flash-${flash.type}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/recuperar-senha">${field({ label: 'Chave de recuperação', name: 'recovery_key', type: 'password', required: true })}${field({ label: 'Novo e-mail', name: 'email', type: 'email', required: true })}${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar novo acesso</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>`,
+    })
+  );
+}
+
+export async function recoverSubmit(req, res, body) {
+  const key = process.env.ADMIN_RECOVERY_KEY;
+  if (!key) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Recuperação não configurada neste site.'));
+  if (!body.recovery_key || body.recovery_key !== key) {
+    return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Chave de recuperação incorreta.'));
+  }
+  const email = String(body.email || '').toLowerCase().trim();
+  const password = String(body.password || '');
+  if (!email || password.length < 8) {
+    return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Preencha e-mail e uma senha com pelo menos 8 caracteres.'));
+  }
+  const existing = await findAdminByEmail(email);
+  if (existing) {
+    const { hash, salt } = hashPassword(password);
+    await query('UPDATE admin_users SET password_hash = $1, salt = $2 WHERE id = $3', [hash, salt, existing.id]);
+  } else {
+    await createAdminUser({ email, password, name: 'Administrador' });
+  }
+  return redirect(res, '/admin/login' + withFlash(res, 'success', 'Acesso atualizado! Entre com o novo e-mail e senha.'));
 }
