@@ -2,7 +2,7 @@
    NJFILMES - Design system cinematografico
    Referencias: sand.black (contraste alto, tipografia forte,
    video em destaque) + cajal.com.br (narrativa, provas sociais)
-   ========================================================= */
+========================================================= */
 
 :root {
   --bg: #0a0a0b;
@@ -56,19 +56,36 @@ button { font-family: inherit; cursor: pointer; }
   mix-blend-mode: overlay;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
-/* "Pelicula" quente/dourada bem sutil por cima do site inteiro (PC e celular, todas as
-   páginas) — pedido original em 30/08/2026, depois ajustado algumas vezes pra mais forte
-   e, por fim (pedido do usuário nesta sessão), reduzido de volta pra ficar discreto — o
-   objetivo é só dar um leve aquecimento visual, sem lavar as cores nem competir com o
-   conteúdo. Div fixa (server/render.js), por cima de tudo (pointer-events:none pra não
-   atrapalhar clique em nada), com um movimento lento e contínuo (gradeDrift, abaixo). */
+/* Pedido em 30/08/2026: "pelicula" puxando pro laranja no site inteiro (PC e
+   celular, todas as paginas - por isso fica no layout base junto com o
+   .noise-overlay acima, nao dentro de uma secao especifica). E uma div nova
+   (server/render.js), fixa e por cima de tudo (pointer-events:none pra nao
+   atrapalhar clique em nada), com mix-blend-mode:soft-light - isso deixa a
+   cor se misturar com o que ja esta na tela (dando aquele ar quente/macio de
+   "grade" cinematografica) em vez de simplesmente pintar por cima lavando as
+   cores originais. Uso o dourado da marca (--accent) e um laranja mais
+   queimado nas pontas pra reforcar o "puxando pro laranja" pedido.
+   Pedido novamente em 30/08/2026: o filtro estava sutil demais - aumentada a
+   opacidade de cada cor (quase o dobro) pra ficar bem mais visivel, em PC e
+   celular igual (essa regra vale pro site inteiro, sem media query). Tambem
+   ganhou um movimento lento e continuo (gradeDrift, abaixo) - o fundo e maior
+   que a tela (background-size 160%) e desliza devagar, dando a sensacao de
+   luz quente "respirando" sobre o site, nao so uma camada parada.
+   Corrigido em 30/08/2026 (mesmo dia): o usuario reparou que o filtro só
+   aparecia em cima da foto do hero, "atras" do texto - o motivo era o
+   mix-blend-mode:soft-light, que quase nao tem efeito visual sobre cores bem
+   escuras (o fundo do site, quase preto) ou bem claras (o texto, quase
+   branco) - so aparece de verdade em tons intermediarios como os da foto.
+   Trocado pra mix-blend-mode:normal (pedido do usuario: "o fundo deixa
+   normal"), que pinta a cor por cima igual em qualquer parte da tela -
+   assim o filtro fica visivel na frente do texto tambem, nao so da foto. */
 .grade-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9998;
   mix-blend-mode: normal;
-  background: linear-gradient(160deg, rgba(255,150,60,0.08) 0%, rgba(201,162,39,0.055) 45%, rgba(120,55,15,0.1) 100%);
+  background: linear-gradient(160deg, rgba(255,150,60,0.10) 0%, rgba(201,162,39,0.07) 45%, rgba(120,55,15,0.13) 100%);
   background-size: 160% 160%;
 }
 .js .grade-overlay { animation: gradeDrift 16s ease-in-out infinite; }
@@ -183,7 +200,6 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   transition: background 0.35s var(--ease), color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.25s var(--ease);
 }
 .btn:hover { background: var(--fg); color: var(--bg); transform: translateY(-2px); }
-.btn:active { filter: brightness(0.88); transition-duration: 0.1s; }
 .btn-solid { background: var(--fg); color: var(--bg); }
 .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: #12100a; }
 .btn-outline { border-color: var(--border-strong); }
@@ -278,11 +294,25 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 }
 .hero-media video, .hero-media img {
   width: 100%; height: 100%; object-fit: cover;
+  /* Corrigido em 30/08/2026: estava com object-fit:contain, que encolhe a foto
+     inteira pra caber sem cortar - no celular (tela bem estreita e alta,
+     proporcao muito diferente da foto) isso deixava duas faixas pretas enormes
+     em cima e embaixo, empurrando o texto pra baixo e deixando tudo bagunçado.
+     Com cover a foto preenche a tela toda (cortando as bordas quando precisa),
+     do jeito que um fundo de hero normalmente funciona - igual no PC. */
   object-position: center center;
   transform: scale(0.98);
   animation: heroZoom 14s ease-in-out infinite alternate;
 }
 @keyframes heroZoom { from { transform: scale(0.98);} to { transform: scale(1.07);} }
+/* Corrigido em 30/08/2026: quando nao ha video configurado, o hero usa duas
+   fotos (.hero-photo-a e .hero-photo-b) como fallback, mas essas classes
+   nunca tinham CSS proprio - ficavam empilhadas uma embaixo da outra (bloco
+   normal), o que so nao aparecia quebrado no PC porque a tela larga escondia
+   a segunda copia. Sem isso, no celular a foto aparecia duplicada, uma em
+   cima da outra. Posicionando as duas em cima uma da outra (absolute/inset:0)
+   elas sobrepoem perfeitamente, exatamente como o video faria nesse mesmo
+   lugar - funciona igual em qualquer tamanho de tela. */
 .hero-photo-split {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -290,6 +320,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .hero-photo-a, .hero-photo-b {
   position: absolute; inset: 0;
 }
+/* Pedido em 30/08/2026: mais degrade escuro em cima da foto do hero no PC tambem
+   (antes esse escurecimento mais forte so existia no celular, mais abaixo no
+   arquivo, dentro do media query de 720px - aquela regra continua valendo e
+   fica ainda mais escura que essa aqui). Base foi de 0.35/0.35/0.96 pra
+   0.58/0.55/0.97. */
 .hero-media::after {
   content: '';
   position: absolute; inset: 0;
@@ -300,18 +335,43 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   width: 100%;
   padding: 0 0 90px;
 }
+/* Pedido em 30/08/2026: o titulo do hero no PC precisa quebrar em 3 linhas
+   (igual no celular). A largura maxima aqui controla isso - foi ajustada
+   algumas vezes junto com o tamanho da fonte (mais abaixo): fonte menor
+   precisa de menos largura pra continuar quebrando em 3 linhas. Reduzida de
+   900px pra 850px junto com a 3a reducao de fonte (mais abaixo), testado e
+   confirmado que continua em 3 linhas nessa faixa. */
 .hero-content h1 { max-width: 850px; }
-/* Desce um pouco o texto pequeno acima do título, a pedido. */
-.hero-eyebrow-lower { margin-top: 0.5em; }
 .hero-content h1 .text-accent { color: var(--accent); }
+/* Pedido em 30/08/2026: mais "movimento de texto" no hero - a palavra em
+   destaque (dourada) ganhou uma flutuacao leve e continua, pra nao ficar
+   parada na tela mesmo depois da animacao de entrada acabar. Sutil (6px,
+   4s) pra nao virar distracao. inline-block e necessario pro transform
+   funcionar sem bagunçar a quebra de linha normal do texto ao redor. */
 .js .hero-content h1 .text-accent { display: inline-block; animation: heroAccentFloat 4s ease-in-out infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+/* Pedido em 30/08/2026: usar no titulo do hero uma fonte parecida com a do
+   site de referencia (silvertake.video). La eles usam "Aktiv Grotesk", que
+   e uma fonte paga - Hanken Grotesk e a alternativa gratuita mais proxima
+   (feita pra ficar parecida com ela), entao da pra usar sem problema de
+   licenca. Pedido pra valer no PC tambem, entao essa regra e global (nao
+   fica so dentro do media query de celular). */
 .hero-content h1 {
   font-family: 'Hanken Grotesk', var(--font-body);
   font-weight: 800;
   letter-spacing: -0.01em;
 }
+/* Pedido em 30/08/2026: diminuir um pouco o tamanho do titulo do hero no PC
+   ("Vamos tirar sua ideia do papel?") - so o valor maximo do clamp muda (o
+   minimo continua 3.4rem, que e o que o celular usa - la a tela e estreita
+   demais pro "maximo" do clamp entrar em jogo, entao o celular nao muda).
+   Ja foi reduzido 3 vezes: 10rem -> 8.5rem -> 7.65rem (10% a menos) -> agora
+   6.885rem (mais 10% a menos). O valor em vw acompanha na mesma proporcao. */
 .hero-content h1 { font-size: clamp(3.4rem, 7.29vw, 6.885rem); }
+/* Pedido em 30/08/2026: dar uma "margem de respiro" entre "papel" e a
+   interrogacao - sem isso o "?" ficava colado na ultima letra da palavra.
+   O "?" agora vem num span proprio (.hero-punct, ver heroHeadlineHtml em
+   server/routes/public.js) so pra poder dar esse espacinho so nele. */
 .hero-content h1 .hero-punct { margin-left: 0.12em; }
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 .hero-scroll {
@@ -329,13 +389,23 @@ section { padding: 110px 0; position: relative; }
 .section-head .lead { max-width: 480px; margin: 0; }
 .alt-bg { background: var(--bg-alt); }
 
-/* ---------- Reveal on scroll ---------- */
+/* ---------- Reveal on scroll ----------
+   Por padrao (sem JS), o conteudo e 100% visivel - a animacao de entrada so e
+   aplicada quando o JavaScript confirma que esta ativo (classe .js no <html>),
+   garantindo que o site nunca dependa de JS para mostrar o conteudo. */
+/* Pedido em 30/08/2026: efeitos gerais do site (cel e PC) estavam "muito
+   estaticos" - a entrada dos elementos ganhou mais movimento (sobe de mais
+   longe) e um leve giro 3D (perspective + rotateX), em vez de so um fade
+   simples pra cima. Como essa regra e usada em quase todo o site (.reveal
+   aparece em varias secoes), o efeito fica mais vivo em geral, nao so no
+   hero. */
 .js .reveal { opacity: 0; transform: perspective(900px) translateY(66px) rotateX(11deg) scale(0.92); transition: opacity 1.1s var(--ease), transform 1.1s var(--ease); }
 .js .reveal.in-view { opacity: 1; transform: perspective(900px) translateY(0) rotateX(0deg) scale(1); }
 .reveal-delay-1.in-view { transition-delay: 0.08s; }
 .reveal-delay-2.in-view { transition-delay: 0.16s; }
 .reveal-delay-3.in-view { transition-delay: 0.24s; }
 
+/* Pequena animacao de "respiracao" usada em elementos que merecem um toque a mais */
 .js .pulse-in { animation: pulseIn 0.9s var(--ease) both; }
 @keyframes pulseIn { from { opacity: 0; transform: scale(0.94); } to { opacity: 1; transform: scale(1); } }
 
@@ -409,71 +479,20 @@ section { padding: 110px 0; position: relative; }
 }
 @media (hover: hover) and (pointer: fine) {
   .work-card { cursor: none; }
+  /* Pedido em 30/08/2026: mais animacao/3D nos cards do portfolio - um leve
+     giro/aproximação 3D ao passar o mouse, so em telas com mouse de verdade
+     (o filtro hover:hover ja usado aqui em cima evita isso no celular, onde
+     nao existe "passar o mouse"). */
   .work-card { transition: transform 0.5s var(--ease); }
   .work-card:hover { transform: perspective(900px) rotateX(4deg) scale(1.03); z-index: 2; }
+  /* Pedido novamente em 30/08/2026: mais movimento no PC tambem nos cards de
+     servico e nas pessoas (pagina Sobre) - mesmo giro/aproximacao 3D leve dos
+     cards do portfolio, so em quem tem mouse de verdade. */
   .service-card { transition: background 0.4s var(--ease), transform 0.5s var(--ease); }
   .service-card:hover { transform: perspective(900px) rotateX(3deg) scale(1.02); }
   .person-card { transition: transform 0.5s var(--ease); }
   .person-card:hover { transform: perspective(900px) rotateX(3deg) scale(1.03); z-index: 2; }
 }
-
-/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): brilho/reflexo que acompanha o mouse
-   nos cards com efeito de inclinacao 3D (JS em site.js atualiza --mx/--my a cada movimento do
-   mouse), reforcando a sensacao de profundidade/vidro. pointer-events:none pra nao atrapalhar
-   clique em nada, e so aparece em quem tem mouse de verdade (mesma logica do tilt em si). */
-@media (hover: hover) and (pointer: fine) {
-  [data-work-card], .service-card, .person-card, .contact-card {
-    --mx: 50%; --my: 50%;
-  }
-  [data-work-card]::after, .service-card::after, .person-card::after, .contact-card::after {
-    content: '';
-    position: absolute; inset: 0; pointer-events: none;
-    background: radial-gradient(circle at var(--mx) var(--my), rgba(255,255,255,0.18), transparent 55%);
-    opacity: 0;
-    transition: opacity 0.4s var(--ease);
-  }
-  [data-work-card]:hover::after, .service-card:hover::after, .person-card:hover::after, .contact-card:hover::after {
-    opacity: 1;
-  }
-}
-
-/* Luz ambiente dourada que segue o cursor pela tela inteira (so PC, discreta) - mesmo padrao
-   de camada usada no noise-overlay/grade-overlay (fixo, pointer-events:none, blend mode),
-   so que reagindo a posicao do mouse via JS (site.js) pra dar mais profundidade ao site. */
-.cursor-glow {
-  position: fixed; top: 0; left: 0; width: 560px; height: 560px; border-radius: 50%;
-  background: radial-gradient(circle, rgba(201,162,39,0.14), transparent 70%);
-  pointer-events: none; z-index: 9997; mix-blend-mode: screen; filter: blur(6px);
-  will-change: transform;
-}
-@media (prefers-reduced-motion: reduce) {
-  .cursor-glow { display: none; }
-}
-
-/* ---------- Intro cinematografica (barras tipo "letterbox" + logo) ---------- */
-/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): abertura cinematografica ao entrar no
-   site pela primeira vez na visita (barras pretas tipo cinema + logo), combinando com o tema de
-   producao audiovisual da marca. So toca uma vez por visita (sessionStorage, marcado por um
-   script pequeno no <head>, antes de qualquer coisa renderizar - por isso nao pisca em quem ja
-   viu) e nunca em quem pediu menos movimento (prefers-reduced-motion). */
-.cine-intro { display: none; position: fixed; inset: 0; z-index: 10050; pointer-events: none; }
-.js .cine-intro { display: block; }
-html.no-intro .cine-intro { display: none; }
-.cine-intro-bar { position: fixed; left: 0; right: 0; height: 51vh; background: #000; z-index: 10050; }
-.cine-intro-bar-top { top: 0; }
-.cine-intro-bar-bottom { bottom: 0; }
-.cine-intro-logo { position: fixed; inset: 0; z-index: 10051; display: flex; align-items: center; justify-content: center; opacity: 0; }
-.cine-intro-logo img { width: 110px; filter: drop-shadow(0 0 24px rgba(201,162,39,0.4)); }
-@keyframes cineLogoIn { from { opacity: 0; transform: scale(0.86); } to { opacity: 1; transform: scale(1); } }
-@keyframes cineLogoOut { to { opacity: 0; transform: scale(1.08); } }
-@keyframes cineBarUp { to { transform: translateY(-100%); } }
-@keyframes cineBarDown { to { transform: translateY(100%); } }
-.js:not(.no-intro) .cine-intro-logo {
-  animation: cineLogoIn 0.55s var(--ease) 0.15s both, cineLogoOut 0.35s var(--ease) 1.05s both;
-}
-.js:not(.no-intro) .cine-intro-bar-top { animation: cineBarUp 0.6s var(--ease) 1s forwards; }
-.js:not(.no-intro) .cine-intro-bar-bottom { animation: cineBarDown 0.6s var(--ease) 1s forwards; }
-.cine-lock { overflow: hidden; }
 
 /* ---------- Filtros de categoria ---------- */
 .filter-bar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 44px; }
@@ -495,11 +514,21 @@ html.no-intro .cine-intro { display: none; }
 
 /* ---------- Sobre / bio ---------- */
 .about-split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 72px; align-items: center; }
+/* Pedido em 30/08/2026: nome ("Noberto Junior (NJ)") na pagina Sobre estava
+   quebrando em 2 linhas no PC - pediu pra caber numa linha so, e falou que
+   podia diminuir mais que 20% se precisasse pra caber. Testado no navegador:
+   o tamanho normal (clamp global do h1, ~160px nessa coluna) so cabe numa
+   linha a partir de ~102px - 6rem (96px) cabe com folga. So no PC (a partir
+   de 981px, que e onde .about-split vira 2 colunas - abaixo disso o texto
+   ocupa a largura toda e nao precisa desse ajuste). */
 @media (min-width: 981px) {
   .about-split h1 { font-size: 6rem; }
 }
 .about-split img { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(15%); }
 .about-split .quote { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 2.1rem); text-transform: none; color: var(--fg); border-left: 2px solid var(--accent); padding-left: 24px; margin: 24px 0; }
+/* Crossfade automatico entre as fotos da bio (quantas o usuario enviar no painel,
+   nao so 2) - pedido do usuario em 30/08/2026. O JS (site.js) troca a classe
+   is-active de uma foto pra outra; aqui so cuida da transicao suave entre elas. */
 .about-photos { position: relative; overflow: hidden; aspect-ratio: 4/5; filter: grayscale(15%); }
 .about-photo-slide {
   position: absolute;
@@ -535,16 +564,9 @@ html.no-intro .cine-intro { display: none; }
   animation: marquee-scroll 32s linear infinite;
 }
 .marquee:hover .marquee-track { animation-play-state: paused; }
-/* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): a faixa que rola sozinha ganha uma
-   inclinacao 3D leve e constante (tipo prateleira/coverflow), mantida durante toda a rolagem
-   porque o rotateX faz parte do proprio keyframe (senao a rolagem apagaria a inclinacao). */
-.marquee { perspective: 1000px; }
 @keyframes marquee-scroll {
-  from { transform: translateX(0) rotateX(6deg); }
-  to { transform: translateX(-50%) rotateX(6deg); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track { transform: none; }
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
 }
 .brand-chip {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
@@ -561,6 +583,8 @@ html.no-intro .cine-intro { display: none; }
 .brand-chip:hover .brand-chip-logo { border-color: var(--accent); box-shadow: 0 8px 20px rgba(201,162,39,0.25); }
 .brand-chip img { max-width: 70%; max-height: 70%; object-fit: contain; }
 .brand-chip span { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--fg-muted); text-align: center; line-height: 1.3; }
+/* Excecao por marca: logos que ja vem com fundo/moldura propria (ex: Rockhair)
+   nao devem ganhar o circulo branco padrao - ficam "soltas" e maiores. */
 .brand-chip .brand-chip-logo.no-frame {
   background: transparent;
   border-color: transparent;
@@ -601,7 +625,9 @@ html.no-intro .cine-intro { display: none; }
 .person-card .person-info b { font-size: 0.95rem; }
 .person-card .person-info span { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); }
 
-/* ---------- Bastidores (galeria de fotos rolando sozinha na pagina Sobre) ---------- */
+/* ---------- Bastidores (galeria de fotos rolando sozinha na pagina Sobre) ----------
+   Pedido do usuario em 29/08/2026: fotos dele trabalhando, rolando pro lado sozinhas,
+   igual a faixa de clientes/marcas - mas com fotos maiores em vez de chips redondos. */
 .bio-gallery {
   margin-top: 48px;
   overflow: hidden;
@@ -636,7 +662,10 @@ html.no-intro .cine-intro { display: none; }
   .bio-gallery-item { width: 168px; height: 248px; }
 }
 
-/* ---------- Depoimentos em video (feedback de clientes) ---------- */
+/* ---------- Depoimentos em video (feedback de clientes) ----------
+   Faixa horizontal com rolagem manual (o visitante rola para o lado e vai
+   vendo um depoimento em video apos o outro), diferente do marquee de logos
+   que rola sozinho — aqui o video precisa ficar parado pra poder assistir. */
 .testimonials-scroll {
   display: flex;
   gap: 26px;
@@ -661,21 +690,6 @@ html.no-intro .cine-intro { display: none; }
   .testimonial-card { flex: 0 0 84vw; }
 }
 
-/* ---------- Contador de curtidas/visualizações do projeto ----------
-   Fica logo abaixo do vídeo principal da página de projeto. A visualização é somada
-   via fetch (site.js) ao carregar a página, e não no render, porque o site público
-   passa a ser publicado como HTML estático. */
-.video-actions { display: flex; align-items: center; gap: 18px; margin: -6px 0 22px; }
-.video-like-btn { display: inline-flex; align-items: center; gap: 8px; background: none; border: 1px solid var(--border-strong); border-radius: 999px; padding: 8px 18px; font-size: 0.9rem; font-family: inherit; color: var(--fg); cursor: pointer; transition: border-color 0.3s var(--ease), color 0.3s var(--ease), transform 0.2s var(--ease); }
-.video-like-btn:hover { border-color: var(--accent); color: var(--accent); }
-.video-like-btn.liked { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
-.video-like-btn:active { transform: scale(0.96); }
-.video-like-btn .heart { font-size: 1.05rem; line-height: 1; }
-.video-like-btn.liked .heart::before { content: "♥"; }
-.video-like-btn .heart::before { content: "♡"; }
-.video-views { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--fg-muted); }
-.video-views .eye { font-size: 1rem; }
-
 /* ---------- CTA final ---------- */
 .cta-section { text-align: center; }
 .cta-section h2 { max-width: 800px; margin: 0 auto 28px; }
@@ -690,22 +704,6 @@ html.no-intro .cine-intro { display: none; }
 .footer-links a:hover, .social-links a:hover { color: var(--accent); }
 .social-links { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
 .footer-bottom { border-top: 1px solid var(--border); padding: 22px 0; font-size: 0.78rem; color: var(--fg-dim); }
-
-/* Link do YouTube no rodapé: logo vermelha + setinha de mouse "clicando" pra chamar atenção */
-.footer-youtube { display: inline-flex; align-items: center; gap: 10px; }
-.footer-youtube:hover { color: #FF0000; }
-.footer-youtube-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.footer-youtube-cursor {
-  position: absolute; right: -7px; bottom: -7px;
-  animation: ytCursorTap 1.8s ease-in-out infinite;
-  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
-}
-@keyframes ytCursorTap {
-  0%, 20%, 100% { transform: translate(0, 0) scale(1); }
-  35% { transform: translate(-4px, 4px) scale(0.92); }
-  48% { transform: translate(-4px, 4px) scale(1.12); }
-  60% { transform: translate(0, 0) scale(1); }
-}
 
 /* ---------- WhatsApp flutuante ---------- */
 .whatsapp-float {
@@ -762,25 +760,11 @@ html.no-intro .cine-intro { display: none; }
 .project-meta b { display: block; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-dim); font-size: 0.68rem; margin-bottom: 4px; }
 .video-embed { position: relative; width: 100%; aspect-ratio: 16/9; background: #000; margin-bottom: 16px; }
 .video-embed iframe, .video-embed video { position: absolute; inset: 0; width: 100%; height: 100%; }
-.video-embed-fallback { font-size: 0.82rem; color: var(--fg-muted); margin-top: -8px; }
-.video-embed-fallback a { color: var(--accent); }
-.video-embed-linkonly { display: flex; align-items: center; justify-content: center; aspect-ratio: 16/9; background: var(--bg-card); }
-/* Botão de tela cheia: fica num canto, fora da área central do player, pra nunca atrapalhar o
-   play/pause do vídeo por baixo (ver comentário em server/util.js sobre por que não dá pra usar
-   duplo clique direto no vídeo quando ele é um iframe de outro site). */
-.video-embed-fullscreen {
-  position: absolute; top: 10px; right: 10px; z-index: 2;
-  width: 36px; height: 36px; border-radius: 8px; border: none;
-  background: rgba(0, 0, 0, 0.55); color: #fff; font-size: 1.1rem; line-height: 1;
-  display: flex; align-items: center; justify-content: center; cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-.video-embed-fullscreen:hover { background: var(--accent); color: #12100a; transform: scale(1.06); }
 
 /* ---------- Pagina simples (contato etc) ---------- */
 .simple-hero { padding: 170px 0 60px; }
 .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; }
-.contact-card { border: 1px solid var(--border); padding: 40px; position: relative; }
+.contact-card { border: 1px solid var(--border); padding: 40px; }
 
 /* ---------- Utilitarios ---------- */
 .muted { color: var(--fg-dim); }
@@ -814,6 +798,14 @@ html.no-intro .cine-intro { display: none; }
   .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 10px 0 0 16px; display: none; }
   .has-sub.open .sub-nav { display: block; }
   .nav-toggle { display: flex; }
+  /* Corrigido em 30/08/2026: o unico jeito de fechar o menu do celular era
+     clicando de novo no icone de hamburguer la no topo da tela - mas esse
+     icone fica dentro do cabecalho, que se esconde sozinho quando a pessoa
+     rola a pagina (pra dar mais espaco de tela). Resultado: se a pessoa abria
+     o menu e rolava, o botao pra fechar sumia junto e o menu ficava "preso"
+     aberto sem nenhuma saida visivel. Agora tem um X sempre visivel dentro do
+     proprio menu, um fundo escurecido atras que fecha ao tocar, e da pra
+     arrastar o menu pro lado (ou pra cima) que ele fecha tambem. */
   .nav-close {
     display: none;
     position: absolute; top: 18px; right: 18px;
@@ -832,11 +824,24 @@ html.no-intro .cine-intro { display: none; }
     transition: opacity 0.4s var(--ease), visibility 0.4s;
   }
   .nav-backdrop.open { opacity: 1; visibility: visible; }
+  /* Mais minimalista em 30/08/2026 (pedido explicito): o grid de portfolio
+     era um mosaico de blocos de tamanhos diferentes (tipo quebra-cabeca),
+     bonito no PC mas denso demais no celular - virava um monte de recortes
+     pequenos grudados. Agora e uma coluna so, cada projeto com o tamanho
+     dele (retrato 4:5) e espaco de sobra entre um e outro - rola mais, mas
+     cada foto/video respira e fica facil de olhar um de cada vez. */
   .work-grid { grid-template-columns: 1fr; grid-auto-rows: auto; gap: 20px; }
   .work-card, .work-card.tall, .work-card.wide, .work-card:nth-child(5n+1), .work-card:nth-child(5n+2), .work-card:nth-child(5n+3), .work-card:nth-child(5n+4), .work-card:nth-child(5n+5) {
     grid-column: span 1; grid-row: auto; aspect-ratio: 4/5;
   }
+  /* object-fit:contain (padrao do card no PC, onde os tamanhos variados do
+     mosaico absorviam a proporcao de cada foto) deixaria faixas vazias nos
+     cards agora que todos tem a mesma proporcao 4:5 - mesmo problema que ja
+     resolvemos no hero. Aqui a foto preenche o card inteiro. */
   .work-card img { object-fit: cover; }
+  /* Servicos e especialidades mais enxutos no celular: sem foto (o texto
+     e o numero ja contam a historia) e sem caixinha com borda em cada tag -
+     so o nome separado por um ponto, como uma frase corrida. */
   .services-grid { grid-template-columns: 1fr; }
   .service-card { padding: 32px 4px; }
   .service-card img { display: none; }
@@ -848,21 +853,57 @@ html.no-intro .cine-intro { display: none; }
   .specialties-list span:not(:last-child)::after { content: ' · '; color: var(--fg-dim); }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
+  /* Pedido em 30/08/2026 (com print do celular): tinha muito espaco vazio
+     embaixo do texto do hero antes da proxima secao comecar - a foto de fundo
+     continuava, mas sem nada acontecendo ali. Diminuindo a altura do hero no
+     celular o texto sobe (fica menos "no fundo da tela") e esse vazio some. */
   .hero { min-height: 84svh; }
   .hero-scroll { bottom: 18px; }
+  /* Pedido em 30/08/2026: deixar a foto do hero com um ar mais "dark" no
+     celular - e depois pediu pra escurecer ainda mais. O degrade original
+     (.hero-media::after acima) ja escurecia a foto, mas leve - aqui so no
+     celular a gente reforça bem esse degrade (fica bem mais escuro do topo
+     ao rodape) sem mexer na versao de PC nem trocar a foto em si, so a
+     camada escura por cima dela. */
   .hero-media::after {
     background: linear-gradient(180deg, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.8) 35%, rgba(2,2,3,0.99) 100%);
   }
+  /* Pedido em 30/08/2026: o texto do hero ainda estava perto demais do
+     rodape mesmo depois de diminuir a altura da secao - centralizando o
+     conteudo dentro do hero (em vez de grudado embaixo) ele sobe bem mais
+     pra perto do meio da tela. O "ROLE" continua no rodape porque tem
+     posicionamento proprio (absolute), nao e afetado por isso. */
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
+  /* Pedido em 30/08/2026: a legenda "Produção Audiovisual · Salvador, BA"
+     em cima do titulo estava grande e espaçada demais pro celular - deixando
+     menor e com menos espaço entre letras ela vira um detalhe discreto,
+     como devia ser, em vez de disputar atenção com o titulo. */
   .hero .eyebrow {
     font-size: 0.62rem;
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
   }
+  /* Pedido em 30/08/2026: tirar o paragrafo abaixo do titulo do hero
+     ("Produção audiovisual, fotografia e drone...") no celular - o titulo
+     e os botoes ja dizem o essencial, esse texto so ocupava espaco. Some
+     so no celular; no PC continua aparecendo normalmente. */
   .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
+  /* Ajuste de hierarquia em 30/08/2026 (pedido: deixar a versao de celular
+     menos poluida): no hero, "Ver portfolio" e "Entrar em contato" tinham o
+     mesmo peso visual, brigando pela atencao logo na primeira tela. Agora so
+     "Ver portfolio" fica solido como acao principal; "Entrar em contato" vira
+     um link discreto ao lado dele - o botao de WhatsApp flutuante ja cobre
+     esse contato rapido, entao nao precisa competir aqui tambem. */
+  /* Pedido em 30/08/2026: descer um pouco os botoes "Ver portfolio" e
+     "Entrar em contato" no celular - estavam grudados logo depois do
+     titulo, um respiro maior aqui embaixo deles fica mais equilibrado. */
   .hero .btn-row { align-items: center; gap: 22px; margin-top: 14px; }
+  /* Pedido em 30/08/2026: diminuir os botoes "Ver portfolio" e "Entrar em
+     contato" no celular - ficavam grandes/largos pro tamanho da tela. So
+     no celular (padding e fonte menores); no PC continuam do tamanho
+     original. */
   .hero .btn-row .btn {
     padding: 11px 20px;
     font-size: 0.7rem;
@@ -873,19 +914,39 @@ html.no-intro .cine-intro { display: none; }
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--fg-muted);
+    /* Pedido em 30/08/2026: diminuir ainda mais o "Entrar em contato" -
+       ja era so texto sublinhado, agora a fonte fica menor tambem. */
     font-size: 0.62rem;
   }
   .hero .btn-row .btn-outline:hover { background: none; color: var(--fg); transform: none; }
+  /* Pedido em 30/08/2026: os textos do hero (legenda, titulo, paragrafo,
+     botoes) estavam colados na borda esquerda da tela no celular - o motivo
+     e que .hero-content zera o padding lateral (padding:0 0 90px, definido
+     mais acima) por cima do padding:0 24px que .container normalmente da
+     a todas as outras secoes (incluindo "Projeto em destaque" logo abaixo
+     do hero). Alinhando o padding-esquerdo do hero com esse mesmo valor de
+     24px, o titulo fica na mesma margem do texto "Projeto em destaque". */
   .hero-content {
     padding-left: 24px;
   }
+  /* Pedido em 30/08/2026: mesmo centralizado (align-items:center, acima),
+     o texto ainda ficava baixo - pediu pra subir mais, quase na altura do
+     rosto/nariz na foto. Um deslocamento extra pra cima por cima da
+     centralizacao ja existente. Primeira tentativa (-16vh) subiu demais,
+     ajustado pra um valor menor. */
   .hero-content {
     transform: translateY(-8vh);
   }
+  /* Pedido em 30/08/2026: diminuir o titulo do hero em 20% no celular -
+     la ele usava o piso do clamp global (3.4rem = 54,4px), entao 20% a
+     menos da 2.72rem (43,5px). So no celular; no PC quem manda e o clamp
+     ajustado mais acima (nao usa mais esse piso de 3.4rem no PC). */
   .hero-content h1 {
     font-size: 2.72rem;
   }
-  .hero-eyebrow-lower { margin-top: 0.9em; }
+  /* Pedido em 30/08/2026: no celular tambem, dar uma margem de respiro antes
+     da interrogacao (mesma ideia da regra pro PC, mais acima no arquivo) -
+     valor um pouco menor aqui porque a fonte do celular tambem e menor. */
   .hero-content h1 .hero-punct {
     margin-left: 0.08em;
   }
@@ -895,6 +956,12 @@ html.no-intro .cine-intro { display: none; }
   h2 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
 }
 
+/* Corrigido em 30/08/2026 (pedido do usuario): no celular os botoes de
+   WhatsApp e Instagram estavam grandes e um pouco desalinhados entre si (o
+   circulo do WhatsApp e maior que o do Instagram, entao os centros nao
+   batiam). Agora os dois usam exatamente o mesmo tamanho e o mesmo
+   alinhamento no celular, so a posicao vertical muda - ficam menores e
+   perfeitamente um embaixo do outro. */
 @media (max-width: 720px) {
   .whatsapp-float, .instagram-float {
     width: 42px; height: 42px;
@@ -906,7 +973,8 @@ html.no-intro .cine-intro { display: none; }
   .instagram-float svg { width: 17px; height: 17px; }
 }
 
-/* ---------- Barra de progresso de rolagem ---------- */
+/* ---------- Barra de progresso de rolagem (o site.js ja criava essa div,
+   mas faltava o CSS - por isso ela nunca aparecia) ---------- */
 .scroll-progress {
   position: fixed; top: 0; left: 0;
   height: 3px; width: 0%;
@@ -915,7 +983,10 @@ html.no-intro .cine-intro { display: none; }
   transition: width 0.12s linear;
 }
 
-/* ---------- Botao "voltar ao topo" ---------- */
+/* ---------- Botao "voltar ao topo" (pedido do usuario em 30/08/2026) ----------
+   Fica escondido no topo da pagina e aparece depois que a pessoa rola um pouco.
+   Colocado do lado esquerdo, oposto aos botoes de WhatsApp/Instagram, pra nao
+   amontoar tres botoes flutuantes no mesmo canto. */
 .back-to-top {
   position: fixed; bottom: 24px; left: 24px; z-index: 600;
   width: 50px; height: 50px; border-radius: 50%;
