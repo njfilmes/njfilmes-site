@@ -2,288 +2,251 @@
 (function () {
   'use strict';
 
-  // Header muda de estilo ao rolar, e se esconde ao descer / reaparece ao subir
-  const header = document.querySelector('[data-header]');
-  if (header) {
-    let lastY = window.scrollY;
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y > 40) header.classList.add('scrolled');
-      else header.classList.remove('scrolled');
+  // Quando o site é publicado como HTML estático (separado do backend que guarda curtidas e
+  // visualizações), essa variável vem preenchida pelo servidor com a URL completa do backend.
+  // No modo normal (site + admin no mesmo serviço) ela vem vazia e os caminhos abaixo continuam
+  // relativos ao próprio domínio, sem nenhuma mudança de comportamento.
+  var API_BASE = window.NJFILMES_API_BASE || '';
 
-      if (y > lastY && y > 160) header.classList.add('hide-on-scroll');
-      else header.classList.remove('hide-on-scroll');
-      lastY = y;
-    };
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
+  // Animações de entrada ao rolar a página (fade + slide sutil).
+  // Isso roda ANTES de tudo, e tem uma rede de segurança por tempo: mesmo que
+  // algum outro trecho de código abaixo tenha erro, ou o navegador demore para
+  // disparar o IntersectionObserver, o conteúdo é revelado de qualquer forma
+  // depois de 2s. Isso evita que a página fique com seções "pretas"/invisíveis.
+  var revealEls = document.querySelectorAll('.reveal');
+  if (revealEls.length) {
+    try {
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add('in-view');
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
+        );
+        revealEls.forEach(function (el) { io.observe(el); });
+      } else {
+        revealEls.forEach(function (el) { el.classList.add('in-view'); });
+      }
+    } catch (err) {
+      revealEls.forEach(function (el) { el.classList.add('in-view'); });
+    }
+    setTimeout(function () {
+      revealEls.forEach(function (el) { el.classList.add('in-view'); });
+    }, 2000);
   }
+
+  // Header muda de estilo ao rolar, e se esconde ao descer / reaparece ao subir
+  try {
+    var header = document.querySelector('[data-header]');
+    if (header) {
+      var lastY = window.scrollY;
+      var onScroll = function () {
+        var y = window.scrollY;
+        if (y > 40) header.classList.add('scrolled');
+        else header.classList.remove('scrolled');
+
+        if (y > lastY && y > 160) header.classList.add('hide-on-scroll');
+        else header.classList.remove('hide-on-scroll');
+        lastY = y;
+      };
+      onScroll();
+      window.addEventListener('scroll', onScroll, { passive: true });
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
   // Cursor personalizado "VER PROJETO" nos cards de portfólio
-  const workCards = document.querySelectorAll('[data-work-card]');
-  if (workCards.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    const cursor = document.createElement('div');
-    cursor.className = 'work-cursor';
-    cursor.innerHTML = '<span>Ver projeto</span>';
-    document.body.appendChild(cursor);
+  try {
+    var workCards = document.querySelectorAll('[data-work-card]');
+    if (workCards.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      var cursor = document.createElement('div');
+      cursor.className = 'work-cursor';
+      cursor.innerHTML = '<span>Ver projeto</span>';
+      document.body.appendChild(cursor);
 
-    let cx = 0, cy = 0, tx = 0, ty = 0;
-    let active = false;
-    const loop = () => {
-      cx += (tx - cx) * 0.18;
-      cy += (ty - cy) * 0.18;
-      cursor.style.transform = `translate(${cx}px, ${cy}px) translate(-50%, -50%) scale(${active ? 1 : 0.4})`;
+      var cx = 0, cy = 0, tx = 0, ty = 0;
+      var active = false;
+      var loop = function () {
+        cx += (tx - cx) * 0.18;
+        cy += (ty - cy) * 0.18;
+        cursor.style.transform = 'translate(' + cx + 'px, ' + cy + 'px) translate(-50%, -50%) scale(' + (active ? 1 : 0.4) + ')';
+        requestAnimationFrame(loop);
+      };
       requestAnimationFrame(loop);
-    };
-    requestAnimationFrame(loop);
 
-    window.addEventListener('mousemove', (e) => { tx = e.clientX; ty = e.clientY; }, { passive: true });
+      window.addEventListener('mousemove', function (e) { tx = e.clientX; ty = e.clientY; }, { passive: true });
 
-    workCards.forEach((card) => {
-      card.addEventListener('mouseenter', () => { active = true; cursor.classList.add('is-active'); });
-      card.addEventListener('mouseleave', () => { active = false; cursor.classList.remove('is-active'); });
-    });
-  }
-
-  // Menu mobile (corrigido 30/08/2026: agora tem 3 jeitos de fechar - o X
-  // dentro do proprio menu, tocar no fundo escurecido, ou arrastar o menu pro
-  // lado/pra cima - antes so dava pra fechar clicando nao icone de hamburguer
-  // la em cima, que podia sumir da tela quando a pessoa rolava a pagina)
-  const nav = document.querySelector('[data-nav]');
-  const toggle = document.querySelector('[data-nav-toggle]');
-  const navClose = document.querySelector('[data-nav-close]');
-  const navBackdrop = document.querySelector('[data-nav-backdrop]');
-  if (nav && toggle) {
-    const openNav = () => {
-      nav.classList.add('open');
-      navBackdrop?.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
-    };
-    const closeNav = () => {
-      nav.classList.remove('open');
-      navBackdrop?.classList.remove('open');
-      toggle.setAttribute('aria-expanded', 'false');
-      document.body.style.overflow = '';
-    };
-    toggle.addEventListener('click', () => {
-      if (nav.classList.contains('open')) closeNav();
-      else openNav();
-    });
-    navClose?.addEventListener('click', closeNav);
-    navBackdrop?.addEventListener('click', closeNav);
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
-    });
-
-    // Arrastar o menu pro lado ou pra cima fecha, igual a maioria dos apps
-    let touchStartX = 0;
-    let touchStartY = 0;
-    nav.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-    }, { passive: true });
-    nav.addEventListener('touchend', (e) => {
-      const dx = e.changedTouches[0].clientX - touchStartX;
-      const dy = e.changedTouches[0].clientY - touchStartY;
-      if (dx > 50 || dy < -50) closeNav();
-    }, { passive: true });
-
-    // Em telas pequenas, o submenu de categorias abre/fecha ao tocar no link "Portfólio"
-    document.querySelectorAll('.has-sub > a').forEach((link) => {
-      link.addEventListener('click', (e) => {
-        if (window.innerWidth <= 720) {
-          e.preventDefault();
-          link.closest('.has-sub').classList.toggle('open');
-        }
+      workCards.forEach(function (card) {
+        card.addEventListener('mouseenter', function () { active = true; cursor.classList.add('is-active'); });
+        card.addEventListener('mouseleave', function () { active = false; cursor.classList.remove('is-active'); });
       });
-    });
-  }
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
-  // Animações de entrada ao rolar a página (fade + slide sutil)
-  const revealEls = document.querySelectorAll('.reveal');
-  if (revealEls.length && 'IntersectionObserver' in window) {
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('in-view');
-            io.unobserve(entry.target);
+  // Menu mobile
+  try {
+    var nav = document.querySelector('[data-nav]');
+    var toggle = document.querySelector('[data-nav-toggle]');
+    if (nav && toggle) {
+      toggle.addEventListener('click', function () {
+        var isOpen = nav.classList.toggle('open');
+        toggle.setAttribute('aria-expanded', String(isOpen));
+      });
+      // Em telas pequenas, o submenu de categorias abre/fecha ao tocar no link "Portfólio"
+      document.querySelectorAll('.has-sub > a').forEach(function (link) {
+        link.addEventListener('click', function (e) {
+          if (window.innerWidth <= 720) {
+            e.preventDefault();
+            link.closest('.has-sub').classList.toggle('open');
           }
         });
-      },
-      { threshold: 0.15, rootMargin: '0px 0px -40px 0px' }
-    );
-    revealEls.forEach((el) => io.observe(el));
-  } else {
-    revealEls.forEach((el) => el.classList.add('in-view'));
-  }
+      });
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
   // Parallax leve no vídeo/imagem do hero (discreto, sem prejudicar performance)
-  const heroMedia = document.querySelector('.hero-media');
-  if (heroMedia) {
-    window.addEventListener(
-      'scroll',
-      () => {
-        const y = window.scrollY;
-        if (y < window.innerHeight) {
-          heroMedia.style.transform = `translateY(${y * 0.25}px)`;
-        }
-      },
-      { passive: true }
-    );
-  }
+  try {
+    var heroMedia = document.querySelector('.hero-media');
+    if (heroMedia) {
+      window.addEventListener(
+        'scroll',
+        function () {
+          var y = window.scrollY;
+          if (y < window.innerHeight) {
+            heroMedia.style.transform = 'translateY(' + Math.min(y * 0.18, 90) + 'px)';
+          }
+        },
+        { passive: true }
+      );
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
   // Filtro de categorias no portfólio (client-side, sem recarregar a página)
-  const filterBar = document.querySelector('[data-filter-bar]');
-  if (filterBar) {
-    const cards = document.querySelectorAll('[data-work-card]');
-    filterBar.addEventListener('click', (e) => {
-      const pill = e.target.closest('.filter-pill');
-      if (!pill) return;
-      filterBar.querySelectorAll('.filter-pill').forEach((p) => p.classList.remove('active'));
-      pill.classList.add('active');
-      const cat = pill.dataset.cat;
-      cards.forEach((card) => {
-        const show = cat === 'all' || card.dataset.category === cat;
-        card.style.display = show ? '' : 'none';
+  try {
+    var filterBar = document.querySelector('[data-filter-bar]');
+    if (filterBar) {
+      var cards = document.querySelectorAll('[data-work-card]');
+      filterBar.addEventListener('click', function (e) {
+        var pill = e.target.closest('.filter-pill');
+        if (!pill) return;
+        filterBar.querySelectorAll('.filter-pill').forEach(function (p) { p.classList.remove('active'); });
+        pill.classList.add('active');
+        var cat = pill.dataset.cat;
+        cards.forEach(function (card) {
+          var show = cat === 'all' || card.dataset.category === cat;
+          card.style.display = show ? '' : 'none';
+        });
+        var url = new URL(window.location);
+        if (cat === 'all') url.searchParams.delete('categoria');
+        else url.searchParams.set('categoria', cat);
+        window.history.replaceState({}, '', url);
       });
-      const url = new URL(window.location);
-      if (cat === 'all') url.searchParams.delete('categoria');
-      else url.searchParams.set('categoria', cat);
-      window.history.replaceState({}, '', url);
-    });
-  }
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
   // Lightbox de galeria
-  const lightbox = document.querySelector('[data-lightbox]');
-  if (lightbox) {
-    const imgEl = lightbox.querySelector('img');
-    const counterEl = lightbox.querySelector('[data-lightbox-counter]');
-    const triggers = Array.from(document.querySelectorAll('[data-lightbox-trigger]'));
-    let current = 0;
+  try {
+    var lightbox = document.querySelector('[data-lightbox]');
+    if (lightbox) {
+      var imgEl = lightbox.querySelector('img');
+      var counterEl = lightbox.querySelector('[data-lightbox-counter]');
+      var triggers = Array.from(document.querySelectorAll('[data-lightbox-trigger]'));
+      var current = 0;
 
-    const open = (index) => {
-      current = index;
-      show();
-      lightbox.classList.add('open');
-      document.body.style.overflow = 'hidden';
-    };
-    const close = () => {
-      lightbox.classList.remove('open');
-      document.body.style.overflow = '';
-    };
-    const show = () => {
-      const full = triggers[current].dataset.full || triggers[current].querySelector('img').src;
-      imgEl.src = full;
-      imgEl.alt = triggers[current].dataset.caption || '';
-      if (counterEl) counterEl.textContent = `${current + 1} / ${triggers.length}`;
-    };
-    const next = () => { current = (current + 1) % triggers.length; show(); };
-    const prev = () => { current = (current - 1 + triggers.length) % triggers.length; show(); };
-
-    triggers.forEach((trigger, i) => {
-      trigger.addEventListener('click', () => open(i));
-    });
-    lightbox.querySelector('[data-lightbox-close]')?.addEventListener('click', close);
-    lightbox.querySelector('[data-lightbox-next]')?.addEventListener('click', next);
-    lightbox.querySelector('[data-lightbox-prev]')?.addEventListener('click', prev);
-    lightbox.addEventListener('click', (e) => { if (e.target === lightbox) close(); });
-    document.addEventListener('keydown', (e) => {
-      if (!lightbox.classList.contains('open')) return;
-      if (e.key === 'Escape') close();
-      if (e.key === 'ArrowRight') next();
-      if (e.key === 'ArrowLeft') prev();
-    });
-  }
-  const tiltEls = document.querySelectorAll('[data-work-card], .service-card, .person-card, .contact-card, .about-split img'); if (tiltEls.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) { tiltEls.forEach((el) => { el.addEventListener('mousemove', (e) => { const r = el.getBoundingClientRect(); const px = (e.clientX - r.left) / r.width - 0.5; const py = (e.clientY - r.top) / r.height - 0.5; el.style.transform = `perspective(900px) rotateX(${(py * -7).toFixed(2)}deg) rotateY(${(px * 7).toFixed(2)}deg) scale3d(1.02, 1.02, 1.02)`; }); el.addEventListener('mouseleave', () => { el.style.transform = ''; }); }); }
-
-  // ---------- Barra de progresso de rolagem (adicionado 30/08/2026: mostra o quanto falta pra rolar a pagina) ----------
-  const scrollBar = document.createElement('div');
-  scrollBar.className = 'scroll-progress';
-  document.body.appendChild(scrollBar);
-  const updateScrollBar = () => {
-    const doc = document.documentElement;
-    const scrollable = doc.scrollHeight - doc.clientHeight;
-    const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 0;
-    scrollBar.style.width = pct + '%';
-  };
-  updateScrollBar();
-  window.addEventListener('scroll', updateScrollBar, { passive: true });
-  window.addEventListener('resize', updateScrollBar);
-
-  // ---------- Contador animado nas estatisticas da pagina Sobre (numeros que sobem do zero ao aparecer na tela) ----------
-  const statEls = document.querySelectorAll('.stat b');
-  if (statEls.length && 'IntersectionObserver' in window) {
-    const animateCount = (el) => {
-      const raw = el.textContent.trim();
-      const match = raw.match(/^(\d+)(.*)$/);
-      if (!match) return;
-      const target = parseInt(match[1], 10);
-      const suffix = match[2] || '';
-      if (!target || target > 9999) return;
-      const duration = 1100;
-      const start = performance.now();
-      const step = (now) => {
-        const progress = Math.min((now - start) / duration, 1);
-        const eased = 1 - Math.pow(1 - progress, 3);
-        el.textContent = Math.round(target * eased) + suffix;
-        if (progress < 1) requestAnimationFrame(step);
-        else el.textContent = target + suffix;
+      var show = function () {
+        var full = triggers[current].dataset.full || triggers[current].querySelector('img').src;
+        imgEl.src = full;
+        imgEl.alt = triggers[current].dataset.caption || '';
+        if (counterEl) counterEl.textContent = (current + 1) + ' / ' + triggers.length;
       };
-      requestAnimationFrame(step);
-    };
-    const statIo = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          animateCount(entry.target);
-          statIo.unobserve(entry.target);
-        }
+      var open = function (index) {
+        current = index;
+        show();
+        lightbox.classList.add('open');
+        document.body.style.overflow = 'hidden';
+      };
+      var close = function () {
+        lightbox.classList.remove('open');
+        document.body.style.overflow = '';
+      };
+      var next = function () { current = (current + 1) % triggers.length; show(); };
+      var prev = function () { current = (current - 1 + triggers.length) % triggers.length; show(); };
+
+      triggers.forEach(function (trigger, i) {
+        trigger.addEventListener('click', function () { open(i); });
       });
-    }, { threshold: 0.4 });
-    statEls.forEach((el) => statIo.observe(el));
-  }
-
-  // ---------- Efeito magnetico sutil nos botoes (o botao acompanha um pouco o cursor ao passar perto) ----------
-  const magneticBtns = document.querySelectorAll('.btn');
-  if (magneticBtns.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
-    magneticBtns.forEach((btn) => {
-      btn.addEventListener('mousemove', (e) => {
-        const r = btn.getBoundingClientRect();
-        const mx = (e.clientX - r.left - r.width / 2) * 0.25;
-        const my = (e.clientY - r.top - r.height / 2) * 0.35;
-        btn.style.transform = `translate(${mx}px, ${my - 2}px)`;
+      var closeBtn = lightbox.querySelector('[data-lightbox-close]');
+      if (closeBtn) closeBtn.addEventListener('click', close);
+      var nextBtn = lightbox.querySelector('[data-lightbox-next]');
+      if (nextBtn) nextBtn.addEventListener('click', next);
+      var prevBtn = lightbox.querySelector('[data-lightbox-prev]');
+      if (prevBtn) prevBtn.addEventListener('click', prev);
+      lightbox.addEventListener('click', function (e) { if (e.target === lightbox) close(); });
+      document.addEventListener('keydown', function (e) {
+        if (!lightbox.classList.contains('open')) return;
+        if (e.key === 'Escape') close();
+        if (e.key === 'ArrowRight') next();
+        if (e.key === 'ArrowLeft') prev();
       });
-      btn.addEventListener('mouseleave', () => { btn.style.transform = ''; });
-    });
-  }
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
-  // ---------- Fotos da pagina Sobre passando sozinhas (crossfade, adicionado 30/08/2026) ----------
-  // Antes so tinha 2 fotos fixas. Agora o usuario pode enviar quantas fotos quiser pelo
-  // painel, e aqui a gente vai trocando de uma pra outra, todas na mesma posicao (crossfade).
-  const aboutSlides = document.querySelectorAll('.about-photo-slide');
-  if (aboutSlides.length > 1) {
-    let aboutIndex = 0;
-    setInterval(() => {
-      aboutSlides[aboutIndex].classList.remove('is-active');
-      aboutIndex = (aboutIndex + 1) % aboutSlides.length;
-      aboutSlides[aboutIndex].classList.add('is-active');
-    }, 3500);
-  }
+  // Contador de visualizações: como a página do projeto pode ser servida como HTML estático
+  // (sem código rodando a cada acesso), a visualização é somada aqui, pelo navegador, uma vez
+  // por carregamento de página — via fetch pra /api/visualizar/:slug.
+  try {
+    var viewsBlock = document.querySelector('[data-views-block]');
+    if (viewsBlock) {
+      var viewsSlug = viewsBlock.getAttribute('data-project');
+      if (viewsSlug) {
+        fetch(API_BASE + '/api/visualizar/' + encodeURIComponent(viewsSlug), { method: 'POST' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && typeof data.views === 'number') {
+              var viewCountEl = viewsBlock.querySelector('[data-view-count]');
+              if (viewCountEl) viewCountEl.textContent = data.views;
+              var viewWordEl = viewsBlock.querySelector('[data-view-word]');
+              if (viewWordEl) viewWordEl.textContent = data.views === 1 ? 'ção' : 'ções';
+            }
+          })
+          .catch(function () { /* falha de rede: mantém o número já exibido na página */ });
+      }
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
-  // ---------- Botao "voltar ao topo" (adicionado 30/08/2026) ----------
-  // Fica escondido ate a pessoa rolar um pouco a pagina, depois aparece no
-  // canto inferior esquerdo e leva de volta ao topo com rolagem suave.
-  const backToTop = document.querySelector('[data-back-to-top]');
-  if (backToTop) {
-    const toggleBackToTop = () => {
-      if (window.scrollY > window.innerHeight * 0.6) backToTop.classList.add('is-visible');
-      else backToTop.classList.remove('is-visible');
-    };
-    toggleBackToTop();
-    window.addEventListener('scroll', toggleBackToTop, { passive: true });
-    backToTop.addEventListener('click', () => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Botão de curtir do projeto.
+  try {
+    var likeBtns = Array.from(document.querySelectorAll('[data-like-btn]'));
+    likeBtns.forEach(function (btn) {
+      var slug = btn.getAttribute('data-project');
+      if (!slug) return;
+      var storageKey = 'nj_liked_' + slug;
+      var already = false;
+      try { already = !!window.localStorage.getItem(storageKey); } catch (e) { already = false; }
+      if (already) btn.classList.add('liked');
+
+      btn.addEventListener('click', function () {
+        var liked = false;
+        try { liked = !!window.localStorage.getItem(storageKey); } catch (e) { liked = false; }
+        if (liked || btn.disabled) return;
+        btn.disabled = true;
+        fetch(API_BASE + '/api/curtir/' + encodeURIComponent(slug), { method: 'POST' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && typeof data.likes === 'number') {
+              var countEl = btn.querySelector('[data-like-count]');
+              if (countEl) countEl.textContent = data.likes;
+              btn.classList.add('liked');
+              try { window.localStorage.setItem(storageKey, '1'); } catch (e) { /* localStorage indisponível, sem problema */ }
+            }
+          })
+          .catch(function () { /* falha de rede: apenas destrava o botão pra tentar de novo */ })
+          .finally(function () { btn.disabled = false; });
+      });
     });
-  }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 })();
