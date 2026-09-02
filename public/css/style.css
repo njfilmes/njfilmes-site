@@ -646,15 +646,6 @@ section { padding: 110px 0; position: relative; }
   transition: transform 0.3s var(--ease);
 }
 .instagram-float:hover { transform: scale(0.98); }
-.youtube-float {
-  position: fixed; bottom: 160px; right: 24px; z-index: 600;
-  width: 50px; height: 50px; border-radius: 50%;
-  background: #FF0000; color: #fff;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  transition: transform 0.3s var(--ease);
-}
-.youtube-float:hover { transform: scale(0.98); }
 @keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(37,211,102,0.25);} 50% { box-shadow: 0 8px 30px rgba(37,211,102,0.55);} }
 
 /* ---------- Lightbox ---------- */
@@ -823,16 +814,14 @@ section { padding: 110px 0; position: relative; }
 }
 
 @media (max-width: 720px) {
-  .whatsapp-float, .instagram-float, .youtube-float {
+  .whatsapp-float, .instagram-float {
     width: 42px; height: 42px;
     right: 16px;
   }
   .whatsapp-float { bottom: 16px; }
   .instagram-float { bottom: 66px; }
-  .youtube-float { bottom: 116px; }
   .whatsapp-float svg { width: 20px; height: 20px; }
   .instagram-float svg { width: 17px; height: 17px; }
-  .youtube-float svg { width: 18px; height: 18px; }
 }
 
 /* ---------- Barra de progresso de rolagem ---------- */
