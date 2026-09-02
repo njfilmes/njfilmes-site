@@ -9,6 +9,7 @@ import { getSessionIdFromReq, getSessionAdmin, findAdminByEmail, createAdminUser
 import { query, initSchema } from './db.js';
 import * as Pub from './routes/public.js';
 import * as Admin from './routes/admin.js';
+import * as SeedAdmin from './routes/seedAdmin.js';
 import { listCategories, getSettings, listAllProjectsForAdmin } from './queries.js';
 import { layout } from './render.js';
 import { triggerStaticRebuild } from './deployHook.js';
@@ -223,6 +224,13 @@ async function router(req, res) {
     }
 
     if (pathname === '/admin' && method === 'GET') return Admin.dashboardPage(req, res, admin);
+
+    // Rota temporária de configuração inicial (ver server/routes/admin.js) — usada uma vez para
+    // popular um banco novo (ex.: Neon) sem precisar de terminal no servidor.
+    if (pathname === '/admin/rodar-seed-inicial') {
+      if (method === 'GET') return SeedAdmin.seedPage(req, res, admin);
+      if (method === 'POST') return SeedAdmin.seedSubmit(req, res, admin);
+    }
 
     if (pathname === '/admin/categorias' && method === 'GET') return Admin.categoriesPage(req, res, admin);
     if (pathname === '/admin/categorias/criar' && method === 'POST') return Admin.categoryCreate(req, res, await parseBody(req));
