@@ -2,7 +2,7 @@
 // Uso: node scripts/create-admin.js seu@email.com "sua senha" "Seu Nome"
 // Normalmente você não vai precisar disso: na primeira vez que acessar /admin,
 // o próprio site oferece uma tela para criar o administrador pelo navegador.
-import { db } from '../server/db.js';
+import { query, initSchema } from '../server/db.js';
 import { createAdminUser, findAdminByEmail, hashPassword } from '../server/auth.js';
 
 const [, , email, password, name] = process.argv;
@@ -12,12 +12,14 @@ if (!email || !password) {
   process.exit(1);
 }
 
-const existing = findAdminByEmail(email);
+await initSchema();
+
+const existing = await findAdminByEmail(email);
 if (existing) {
   const { hash, salt } = hashPassword(password);
-  db.prepare('UPDATE admin_users SET password_hash = ?, salt = ? WHERE id = ?').run(hash, salt, existing.id);
+  await query('UPDATE admin_users SET password_hash = $1, salt = $2 WHERE id = $3', [hash, salt, existing.id]);
   console.log(`Senha atualizada para o administrador existente: ${email}`);
 } else {
-  createAdminUser({ email, password, name: name || 'Administrador' });
+  await createAdminUser({ email, password, name: name || 'Administrador' });
   console.log(`Administrador criado: ${email}`);
 }

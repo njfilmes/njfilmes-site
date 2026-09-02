@@ -35,6 +35,8 @@ if (!process.env.PUBLIC_API_BASE) {
 const { layout } = await import('../server/render.js');
 const Pub = await import('../server/routes/public.js');
 const { listCategories, listAllProjectsForAdmin, getSettings } = await import('../server/queries.js');
+const { initSchema } = await import('../server/db.js');
+await initSchema();
 
 // "Resposta falsa": os handlers de server/routes/public.js foram escritos pra um res.end(html)
 // de verdade (http.ServerResponse). Aqui a gente só captura o texto que seria enviado, sem

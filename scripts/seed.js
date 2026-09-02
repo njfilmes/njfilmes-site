@@ -1,26 +1,28 @@
 // Popula o banco com conteúdo de demonstração (claramente fictício) para o site não ficar vazio,
 // além de já deixar configurados os dados reais que a NJFILMES informou (WhatsApp, Instagram, bio).
 // Pode ser rodado quantas vezes quiser: só cria o que ainda não existe.
-import { db } from '../server/db.js';
+import { query, queryOne, initSchema } from '../server/db.js';
 import * as Q from '../server/queries.js';
-import { slugify, uniqueSlug } from '../server/util.js';
+import { slugify, uniqueSlug, parseVideoUrl } from '../server/util.js';
 
-function ensureCategory(name) {
-  const existing = db.prepare('SELECT * FROM categories WHERE slug = ?').get(slugify(name));
+await initSchema();
+
+async function ensureCategory(name) {
+  const existing = await queryOne('SELECT * FROM categories WHERE slug = $1', [slugify(name)]);
   if (existing) return existing.id;
-  const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM categories').get().m;
-  return Q.createCategory({ name, slug: slugify(name), sort_order: maxOrder + 1 });
+  const maxRow = await queryOne('SELECT COALESCE(MAX(sort_order),0) as m FROM categories');
+  return Q.createCategory({ name, slug: slugify(name), sort_order: Number(maxRow.m) + 1 });
 }
 
 const categoryNames = ['Casamentos', 'Eventos', 'Videoclipes', 'Institucional', 'Artistas', 'Drone', 'Fotografia', 'Reels / Conteúdo'];
 const categoryIds = {};
 for (const name of categoryNames) {
-  categoryIds[name] = ensureCategory(name);
+  categoryIds[name] = await ensureCategory(name);
 }
 console.log('Categorias garantidas:', categoryNames.join(', '));
 
 // Configurações com os dados reais informados pela NJFILMES
-Q.updateSettings({
+await Q.updateSettings({
   site_name: 'NJFILMES',
   tagline: 'Produção audiovisual cinematográfica',
   whatsapp_number: '5571986817816',
@@ -40,7 +42,7 @@ Q.updateSettings({
 console.log('Configurações atualizadas com os dados reais da NJFILMES.');
 
 // Biografia com os dados reais informados
-Q.updateBio({
+await Q.updateBio({
   name: 'Noberto Junior (NJ)',
   professional_title: 'Videomaker & Fotógrafo — NJFILMES',
   biography:
@@ -66,12 +68,12 @@ const services = [
   ['Vídeos institucionais', 'Conteúdo corporativo para apresentar sua marca com profissionalismo.'],
   ['Conteúdo para redes sociais', 'Reels, bastidores e conteúdo dinâmico para Instagram e TikTok.'],
 ];
-let order = db.prepare('SELECT COALESCE(MAX(sort_order),0) as m FROM services').get().m;
+let order = Number((await queryOne('SELECT COALESCE(MAX(sort_order),0) as m FROM services')).m);
 for (const [title, description] of services) {
-  const exists = db.prepare('SELECT id FROM services WHERE title = ?').get(title);
+  const exists = await queryOne('SELECT id FROM services WHERE title = $1', [title]);
   if (exists) continue;
   order += 1;
-  Q.createService({ title, description, sort_order: order, published: true });
+  await Q.createService({ title, description, sort_order: order, published: true });
 }
 console.log('Serviços garantidos.');
 
@@ -107,10 +109,10 @@ const demoProjects = [
 ];
 
 for (const p of demoProjects) {
-  const existing = db.prepare('SELECT id FROM projects WHERE title = ?').get(p.title);
+  const existing = await queryOne('SELECT id FROM projects WHERE title = $1', [p.title]);
   if (existing) continue;
-  const slug = await uniqueSlug(db, 'projects', p.title);
-  const id = Q.createProject({
+  const slug = await uniqueSlug('projects', p.title);
+  const id = await Q.createProject({
     title: p.title,
     slug,
     category_id: categoryIds[p.category] || null,
@@ -123,9 +125,8 @@ for (const p of demoProjects) {
     featured: p.featured,
   });
   if (p.video) {
-    const { parseVideoUrl } = await import('../server/util.js');
     const parsed = parseVideoUrl(p.video);
-    if (parsed) Q.addProjectVideo(id, { provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: 'Filme completo', sort_order: 1 });
+    if (parsed) await Q.addProjectVideo(id, { provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: 'Filme completo', sort_order: 1 });
   }
   console.log('Projeto de exemplo criado:', p.title);
 }
