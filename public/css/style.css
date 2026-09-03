@@ -699,6 +699,11 @@ html.no-intro .cine-intro { display: none; }
 .video-like-btn .heart::before { content: "♡"; }
 .video-views { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--fg-muted); }
 .video-views .eye { font-size: 1rem; }
+/* Atalho pros comentários junto de curtir/visualizações, no estilo rede social — clicar rola
+   suave até a seção Comentários (âncora #comentarios, scroll-behavior:smooth já está no html). */
+.video-comments-link { display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; color: var(--fg-muted); text-decoration: none; transition: color 0.3s var(--ease); }
+.video-comments-link:hover { color: var(--accent); }
+.video-comments-link .comment-ico { font-size: 1rem; line-height: 1; }
 
 /* ---------- CTA final ---------- */
 .cta-section { text-align: center; }
