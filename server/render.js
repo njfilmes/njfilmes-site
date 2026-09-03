@@ -134,6 +134,8 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
   <div class="container header-inner">
     <a href="/" class="logo logo-img"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES" class="logo-img-el"></a>
     <nav class="main-nav" data-nav>
+      <span class="nav-glow nav-glow-1" aria-hidden="true"></span>
+      <span class="nav-glow nav-glow-2" aria-hidden="true"></span>
       <button class="nav-close" data-nav-close type="button" aria-label="Fechar menu">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
