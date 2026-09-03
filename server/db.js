@@ -342,6 +342,18 @@ export async function initSchema() {
                                   );
                                     `);
 
+  // Fotos de destaque da Home que ficam passando (crossfade) na primeira tela do site, além da
+  // foto única de sempre (settings.hero_photo) — pedido do usuário em 03/09/2026 pra poder
+  // colocar mais fotos e escolher quais entram no rodízio, editável pelo painel (Configurações).
+  await query(`
+      CREATE TABLE IF NOT EXISTS hero_photos (
+            id SERIAL PRIMARY KEY,
+                  filename TEXT NOT NULL,
+                        sort_order INTEGER NOT NULL DEFAULT 0,
+                              created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                  );
+                                    `);
+
   // Depoimentos em vídeo de clientes, exibidos numa faixa de rolagem manual na Home.
   await query(`
       CREATE TABLE IF NOT EXISTS testimonials (

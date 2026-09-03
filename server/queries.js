@@ -56,6 +56,22 @@ export async function deleteBioGalleryPhoto(id) {
   await query('DELETE FROM bio_gallery_photos WHERE id = $1', [id]);
 }
 
+// ---------- Fotos de destaque da Home (crossfade na primeira tela, além da foto única) ----------
+export async function listHeroPhotos() {
+  return queryRows('SELECT * FROM hero_photos ORDER BY sort_order ASC, id ASC');
+}
+export async function addHeroPhoto(filename) {
+  const maxRow = await queryOne('SELECT COALESCE(MAX(sort_order),0) as m FROM hero_photos');
+  const row = await queryOne('INSERT INTO hero_photos (filename, sort_order) VALUES ($1, $2) RETURNING id', [
+    filename,
+    Number(maxRow.m) + 1,
+  ]);
+  return row.id;
+}
+export async function deleteHeroPhoto(id) {
+  await query('DELETE FROM hero_photos WHERE id = $1', [id]);
+}
+
 export async function listCategories() {
   return queryRows('SELECT * FROM categories ORDER BY sort_order ASC, name ASC');
 }

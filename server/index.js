@@ -298,6 +298,9 @@ async function router(req, res) {
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
     if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req));
+    if (pathname === '/admin/hero/fotos/upload' && method === 'POST') return Admin.heroPhotosUpload(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/hero\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.heroPhotoDelete(req, res, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/hero\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.heroPhotoMove(req, res, await parseBody(req), Number(m[1]));
     if (pathname === '/admin/conta/senha' && method === 'POST') return Admin.changePasswordSubmit(req, res, await parseBody(req), admin);
 
     if (pathname === '/admin/projetos' && method === 'GET') return Admin.projectsListPage(req, res, admin);
