@@ -801,7 +801,33 @@ html.no-intro .cine-intro { display: none; }
   position: absolute; background: none; border: none; color: var(--fg);
   font-size: 1.6rem; padding: 14px;
 }
-.lightbox-close { top: 14px; right: 14px; }
+/* Pedido em 03/09/2026: o X de fechar a foto ampliada estava pequeno demais e sem nenhuma
+   reação ao toque/clique — pedido pra deixar maior e "mais animado". Virou um botão redondo
+   de verdade (antes era só o caractere × solto), com uma entrada girando+crescendo quando a
+   foto abre, e gira 90° com feedback de toque (encolhe um pouco) ao tocar/clicar — reaproveita
+   o mesmo truque de usar `rotate`/`scale` como propriedades CSS separadas de `transform` (em
+   vez de tudo dentro de transform), já usado no paralaxe mais abaixo, pra entrada e toque não
+   brigarem entre si. */
+.lightbox-close {
+  top: 16px; right: 16px;
+  width: 48px; height: 48px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.9rem; line-height: 1; padding: 0;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18) !important;
+  border-radius: 50%;
+  z-index: 2;
+  transition: rotate 0.35s var(--ease), scale 0.2s var(--ease), background 0.3s var(--ease), border-color 0.3s var(--ease);
+  animation: lightboxCloseIn 0.5s var(--ease) 0.1s both;
+}
+@keyframes lightboxCloseIn { from { opacity: 0; scale: 0.4; rotate: -110deg; } to { opacity: 1; scale: 1; rotate: 0deg; } }
+@media (hover: hover) {
+  .lightbox-close:hover { background: rgba(201,162,39,0.16); border-color: var(--accent) !important; rotate: 90deg; }
+}
+.lightbox-close:active { scale: 0.86; rotate: 90deg; background: rgba(201,162,39,0.2); }
+@media (prefers-reduced-motion: reduce) {
+  .lightbox-close { animation: none; }
+}
 .lightbox-prev { left: 8px; top: 50%; transform: translateY(-50%); font-size: 2.2rem; }
 .lightbox-next { right: 8px; top: 50%; transform: translateY(-50%); font-size: 2.2rem; }
 .lightbox-counter { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 0.8rem; color: var(--fg-muted); }
@@ -888,69 +914,104 @@ html.no-intro .cine-intro { display: none; }
      vez de uma linha pequena igual as outras, um brilho radial sutil no canto (mesma linguagem
      visual do resto do site) e um rodapé fixo com WhatsApp + redes sociais. Cada item entra com
      uma animação encadeada (um depois do outro, via --i e transition-delay) quando o menu abre,
-     em vez de tudo aparecer de uma vez — dá a sensação de profundidade/movimento pedida. */
+     em vez de tudo aparecer de uma vez — dá a sensação de profundidade/movimento pedida.
+
+     Ajustado de novo em 03/09/2026 (usuário achou "muito cru" ainda, pediu mais discreto/bonito
+     e com efeitos 3D): o painel virou vidro fosco de verdade (fundo semi-transparente +
+     backdrop-filter: blur) em vez de cor sólida — como ele fica por cima do .parallax-bg (que é
+     `position: fixed` cobrindo a página inteira desde o layout(), ver mais abaixo no arquivo),
+     as luzes que já andam pela página aparecem borradas atrás do menu, então o mesmo efeito de
+     luz "mora" também aqui em vez de ser uma cor parada. O texto ficou um pouco menor/mais fino
+     (menos "gritando"), os números viraram uma placinha com profundidade própria (sombra +
+     brilho interno, `--font-display` continua igual) e a entrada de cada item agora usa
+     `perspective`+`rotateY`+`translateZ` (em vez de só translateX) pra vir "girando" de lado com
+     sensação de profundidade real, não só deslizando na horizontal. */
   .main-nav {
-    position: fixed; top: 0; right: 0; height: 100vh; width: min(360px, 88vw);
-    background: var(--bg-alt); border-left: 1px solid var(--border);
-    transform: translateX(100%); transition: transform 0.45s var(--ease);
+    position: fixed; top: 0; right: 0; height: 100vh; width: min(340px, 86vw);
+    background: rgba(15,13,10,0.62);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    backdrop-filter: blur(26px) saturate(150%);
+    border-left: 1px solid rgba(255,255,255,0.1);
+    box-shadow: -24px 0 70px rgba(0,0,0,0.55);
+    transform: translateX(100%); transition: transform 0.5s var(--ease);
     display: flex; flex-direction: column; align-items: stretch;
-    padding: 84px 32px 32px;
+    padding: 80px 30px 28px;
     z-index: 400;
     overflow-y: auto;
     overflow-x: hidden;
+    perspective: 1000px;
   }
   .main-nav::before {
     content: '';
     position: absolute; inset: 0;
     background:
-      radial-gradient(circle at 100% 0%, rgba(201,162,39,0.16), transparent 55%),
-      radial-gradient(circle at 0% 100%, rgba(120,55,15,0.14), transparent 60%);
+      radial-gradient(circle at 100% 0%, rgba(201,162,39,0.1), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(120,55,15,0.09), transparent 60%);
     pointer-events: none;
   }
   .main-nav.open { transform: translateX(0); }
   .nav-menu-label {
     display: block;
     position: relative;
-    margin-bottom: 34px;
+    margin-bottom: 30px;
+    font-size: 0.68rem;
     opacity: 0; transform: translateY(-10px);
     transition: opacity 0.5s var(--ease) 0.1s, transform 0.5s var(--ease) 0.1s;
   }
-  .main-nav.open .nav-menu-label { opacity: 1; transform: translateY(0); }
+  .main-nav.open .nav-menu-label { opacity: 0.85; transform: translateY(0); }
   .main-nav > ul.nav-links-list {
     position: relative;
     flex: 1;
     display: flex; flex-direction: column; justify-content: center;
-    gap: 22px;
+    gap: 6px;
   }
   .nav-links-list li {
-    opacity: 0; transform: translateX(28px);
-    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    opacity: 0;
+    transform: perspective(700px) rotateY(-22deg) translateX(30px) translateZ(-50px);
+    transform-origin: right center;
+    transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
     transition-delay: calc(var(--i, 0) * 0.07s + 0.15s);
+    border-bottom: 1px solid rgba(255,255,255,0.055);
   }
-  .main-nav.open .nav-links-list li { opacity: 1; transform: translateX(0); }
+  .nav-links-list li:last-child { border-bottom: none; }
+  .main-nav.open .nav-links-list li { opacity: 1; transform: perspective(700px) rotateY(0) translateX(0) translateZ(0); }
   .nav-links-list a {
-    display: flex; align-items: baseline; gap: 14px;
+    display: flex; align-items: center; gap: 14px;
+    padding: 13px 2px;
     font-family: var(--font-display);
-    font-size: clamp(1.9rem, 8vw, 2.4rem);
-    letter-spacing: 0.01em;
+    font-size: clamp(1.28rem, 5.6vw, 1.56rem);
+    letter-spacing: 0.015em;
     line-height: 1;
+    color: rgba(245,242,235,0.82);
+    text-shadow: 0 1px 0 rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.3);
+    transition: color 0.3s var(--ease), scale 0.15s var(--ease);
   }
+  .nav-links-list a:active { scale: 0.97; color: var(--fg); }
   .nav-link-num {
-    display: inline-block;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: none;
+    width: 26px; height: 26px;
+    border-radius: 7px;
     font-family: var(--font-display);
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
+    font-size: 0.62rem;
+    letter-spacing: 0.03em;
     color: var(--accent);
+    background: linear-gradient(155deg, rgba(201,162,39,0.2), rgba(201,162,39,0.03));
+    border: 1px solid rgba(201,162,39,0.32);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
   }
+  .js .nav-link-num { animation: navNumFloat 4.5s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 0.2s); }
+  @keyframes navNumFloat { 0%, 100% { transform: translateY(0) rotateX(0); } 50% { transform: translateY(-3px) rotateX(12deg); } }
   .has-sub.open > a .nav-link-text { color: var(--accent); }
-  .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 10px 0 0 38px; display: none; }
+  .has-sub.open > a .nav-link-num { border-color: var(--accent); background: linear-gradient(155deg, rgba(201,162,39,0.34), rgba(201,162,39,0.08)); }
+  .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 4px 0 6px 40px; display: none; }
   .has-sub.open .sub-nav { display: block; }
-  .sub-nav li a { font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; }
+  .sub-nav li a { font-family: var(--font-body); font-size: 0.76rem; font-weight: 600; padding: 8px 2px; color: rgba(245,242,235,0.62); }
   .nav-drawer-footer {
-    display: flex; flex-direction: column; gap: 16px;
+    display: flex; flex-direction: column; gap: 14px;
     position: relative;
-    padding-top: 22px; margin-top: 22px;
-    border-top: 1px solid var(--border);
+    padding-top: 20px; margin-top: 18px;
+    border-top: 1px solid rgba(255,255,255,0.08);
     opacity: 0; transform: translateY(12px);
     transition: opacity 0.5s var(--ease) 0.5s, transform 0.5s var(--ease) 0.5s;
   }
@@ -958,20 +1019,29 @@ html.no-intro .cine-intro { display: none; }
   .nav-drawer-footer .btn { width: 100%; justify-content: center; text-align: center; }
   .nav-drawer-footer .social-links { margin-bottom: 0; }
   .nav-toggle { display: flex; }
+  /* Pedido em 03/09/2026: o X de fechar o menu tava discreto demais (pequeno, parado) — deixar
+     maior e mais animado, igual foi pedido pro X da foto ampliada (mesmo truque de rotate/scale
+     como propriedades separadas de transform, ver .lightbox-close mais abaixo). */
   .nav-close {
     display: none;
-    position: absolute; top: 18px; right: 18px;
-    width: 40px; height: 40px; border-radius: 50%;
+    position: absolute; top: 16px; right: 16px;
+    width: 46px; height: 46px; border-radius: 50%;
     align-items: center; justify-content: center;
-    background: none; border: 1px solid var(--border-strong); color: var(--fg);
-    transition: border-color 0.3s var(--ease), background 0.3s var(--ease);
+    background: rgba(255,255,255,0.06); border: 1px solid var(--border-strong); color: var(--fg);
+    transition: border-color 0.3s var(--ease), background 0.3s var(--ease), rotate 0.35s var(--ease), scale 0.2s var(--ease);
   }
-  .nav-close:hover { border-color: var(--accent); background: rgba(201,162,39,0.1); }
-  .main-nav.open .nav-close { display: flex; }
+  .nav-close svg { width: 22px; height: 22px; }
+  .main-nav.open .nav-close { display: flex; animation: lightboxCloseIn 0.5s var(--ease) 0.25s both; }
+  @media (hover: hover) {
+    .nav-close:hover { border-color: var(--accent); background: rgba(201,162,39,0.12); rotate: 90deg; }
+  }
+  .nav-close:active { scale: 0.86; rotate: 90deg; }
   .nav-backdrop {
     display: block;
     position: fixed; inset: 0; z-index: 390;
     background: rgba(0,0,0,0.6);
+    -webkit-backdrop-filter: blur(2px);
+    backdrop-filter: blur(2px);
     opacity: 0; visibility: hidden;
     transition: opacity 0.4s var(--ease), visibility 0.4s;
   }
@@ -1169,22 +1239,38 @@ html.no-intro .cine-intro { display: none; }
   bottom: -16%; left: 30%;
   background: radial-gradient(circle, rgba(255,150,60,0.2), transparent 70%);
 }
+/* Pedido em 03/09/2026: "pode botar mais luzes e mais efeitos na página toda" — 4ª mancha,
+   menor e mais rápida que as outras 3, com um dourado bem claro/quase branco (contraste com o
+   dourado mais escuro das outras), pra dar uma "faísca" extra de vida sem pesar — o painel do
+   menu mobile agora é vidro fosco (ver .main-nav mais acima) e deixa essas luzes aparecerem
+   borradas atrás dele, então quanto mais variedade de luz na página, mais bonito fica ali
+   também. */
+.parallax-layer-4 {
+  width: 22vw; height: 22vw; max-width: 320px; max-height: 320px;
+  top: 62%; left: 4%;
+  background: radial-gradient(circle, rgba(255,224,150,0.3), transparent 70%);
+}
 .js .parallax-layer-1 { animation: parallaxDrift1 14s ease-in-out infinite; }
 .js .parallax-layer-2 { animation: parallaxDrift2 18s ease-in-out infinite; }
 .js .parallax-layer-3 { animation: parallaxDrift3 10s ease-in-out infinite; }
+.js .parallax-layer-4 { animation: parallaxDrift4 8s ease-in-out infinite; }
 @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(16vw, 20vh); } }
 @keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-18vw, -16vh); } }
 @keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-15vw, 19vh); } }
+@keyframes parallaxDrift4 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(13vw, -17vh); } }
 @media (prefers-reduced-motion: reduce) {
-  .parallax-layer-1, .parallax-layer-2, .parallax-layer-3 { animation: none; }
+  .parallax-layer-1, .parallax-layer-2, .parallax-layer-3, .parallax-layer-4 { animation: none; }
 }
-/* Celular: 2 camadas em vez de 3 (mais leve pra bateria/GPU), mas cobrindo topo e meio da
-   página em vez de só uma manchinha no canto — senão fica parecendo "parado num lugar só". */
+/* Celular: 3 camadas em vez de 4 (mais leve pra bateria/GPU) — a 4ª (menor e mais rápida) some,
+   ficam a 1, 2 e 3, cobrindo topo, meio e fundo da página em vez de só uma manchinha no canto —
+   senão fica parecendo "parado num lugar só". */
 @media (max-width: 720px) {
-  .parallax-layer-3 { display: none; }
-  .parallax-layer-1, .parallax-layer-2 { filter: blur(50px); }
+  .parallax-layer-4 { display: none; }
+  .parallax-layer-1, .parallax-layer-2, .parallax-layer-3 { filter: blur(50px); }
   .parallax-layer-1 { background: radial-gradient(circle, rgba(201,162,39,0.34), transparent 70%); }
   .parallax-layer-2 { background: radial-gradient(circle, rgba(120,55,15,0.32), transparent 70%); }
+  .parallax-layer-3 { background: radial-gradient(circle, rgba(255,150,60,0.3), transparent 70%); width: 44vw; height: 44vw; }
   @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10vw, 14vh); } }
   @keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-12vw, -12vh); } }
+  @keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10vw, 13vh); } }
 }
