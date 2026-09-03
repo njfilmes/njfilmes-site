@@ -918,9 +918,10 @@ html.no-intro .cine-intro { display: none; }
   }
   /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
      site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
-     site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo). */
+     site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo).
+     Ajustado (mesmo dia): aumentado bem de leve, a pedido do usuario. */
   .grade-overlay {
-    background: linear-gradient(160deg, rgba(255,140,50,0.07) 0%, rgba(255,120,40,0.05) 45%, rgba(140,60,15,0.08) 100%);
+    background: linear-gradient(160deg, rgba(255,140,50,0.085) 0%, rgba(255,120,40,0.065) 45%, rgba(140,60,15,0.095) 100%);
   }
 }
 @media (max-width: 480px) {
