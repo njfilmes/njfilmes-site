@@ -114,7 +114,11 @@
     // Pedido em 03/09/2026 (mesma ideia aplicada na foto ampliada, mais abaixo): o botão
     // "voltar" do celular com o menu aberto saía da página em vez de só fechar o menu. Agora
     // abrir o menu empilha um estado no histórico e apertar "voltar" fecha o menu em vez de
-    // sair da página; fechar pelo X/fundo/arrasto desempilha esse estado sozinho.
+    // sair da página; fechar pelo X/fundo/arrasto desempilha esse estado sozinho. Empilhamos
+    // com uma "#menu" no final da URL (em vez da URL idêntica de antes) pra garantir que todo
+    // navegador reconheça isso como um estado de verdade diferente do anterior — sem isso,
+    // alguns celulares podem não disparar o popstate de forma confiável quando a URL empilhada
+    // é exatamente igual à de antes.
     var navPushed = false;
     var closeNavImmediate = function () {
       nav.classList.remove('open');
@@ -128,7 +132,7 @@
       toggle.setAttribute('aria-expanded', 'true');
       document.body.style.overflow = 'hidden';
       try {
-        history.pushState({ njNav: true }, '', location.href);
+        history.pushState({ njNav: true }, '', location.pathname + location.search + '#menu');
         navPushed = true;
       } catch (e) {}
     };
@@ -267,7 +271,10 @@
     // gente escuta e usa pra fechar a foto ampliada, sem sair da página. Fechar pelo X, tocando
     // fora da foto ou arrastando pra baixo funciona igual de antes, só que agora chama
     // history.back() pra "desempilhar" esse estado extra — assim o botão físico de voltar
-    // sempre fica consistente com o que a pessoa vê na tela, não importa como ela fechou.
+    // sempre fica consistente com o que a pessoa vê na tela, não importa como ela fechou. Igual
+    // no menu (ver mais acima), empilhamos com uma "#foto" no final da URL em vez da URL
+    // idêntica de antes, pra garantir que todo celular reconheça como um estado diferente de
+    // verdade e dispare o popstate de forma confiável.
     var lightboxPushed = false;
     var closeImmediate = function () {
       lightbox.classList.remove('open');
@@ -279,7 +286,7 @@
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
       try {
-        history.pushState({ njLightbox: true }, '', location.href);
+        history.pushState({ njLightbox: true }, '', location.pathname + location.search + '#foto');
         lightboxPushed = true;
       } catch (e) {}
     };
