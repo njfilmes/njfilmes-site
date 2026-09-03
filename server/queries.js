@@ -75,6 +75,17 @@ export async function deleteHeroPhoto(id) {
 export async function listCategories() {
   return queryRows('SELECT * FROM categories ORDER BY sort_order ASC, name ASC');
 }
+// Igual a listCategories(), mas só traz categorias com pelo menos um projeto publicado —
+// usada nas páginas públicas (menu e filtro do portfólio) pra não listar categoria vazia
+// pro visitante. O painel administrativo (gestão de categorias) continua usando
+// listCategories() normal, porque lá faz sentido ver e editar todas, mesmo as vazias.
+export async function listCategoriesWithProjects() {
+  return queryRows(
+    `SELECT DISTINCT c.* FROM categories c
+     JOIN projects p ON p.category_id = c.id AND p.published = 1
+     ORDER BY c.sort_order ASC, c.name ASC`
+  );
+}
 export async function getCategoryBySlug(slug) {
   return queryOne('SELECT * FROM categories WHERE slug = $1', [slug]);
 }

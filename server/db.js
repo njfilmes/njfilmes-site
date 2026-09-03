@@ -418,7 +418,7 @@ export async function initSchema() {
     }
     // 03/09/2026: permite trocar a foto de destaque da Home (o usuario segurando a
     // camera) pelo painel, em vez de ser um arquivo fixo no codigo. Se ficar vazia,
-    // o site continua usando a imagem padrao (public/img/hero-poster.jpg).
+    // o site continua usando a imagem padrao (public/img/hero-poster.webp).
     if (!settingsCols.includes('hero_photo')) {
           await query("ALTER TABLE settings ADD COLUMN hero_photo TEXT DEFAULT ''");
     }

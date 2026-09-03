@@ -1,5 +1,6 @@
 // Camada de renderização (SSR simples, sem framework): layout base + helpers de SEO.
 import { escapeHtml, truncate } from './util.js';
+import { ASSET_VERSION } from './assetVersion.js';
 
 export const SITE_URL = process.env.SITE_URL || 'https://njfilmes.com.br';
 
@@ -34,6 +35,7 @@ export function layout({
   content,
   structuredData = null,
   noindex = false,
+  preloadImage = null,
 }) {
   const fullTitle = title ? `${title} | ${settings.site_name || 'NJFILMES'}` : (settings.meta_title || 'NJFILMES');
   const desc = truncate(description || settings.meta_description || '', 160);
@@ -110,20 +112,26 @@ ${noindex ? '<meta name="robots" content="noindex, nofollow">' : '<meta name="ro
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/css/style.css">
+${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
+<link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
 </head>
 <body class="${escapeHtml(bodyClass)}">
 <div class="cine-intro" data-cine-intro aria-hidden="true">
   <div class="cine-intro-bar cine-intro-bar-top"></div>
   <div class="cine-intro-bar cine-intro-bar-bottom"></div>
-  <div class="cine-intro-logo"><img src="/img/nj-logo.png" alt=""></div>
+  <div class="cine-intro-logo"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt=""></div>
 </div>
 <div class="noise-overlay" aria-hidden="true"></div>
 <div class="grade-overlay" aria-hidden="true"></div>
+<div class="parallax-bg" aria-hidden="true">
+  <span class="parallax-layer parallax-layer-1"></span>
+  <span class="parallax-layer parallax-layer-2"></span>
+  <span class="parallax-layer parallax-layer-3"></span>
+</div>
 <header class="site-header" data-header>
   <div class="container header-inner">
-    <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
+    <a href="/" class="logo logo-img"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES" class="logo-img-el"></a>
     <nav class="main-nav" data-nav>
       <button class="nav-close" data-nav-close type="button" aria-label="Fechar menu">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
@@ -153,7 +161,7 @@ ${content}
 <footer class="site-footer">
   <div class="container footer-inner">
     <div class="footer-brand">
-      <a href="/" class="logo logo-img"><img src="/img/nj-logo.png" alt="NJFILMES" class="logo-img-el"></a>
+      <a href="/" class="logo logo-img"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES" class="logo-img-el"></a>
       <p>${escapeHtml(settings.footer_text || '')}</p>
     </div>
     <div class="footer-links">
@@ -188,7 +196,7 @@ ${wa ? `<a href="${escapeHtml(wa)}" class="whatsapp-float" target="_blank" rel="
 </a>` : ''}
 
 <script>window.NJFILMES_API_BASE = ${JSON.stringify(PUBLIC_API_BASE)};</script>
-<script src="/js/site.js" defer></script>
+<script src="/js/site.js?v=${ASSET_VERSION}" defer></script>
 </body>
 </html>`;
 }
