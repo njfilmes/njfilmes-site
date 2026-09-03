@@ -417,4 +417,141 @@
       });
     });
   } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
+
+  // Comentários dos visitantes na página do projeto: como a página pode ser HTML estático, a
+  // lista é buscada aqui via fetch (não vem pronta no HTML) e o formulário envia via fetch
+  // também. O conteúdo digitado por visitantes é sempre inserido via textContent (nunca
+  // innerHTML) para não correr risco nenhum de injeção de HTML/script.
+  try {
+    var commentsSection = document.querySelector('[data-comments]');
+    if (commentsSection) {
+      var commentsSlug = commentsSection.getAttribute('data-project');
+      var commentsListEl = commentsSection.querySelector('[data-comments-list]');
+      var commentForm = commentsSection.querySelector('[data-comment-form]');
+      var commentStatusEl = commentsSection.querySelector('[data-comment-status]');
+
+      var formatCommentDate = function (iso) {
+        try {
+          var d = new Date(iso);
+          if (isNaN(d.getTime())) return '';
+          return d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        } catch (e) { return ''; }
+      };
+
+      var renderComments = function (comments) {
+        if (!commentsListEl) return;
+        commentsListEl.textContent = '';
+        if (!comments || !comments.length) {
+          var empty = document.createElement('p');
+          empty.className = 'comments-empty';
+          empty.textContent = 'Nenhum comentário ainda. Seja o primeiro a comentar!';
+          commentsListEl.appendChild(empty);
+          return;
+        }
+        comments.forEach(function (c) {
+          var item = document.createElement('div');
+          item.className = 'comment-item';
+
+          var head = document.createElement('div');
+          head.className = 'comment-head';
+          var author = document.createElement('span');
+          author.className = 'comment-author';
+          author.textContent = c.author_name || '';
+          var date = document.createElement('span');
+          date.className = 'comment-date';
+          date.textContent = formatCommentDate(c.created_at);
+          head.appendChild(author);
+          head.appendChild(date);
+          item.appendChild(head);
+
+          var body = document.createElement('p');
+          body.className = 'comment-content';
+          body.textContent = c.content || '';
+          item.appendChild(body);
+
+          if (c.admin_reply) {
+            var reply = document.createElement('div');
+            reply.className = 'comment-reply';
+            var label = document.createElement('span');
+            label.className = 'comment-reply-label';
+            label.textContent = 'Resposta da NJFILMES';
+            var replyBody = document.createElement('p');
+            replyBody.style.margin = '0';
+            replyBody.textContent = c.admin_reply;
+            reply.appendChild(label);
+            reply.appendChild(replyBody);
+            item.appendChild(reply);
+          }
+
+          commentsListEl.appendChild(item);
+        });
+      };
+
+      var loadComments = function () {
+        if (!commentsSlug) return;
+        fetch(API_BASE + '/api/comentarios/' + encodeURIComponent(commentsSlug))
+          .then(function (r) { return r.json(); })
+          .then(function (data) { renderComments(data && data.comments); })
+          .catch(function () {
+            if (commentsListEl) {
+              commentsListEl.textContent = '';
+              var err = document.createElement('p');
+              err.className = 'comments-empty';
+              err.textContent = 'Não foi possível carregar os comentários agora.';
+              commentsListEl.appendChild(err);
+            }
+          });
+      };
+      loadComments();
+
+      if (commentForm) {
+        commentForm.addEventListener('submit', function (ev) {
+          ev.preventDefault();
+          if (!commentsSlug) return;
+          var submitBtn = commentForm.querySelector('button[type="submit"]');
+          var authorName = commentForm.querySelector('[name="author_name"]');
+          var content = commentForm.querySelector('[name="content"]');
+          var honeypot = commentForm.querySelector('[name="empresa"]');
+
+          if (commentStatusEl) { commentStatusEl.textContent = ''; commentStatusEl.className = 'comment-form-status'; }
+          if (submitBtn) submitBtn.disabled = true;
+
+          fetch(API_BASE + '/api/comentarios/' + encodeURIComponent(commentsSlug), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              author_name: authorName ? authorName.value : '',
+              content: content ? content.value : '',
+              empresa: honeypot ? honeypot.value : '',
+            }),
+          })
+            .then(function (r) { return r.json().then(function (data) { return { ok: r.ok, data: data }; }); })
+            .then(function (result) {
+              if (result.ok && result.data && result.data.ok) {
+                commentForm.reset();
+                if (commentStatusEl) {
+                  commentStatusEl.textContent = 'Comentário enviado!';
+                  commentStatusEl.className = 'comment-form-status is-success';
+                }
+                loadComments();
+              } else {
+                if (commentStatusEl) {
+                  commentStatusEl.textContent = (result.data && result.data.error) || 'Não foi possível enviar seu comentário.';
+                  commentStatusEl.className = 'comment-form-status is-error';
+                }
+              }
+            })
+            .catch(function () {
+              if (commentStatusEl) {
+                commentStatusEl.textContent = 'Falha de conexão. Tente novamente.';
+                commentStatusEl.className = 'comment-form-status is-error';
+              }
+            })
+            .finally(function () {
+              if (submitBtn) submitBtn.disabled = false;
+            });
+        });
+      }
+    }
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 })();
