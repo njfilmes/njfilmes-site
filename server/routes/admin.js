@@ -1146,7 +1146,10 @@ function projectInfoForm({ action, project = {}, categories }) {
 
 export async function projectNewPage(req, res, admin) {
   const categories = await Q.listCategories();
-  const content = `<div class="panel"><h2>Novo projeto</h2>${projectInfoForm({ action: '/admin/projetos/criar', categories })}</div>`;
+  // hide_gallery vem marcado por padrão em projeto novo — pedido do usuário em 03/09/2026 pra
+  // não precisar lembrar de marcar toda vez; ainda dá pra desmarcar manualmente se algum dia
+  // quiser mostrar a Galeria de algum projeto específico.
+  const content = `<div class="panel"><h2>Novo projeto</h2>${projectInfoForm({ action: '/admin/projetos/criar', categories, project: { hide_gallery: true } })}</div>`;
   res.end(adminLayout({ title: 'Novo projeto', activePath: '/admin/projetos', admin, content }));
 }
 
