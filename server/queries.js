@@ -143,7 +143,7 @@ async function attachRelations(project) {
   return project;
 }
 
-export async function listProjects({ onlyPublished = false, categoryId = null, featuredOnly = false, limit = null } = {}) {
+export async function listProjects({ onlyPublished = false, categoryId = null, featuredOnly = false, excludeHiddenFromRecent = false, limit = null } = {}) {
   const clauses = [];
   const params = [];
   if (onlyPublished) clauses.push('p.published = 1');
@@ -152,6 +152,7 @@ export async function listProjects({ onlyPublished = false, categoryId = null, f
     clauses.push(`p.category_id = $${params.length}`);
   }
   if (featuredOnly) clauses.push('p.featured = 1');
+  if (excludeHiddenFromRecent) clauses.push('p.hide_from_recent = 0');
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const lim = limit ? `LIMIT ${Number(limit)}` : '';
   return queryRows(
@@ -209,8 +210,8 @@ export async function incrementProjectLikes(id) {
 export async function createProject(data) {
   const now = new Date().toISOString();
   const row = await queryOne(
-    `INSERT INTO projects (title, slug, category_id, description, project_date, location, cover_photo, credits, additional_info, published, featured, sort_order, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14) RETURNING id`,
+    `INSERT INTO projects (title, slug, category_id, description, project_date, location, cover_photo, credits, additional_info, published, featured, hide_from_recent, sort_order, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
     [
       data.title,
       data.slug,
@@ -223,6 +224,7 @@ export async function createProject(data) {
       data.additional_info || '',
       data.published ? 1 : 0,
       data.featured ? 1 : 0,
+      data.hide_from_recent ? 1 : 0,
       data.sort_order || 0,
       now,
       now,
@@ -233,8 +235,8 @@ export async function createProject(data) {
 
 export async function updateProject(id, data) {
   await query(
-    `UPDATE projects SET title=$1, slug=$2, category_id=$3, description=$4, project_date=$5, location=$6, cover_photo=$7, credits=$8, additional_info=$9, published=$10, featured=$11, sort_order=$12, updated_at=$13
-     WHERE id=$14`,
+    `UPDATE projects SET title=$1, slug=$2, category_id=$3, description=$4, project_date=$5, location=$6, cover_photo=$7, credits=$8, additional_info=$9, published=$10, featured=$11, hide_from_recent=$12, sort_order=$13, updated_at=$14
+     WHERE id=$15`,
     [
       data.title,
       data.slug,
@@ -247,6 +249,7 @@ export async function updateProject(id, data) {
       data.additional_info || '',
       data.published ? 1 : 0,
       data.featured ? 1 : 0,
+      data.hide_from_recent ? 1 : 0,
       data.sort_order || 0,
       new Date().toISOString(),
       id,

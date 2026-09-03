@@ -261,6 +261,7 @@ export async function initSchema() {
                                                                   additional_info TEXT DEFAULT '',
                                                                         published INTEGER NOT NULL DEFAULT 0,
                                                                               featured INTEGER NOT NULL DEFAULT 0,
+                                                                                    hide_from_recent INTEGER NOT NULL DEFAULT 0,
                                                                                     sort_order INTEGER NOT NULL DEFAULT 0,
                                                                                           views INTEGER NOT NULL DEFAULT 0,
                                                                                                 likes INTEGER NOT NULL DEFAULT 0,
@@ -393,6 +394,11 @@ export async function initSchema() {
     }
     if (!projectCols.includes('likes')) {
           await query('ALTER TABLE projects ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
+    }
+    // 03/09/2026: permite ocultar um projeto especifico da vitrine "Portfolio selecionado" da Home,
+    // sem precisar despublicar ele (essa vitrine antes so respeitava featured + mais recentes).
+    if (!projectCols.includes('hide_from_recent')) {
+          await query('ALTER TABLE projects ADD COLUMN hide_from_recent INTEGER NOT NULL DEFAULT 0');
     }
 
   const bioCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'bio'")).map(
