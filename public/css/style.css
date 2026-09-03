@@ -1004,6 +1004,7 @@ html.no-intro .cine-intro { display: none; }
     position: relative;
     padding-left: 34px;
     margin-bottom: 30px;
+    font-family: var(--font-display);
     font-size: clamp(1rem, 4.4vw, 1.2rem);
     letter-spacing: 0.1em;
     color: var(--fg);
