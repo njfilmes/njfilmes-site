@@ -1308,6 +1308,8 @@ function projectInfoForm({ action, project = {}, categories }) {
       ${checkboxField({ label: 'Ocultar a seção "Galeria" na página deste projeto', name: 'hide_gallery', checked: !!project.hide_gallery })}
     </div>
     <p style="margin-top:-8px;color:var(--muted, #888);font-size:0.85rem;">Esconde só a seção "Galeria" (com as fotos da aba Fotos) na página pública deste projeto. A foto de capa continua normal nos cards da Home e do Portfólio — isso não apaga nem afeta nenhuma foto, só some com essa seção específica na página do projeto.</p>
+    ${field({ label: 'Título da seção de fotos', name: 'gallery_title', value: project.gallery_title || 'Galeria', placeholder: 'Galeria' })}
+    <p style="margin-top:-8px;color:var(--muted, #888);font-size:0.85rem;">O nome que aparece acima das fotos deste projeto na página pública (por padrão "Galeria"). Pode trocar por qualquer texto, ex: "Bastidores" ou "Fotos do dia".</p>
     <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
   </form>`;
 }
@@ -1339,6 +1341,7 @@ export async function projectCreate(req, res, body) {
     featured: !!body.featured,
     hide_from_recent: !!body.hide_from_recent,
     hide_gallery: !!body.hide_gallery,
+    gallery_title: (body.gallery_title || '').trim() || 'Galeria',
   });
   redirect(res, `/admin/projetos/${id}` + withFlash(res, 'success', 'Projeto criado! Agora adicione vídeos e fotos.'));
 }
@@ -1450,6 +1453,7 @@ export async function projectUpdate(req, res, body, id) {
     featured: !!body.featured,
     hide_from_recent: !!body.hide_from_recent,
     hide_gallery: !!body.hide_gallery,
+    gallery_title: (body.gallery_title || '').trim() || 'Galeria',
     sort_order: project.sort_order,
   });
   redirect(res, `/admin/projetos/${id}` + withFlash(res, 'success', 'Projeto atualizado.'));

@@ -528,7 +528,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
 
   ${otherPhotos.length && !project.hide_gallery ? `<section class="${project.videos.length ? 'alt-bg' : ''}">
     <div class="container">
-      <h3 class="reveal">Galeria</h3>
+      <h3 class="reveal">${escapeHtml(project.gallery_title || 'Galeria')}</h3>
       <div class="gallery-grid" data-lightbox-source>
         ${otherPhotos.map((p, i) => `<button type="button" class="reveal reveal-delay-${(i % 3) + 1}" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
           <img src="${escapeHtml(p.thumb_filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
