@@ -144,6 +144,11 @@ color: var(--a-muted); margin-bottom: 22px; cursor: pointer; transition: border-
 
 .empty-hint { color: var(--a-muted); font-size: 0.88rem; padding: 20px 0; }
 
+/* Comentários */
+.comment-admin-item .comment-admin-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+.comment-admin-item .comment-admin-content { white-space: pre-wrap; color: var(--a-fg); margin: 0 0 16px; }
+.comment-admin-item .comment-admin-reply-form { margin-top: 4px; }
+
 /* Login */
 .admin-login-body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
 .admin-login-box { width: 380px; max-width: 90vw; background: var(--a-panel); border: 1px solid var(--a-border); border-radius: 12px; padding: 40px; }
