@@ -262,6 +262,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    .nav-toggle acima) - por isso o X aparecia solto no topo da versao de PC. */
 .nav-close { display: none; }
 .nav-backdrop { display: none; }
+/* Numeração, rótulo "Menu" e rodapé (WhatsApp + redes) do menu mobile só existem visualmente
+   no celular — no desktop o link mostra só o texto, igual sempre foi. */
+.nav-link-num { display: none; }
+.nav-menu-label { display: none; }
+.nav-drawer-footer { display: none; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -566,8 +571,13 @@ html.no-intro .cine-intro { display: none; }
   gap: 16px;
   width: max-content;
   animation: marquee-scroll 32s linear infinite;
+  cursor: grab;
+  touch-action: pan-y;
 }
 .marquee:hover .marquee-track { animation-play-state: paused; }
+/* Pode ser arrastada igual a faixa de Bastidores (mesmo padrão data-drag-scroll-track em
+   site.js) — pausa ao mexer, volta a rolar sozinha depois de alguns segundos parada. */
+.marquee-track.dragging { cursor: grabbing; }
 /* Pedido em 02/09/2026 ("o mais animado e 3D possivel"): a faixa que rola sozinha ganha uma
    inclinacao 3D leve e constante (tipo prateleira/coverflow), mantida durante toda a rolagem
    porque o rotateX faz parte do proprio keyframe (senao a rolagem apagaria a inclinacao). */
@@ -870,17 +880,83 @@ html.no-intro .cine-intro { display: none; }
 }
 @media (max-width: 720px) {
   section { padding: 72px 0; }
+  /* Menu mobile redesenhado em 03/09/2026 (pedido do usuário: o antigo era "sem graça", uma
+     lista plana e uniforme sem hierarquia visual). Mantém a mesma estrutura/JS de sempre (painel
+     que desliza da direita, .open alterna tudo) mas agora: título "MENU" no topo, cada link com
+     índice numerado (01, 02...) na cor de destaque igual o site já usa em .service-card .num,
+     texto grande na fonte de título (--font-display, a mesma dos títulos gigantes do site) em
+     vez de uma linha pequena igual as outras, um brilho radial sutil no canto (mesma linguagem
+     visual do resto do site) e um rodapé fixo com WhatsApp + redes sociais. Cada item entra com
+     uma animação encadeada (um depois do outro, via --i e transition-delay) quando o menu abre,
+     em vez de tudo aparecer de uma vez — dá a sensação de profundidade/movimento pedida. */
   .main-nav {
-    position: fixed; top: 0; right: 0; height: 100vh; width: min(320px, 84vw);
+    position: fixed; top: 0; right: 0; height: 100vh; width: min(360px, 88vw);
     background: var(--bg-alt); border-left: 1px solid var(--border);
-    transform: translateX(100%); transition: transform 0.4s var(--ease);
-    display: flex; align-items: center; padding: 40px 32px;
+    transform: translateX(100%); transition: transform 0.45s var(--ease);
+    display: flex; flex-direction: column; align-items: stretch;
+    padding: 84px 32px 32px;
     z-index: 400;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  .main-nav::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 100% 0%, rgba(201,162,39,0.16), transparent 55%),
+      radial-gradient(circle at 0% 100%, rgba(120,55,15,0.14), transparent 60%);
+    pointer-events: none;
   }
   .main-nav.open { transform: translateX(0); }
-  .main-nav > ul { flex-direction: column; gap: 26px; }
-  .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 10px 0 0 16px; display: none; }
+  .nav-menu-label {
+    display: block;
+    position: relative;
+    margin-bottom: 34px;
+    opacity: 0; transform: translateY(-10px);
+    transition: opacity 0.5s var(--ease) 0.1s, transform 0.5s var(--ease) 0.1s;
+  }
+  .main-nav.open .nav-menu-label { opacity: 1; transform: translateY(0); }
+  .main-nav > ul.nav-links-list {
+    position: relative;
+    flex: 1;
+    display: flex; flex-direction: column; justify-content: center;
+    gap: 22px;
+  }
+  .nav-links-list li {
+    opacity: 0; transform: translateX(28px);
+    transition: opacity 0.5s var(--ease), transform 0.5s var(--ease);
+    transition-delay: calc(var(--i, 0) * 0.07s + 0.15s);
+  }
+  .main-nav.open .nav-links-list li { opacity: 1; transform: translateX(0); }
+  .nav-links-list a {
+    display: flex; align-items: baseline; gap: 14px;
+    font-family: var(--font-display);
+    font-size: clamp(1.9rem, 8vw, 2.4rem);
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+  .nav-link-num {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+  }
+  .has-sub.open > a .nav-link-text { color: var(--accent); }
+  .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 10px 0 0 38px; display: none; }
   .has-sub.open .sub-nav { display: block; }
+  .sub-nav li a { font-family: var(--font-body); font-size: 0.78rem; font-weight: 600; }
+  .nav-drawer-footer {
+    display: flex; flex-direction: column; gap: 16px;
+    position: relative;
+    padding-top: 22px; margin-top: 22px;
+    border-top: 1px solid var(--border);
+    opacity: 0; transform: translateY(12px);
+    transition: opacity 0.5s var(--ease) 0.5s, transform 0.5s var(--ease) 0.5s;
+  }
+  .main-nav.open .nav-drawer-footer { opacity: 1; transform: translateY(0); }
+  .nav-drawer-footer .btn { width: 100%; justify-content: center; text-align: center; }
+  .nav-drawer-footer .social-links { margin-bottom: 0; }
   .nav-toggle { display: flex; }
   .nav-close {
     display: none;
@@ -1045,18 +1121,21 @@ html.no-intro .cine-intro { display: none; }
 .comments-empty { color: var(--fg-dim); }
 
 /* ---------- Fundo com profundidade (paralaxe) ---------- */
-/* Pedido em 03/09/2026, ajustado em 03/09/2026 depois de testar ao vivo: a primeira versão
-   (só deriva ambiente via CSS, sem JS) ficou sutil demais — em boa parte da página as manchas
-   de luz ficam atrás de seções com fundo próprio (foto, vídeo, .alt-bg) e, nos trechos de fundo
-   liso onde aparecem, o movimento era pequeno e lento demais pra se notar num relance. Mantém o
-   mesmo padrão visual do .cursor-glow (camada fixa, pointer-events:none, mix-blend-mode:screen,
-   desfoque), mas agora com: cores mais fortes, manchas maiores, animação mais rápida — e, além
-   da deriva ambiente própria de cada uma (continua rodando sozinha via @keyframes), um
-   deslocamento extra que ACOMPANHA A ROLAGEM da página (ver site.js), pra dar a sensação real
-   de profundidade/paralaxe (camadas "andando" em velocidades diferentes conforme rola).
-   O deslocamento de scroll é aplicado via `translate` (propriedade separada de `transform`,
-   ver https://developer.mozilla.org/docs/Web/CSS/translate) exatamente pra não conflitar com a
-   animação CSS abaixo, que usa `transform` — as duas se somam automaticamente no elemento.
+/* Pedido em 03/09/2026, ajustado duas vezes no mesmo dia depois de testar ao vivo no celular:
+   1ª versão (só deriva ambiente via CSS, sem JS) ficou sutil demais. 2ª versão adicionou
+   deslocamento ligado ao scroll, mas as 3 manchas continuavam "moradas" perto do canto onde
+   nasceram (posições fixas tipo -14%/-10% etc) e o passeio era curto (~60-80px) — de longe
+   parecia uma mancha parada, não algo "andando pela página toda". Agora: manchas espalhadas em
+   alturas bem diferentes (uma no topo, uma no meio, uma embaixo, ver top/bottom de cada
+   .parallax-layer-N) e o deslocamento do scroll (site.js) ficou bem maior — várias centenas de
+   pixels, em X e em Y — então conforme a pessoa rola a página elas realmente atravessam boa
+   parte da tela, não só balançam no lugar. Mantém o mesmo padrão visual do .cursor-glow (camada
+   fixa, pointer-events:none, mix-blend-mode:screen, desfoque). Além da deriva ambiente própria
+   de cada uma (roda sozinha via @keyframes, mesmo parada), o deslocamento extra do scroll é
+   aplicado via `translate` (propriedade separada de `transform`, ver
+   https://developer.mozilla.org/docs/Web/CSS/translate) exatamente pra não conflitar com a
+   animação CSS, que usa `transform` — as duas se somam automaticamente no elemento, é o que dá
+   a sensação de profundidade (camadas "andando" em velocidades diferentes conforme rola).
    Continua atrás de qualquer seção com fundo próprio (essas pintam por cima na ordem normal do
    documento) e sempre pointer-events:none, pra nunca atrapalhar clique em nada. Continua
    desligando sozinho pra quem pediu menos movimento (prefers-reduced-motion) — tanto a deriva
@@ -1077,35 +1156,35 @@ html.no-intro .cine-intro { display: none; }
 }
 .parallax-layer-1 {
   width: 50vw; height: 50vw; max-width: 680px; max-height: 680px;
-  top: -14%; left: -10%;
+  top: -16%; left: -12%;
   background: radial-gradient(circle, rgba(201,162,39,0.26), transparent 70%);
 }
 .parallax-layer-2 {
   width: 42vw; height: 42vw; max-width: 580px; max-height: 580px;
-  bottom: -14%; right: -8%;
+  top: 38%; right: -14%;
   background: radial-gradient(circle, rgba(120,55,15,0.24), transparent 70%);
 }
 .parallax-layer-3 {
   width: 36vw; height: 36vw; max-width: 500px; max-height: 500px;
-  top: 42%; left: 58%;
+  bottom: -16%; left: 30%;
   background: radial-gradient(circle, rgba(255,150,60,0.2), transparent 70%);
 }
-.js .parallax-layer-1 { animation: parallaxDrift1 20s ease-in-out infinite; }
-.js .parallax-layer-2 { animation: parallaxDrift2 26s ease-in-out infinite; }
-.js .parallax-layer-3 { animation: parallaxDrift3 15s ease-in-out infinite; }
-@keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10vw, 13vh); } }
-@keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-11vw, -10vh); } }
-@keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-9vw, 12vh); } }
+.js .parallax-layer-1 { animation: parallaxDrift1 14s ease-in-out infinite; }
+.js .parallax-layer-2 { animation: parallaxDrift2 18s ease-in-out infinite; }
+.js .parallax-layer-3 { animation: parallaxDrift3 10s ease-in-out infinite; }
+@keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(16vw, 20vh); } }
+@keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-18vw, -16vh); } }
+@keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-15vw, 19vh); } }
 @media (prefers-reduced-motion: reduce) {
   .parallax-layer-1, .parallax-layer-2, .parallax-layer-3 { animation: none; }
 }
-/* Celular: uma camada só (mais leve pra bateria/GPU), mas com brilho mais forte já que é a
-   única visível — senão fica fraca demais numa tela pequena. */
+/* Celular: 2 camadas em vez de 3 (mais leve pra bateria/GPU), mas cobrindo topo e meio da
+   página em vez de só uma manchinha no canto — senão fica parecendo "parado num lugar só". */
 @media (max-width: 720px) {
-  .parallax-layer-2, .parallax-layer-3 { display: none; }
-  .parallax-layer-1 {
-    filter: blur(50px);
-    background: radial-gradient(circle, rgba(201,162,39,0.34), transparent 70%);
-  }
-  @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6vw, 8vh); } }
+  .parallax-layer-3 { display: none; }
+  .parallax-layer-1, .parallax-layer-2 { filter: blur(50px); }
+  .parallax-layer-1 { background: radial-gradient(circle, rgba(201,162,39,0.34), transparent 70%); }
+  .parallax-layer-2 { background: radial-gradient(circle, rgba(120,55,15,0.32), transparent 70%); }
+  @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10vw, 14vh); } }
+  @keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-12vw, -12vh); } }
 }
