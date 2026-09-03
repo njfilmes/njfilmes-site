@@ -24,7 +24,7 @@ function coverUrl(project) {
 
 function workCard(project, opts = {}) {
   const cat = project.category_name || '';
-  const hasVideo = project.videos && project.videos.length > 0;
+  const hasVideo = Number(project.video_count) > 0;
   return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
     <img src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
     ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
@@ -132,7 +132,7 @@ export async function homePage(req, res) {
       </div>
       <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal" style="aspect-ratio:21/9;">
         <img src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
-        <span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>
+        ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
       </a>
     </div>
@@ -346,7 +346,7 @@ function likeViewsBlock(project) {
     <button type="button" class="video-like-btn" data-like-btn data-project="${escapeHtml(project.slug)}">
       <span class="heart"></span> <span data-like-count>${project.likes || 0}</span>
     </button>
-    <span class="video-views"><span class="eye">👁</span> <span data-view-count>${project.views || 0}</span> visualiza<span data-view-word>${project.views === 1 ? 'ção' : 'ções'}</span></span>
+    <span class="video-views"><span class="eye">👁</span> <span data-view-count>${project.views || 0}</span> <span data-view-word>${project.views === 1 ? 'visualização' : 'visualizações'}</span></span>
   </div>`;
 }
 
