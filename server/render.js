@@ -136,16 +136,21 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
       <button class="nav-close" data-nav-close type="button" aria-label="Fechar menu">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li class="has-sub">
-          <a href="/portfolio">Portfólio</a>
+      <span class="nav-menu-label eyebrow">Menu</span>
+      <ul class="nav-links-list">
+        <li style="--i:0"><a href="/"><span class="nav-link-num">01</span><span class="nav-link-text">Home</span></a></li>
+        <li class="has-sub" style="--i:1">
+          <a href="/portfolio"><span class="nav-link-num">02</span><span class="nav-link-text">Portfólio</span></a>
           ${navCats ? `<ul class="sub-nav">${navCats}</ul>` : ''}
         </li>
-        <li><a href="/sobre">Sobre</a></li>
-        <li><a href="/servicos">Serviços</a></li>
-        <li><a href="/contato">Contato</a></li>
+        <li style="--i:2"><a href="/sobre"><span class="nav-link-num">03</span><span class="nav-link-text">Sobre</span></a></li>
+        <li style="--i:3"><a href="/servicos"><span class="nav-link-num">04</span><span class="nav-link-text">Serviços</span></a></li>
+        <li style="--i:4"><a href="/contato"><span class="nav-link-num">05</span><span class="nav-link-text">Contato</span></a></li>
       </ul>
+      <div class="nav-drawer-footer">
+        ${wa ? `<a class="btn btn-solid" href="${escapeHtml(wa)}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
+        ${allSocials ? `<div class="social-links">${allSocials}</div>` : ''}
+      </div>
     </nav>
     <div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
     <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false">
