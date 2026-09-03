@@ -62,7 +62,8 @@
     var parallaxFactors = [
       { freqY: 0.0021, ampY: vh * 0.42, phaseY: 0, freqX: 0.0012, ampX: vw * 0.22, phaseX: 0.8 },
       { freqY: 0.0015, ampY: vh * 0.5, phaseY: 1.4, freqX: 0.002, ampX: vw * 0.26, phaseX: 2.1 },
-      { freqY: 0.003, ampY: vh * 0.34, phaseY: 2.6, freqX: 0.0016, ampX: vw * 0.18, phaseX: 3.4 }
+      { freqY: 0.003, ampY: vh * 0.34, phaseY: 2.6, freqX: 0.0016, ampX: vw * 0.18, phaseX: 3.4 },
+      { freqY: 0.0038, ampY: vh * 0.22, phaseY: 4.2, freqX: 0.0026, ampX: vw * 0.15, phaseX: 5.1 }
     ];
     var updateParallax = function () {
       var y = window.scrollY;
@@ -110,18 +111,42 @@
   var navClose = document.querySelector('[data-nav-close]');
   var navBackdrop = document.querySelector('[data-nav-backdrop]');
   if (nav && toggle) {
-    var openNav = function () {
-      nav.classList.add('open');
-      if (navBackdrop) navBackdrop.classList.add('open');
-      toggle.setAttribute('aria-expanded', 'true');
-      document.body.style.overflow = 'hidden';
-    };
-    var closeNav = function () {
+    // Pedido em 03/09/2026 (mesma ideia aplicada na foto ampliada, mais abaixo): o botão
+    // "voltar" do celular com o menu aberto saía da página em vez de só fechar o menu. Agora
+    // abrir o menu empilha um estado no histórico e apertar "voltar" fecha o menu em vez de
+    // sair da página; fechar pelo X/fundo/arrasto desempilha esse estado sozinho.
+    var navPushed = false;
+    var closeNavImmediate = function () {
       nav.classList.remove('open');
       if (navBackdrop) navBackdrop.classList.remove('open');
       toggle.setAttribute('aria-expanded', 'false');
       document.body.style.overflow = '';
     };
+    var openNav = function () {
+      nav.classList.add('open');
+      if (navBackdrop) navBackdrop.classList.add('open');
+      toggle.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+      try {
+        history.pushState({ njNav: true }, '', location.href);
+        navPushed = true;
+      } catch (e) {}
+    };
+    var closeNav = function () {
+      if (!nav.classList.contains('open')) return;
+      if (navPushed && history.state && history.state.njNav) {
+        navPushed = false;
+        history.back();
+      } else {
+        closeNavImmediate();
+      }
+    };
+    window.addEventListener('popstate', function () {
+      if (nav.classList.contains('open')) {
+        navPushed = false;
+        closeNavImmediate();
+      }
+    });
     toggle.addEventListener('click', function () {
       if (nav.classList.contains('open')) closeNav();
       else openNav();
@@ -235,16 +260,44 @@
       imgEl.alt = triggers[current].dataset.caption || '';
       if (counterEl) counterEl.textContent = (current + 1) + ' / ' + triggers.length;
     };
+    // Pedido em 03/09/2026: no celular, apertar o botão "voltar" do aparelho com a foto
+    // ampliada aberta saía da página inteira (ou voltava pra tela anterior do site) em vez de
+    // só fechar a foto — nada intuitivo. Agora, ao abrir, empilhamos um estado extra no
+    // histórico do navegador (pushState); apertar "voltar" dispara um evento popstate que a
+    // gente escuta e usa pra fechar a foto ampliada, sem sair da página. Fechar pelo X, tocando
+    // fora da foto ou arrastando pra baixo funciona igual de antes, só que agora chama
+    // history.back() pra "desempilhar" esse estado extra — assim o botão físico de voltar
+    // sempre fica consistente com o que a pessoa vê na tela, não importa como ela fechou.
+    var lightboxPushed = false;
+    var closeImmediate = function () {
+      lightbox.classList.remove('open');
+      document.body.style.overflow = '';
+    };
     var open = function (index) {
       current = index;
       show();
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
+      try {
+        history.pushState({ njLightbox: true }, '', location.href);
+        lightboxPushed = true;
+      } catch (e) {}
     };
     var close = function () {
-      lightbox.classList.remove('open');
-      document.body.style.overflow = '';
+      if (!lightbox.classList.contains('open')) return;
+      if (lightboxPushed && history.state && history.state.njLightbox) {
+        lightboxPushed = false;
+        history.back();
+      } else {
+        closeImmediate();
+      }
     };
+    window.addEventListener('popstate', function () {
+      if (lightbox.classList.contains('open')) {
+        lightboxPushed = false;
+        closeImmediate();
+      }
+    });
     var next = function () { current = (current + 1) % triggers.length; show(); };
     var prev = function () { current = (current - 1 + triggers.length) % triggers.length; show(); };
 
