@@ -189,7 +189,6 @@ ${content}
     <div class="footer-social">
       <h4>Redes sociais</h4>
       <div class="social-links">${allSocials || '<span class="muted">—</span>'}</div>
-      ${wa ? `<a class="btn btn-outline footer-wa" href="${escapeHtml(wa)}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
     </div>
   </div>
   <div class="container footer-bottom">
