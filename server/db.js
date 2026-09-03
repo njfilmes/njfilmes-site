@@ -196,7 +196,8 @@ export async function initSchema() {
   contact_budget_title TEXT DEFAULT 'Orçamento rápido',
   contact_budget_text TEXT DEFAULT 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.',
   contact_whatsapp_button_text TEXT DEFAULT 'Falar no WhatsApp',
-  contact_channels_title TEXT DEFAULT 'Outros canais'
+  contact_channels_title TEXT DEFAULT 'Outros canais',
+  hero_photo TEXT DEFAULT ''
                                                                                                                       );
                                                                                                                         `);
 
@@ -384,6 +385,12 @@ export async function initSchema() {
     }
     if (!settingsCols.includes('contact_channels_title')) {
           await query("ALTER TABLE settings ADD COLUMN contact_channels_title TEXT DEFAULT 'Outros canais'");
+    }
+    // 03/09/2026: permite trocar a foto de destaque da Home (o usuario segurando a
+    // camera) pelo painel, em vez de ser um arquivo fixo no codigo. Se ficar vazia,
+    // o site continua usando a imagem padrao (public/img/hero-poster.jpg).
+    if (!settingsCols.includes('hero_photo')) {
+          await query("ALTER TABLE settings ADD COLUMN hero_photo TEXT DEFAULT ''");
     }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
