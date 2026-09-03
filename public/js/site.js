@@ -38,6 +38,40 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
+  // Paralaxe do fundo (plano com as manchas de luz): soma um deslocamento vertical que
+  // acompanha a rolagem da página em cima da deriva ambiente que o CSS já faz sozinho
+  // (@keyframes parallaxDriftN no style.css). Usa a propriedade `translate` (separada de
+  // `transform`) só pra não conflitar com a animação CSS, que já usa `transform` no mesmo
+  // elemento — as duas se somam automaticamente. O deslocamento é calculado com seno, então
+  // fica sempre dentro de uma faixa curta (não cresce sem limite conforme a página é rolada) e
+  // cada camada tem uma frequência/fase diferente, pra dar a sensação de profundidade (camadas
+  // "andando" em ritmos diferentes conforme rola), que é o efeito de paralaxe pedido.
+  var parallaxLayers = document.querySelectorAll('.parallax-layer');
+  if (parallaxLayers.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var parallaxFactors = [
+      { freq: 0.0022, amp: 60, phase: 0 },
+      { freq: 0.0016, amp: 80, phase: 1.4 },
+      { freq: 0.0031, amp: 46, phase: 2.6 }
+    ];
+    var parallaxTicking = false;
+    var updateParallax = function () {
+      var y = window.scrollY;
+      parallaxLayers.forEach(function (el, i) {
+        var f = parallaxFactors[i % parallaxFactors.length];
+        var offset = Math.sin(y * f.freq + f.phase) * f.amp;
+        el.style.translate = '0 ' + offset.toFixed(1) + 'px';
+      });
+      parallaxTicking = false;
+    };
+    window.addEventListener('scroll', function () {
+      if (!parallaxTicking) {
+        window.requestAnimationFrame(updateParallax);
+        parallaxTicking = true;
+      }
+    }, { passive: true });
+    updateParallax();
+  }
+
   // Cursor personalizado "VER PROJETO" nos cards de portfólio
   var workCards = document.querySelectorAll('[data-work-card]');
   if (workCards.length && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
