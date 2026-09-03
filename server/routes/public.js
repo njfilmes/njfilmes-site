@@ -209,8 +209,8 @@ export async function homePage(req, res) {
     <div class="container">
       <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Conheça alguns</span>
       <h2 class="reveal text-center">Clientes</h2>
-      <div class="marquee reveal">
-        <div class="marquee-track">
+      <div class="marquee reveal" data-drag-scroll>
+        <div class="marquee-track" data-drag-scroll-track>
           ${[...marqueeChips, ...marqueeChips].join('')}
         </div>
       </div>
@@ -702,8 +702,8 @@ export async function aboutPage(req, res) {
     <div class="container">
       <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Quem confia no meu trabalho</span>
       <h2 class="reveal text-center">Marcas</h2>
-      <div class="marquee reveal">
-        <div class="marquee-track">
+      <div class="marquee reveal" data-drag-scroll>
+        <div class="marquee-track" data-drag-scroll-track>
           ${[...brands, ...brands].map((b) => {
             const isPlainLogo = b.name === 'Rockhair Barbearia';
             return `<a class="brand-chip" href="${b.url ? escapeHtml(b.url) : '#'}" ${b.url ? 'target="_blank" rel="noopener noreferrer"' : 'tabindex="-1" style="pointer-events:none;"'}><div class="brand-chip-logo${isPlainLogo ? ' no-frame' : ''}"><img src="${escapeHtml(b.logo)}" alt="${escapeHtml(b.name)}" loading="lazy"></div><span>${escapeHtml(b.name)}</span></a>`;
