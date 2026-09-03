@@ -768,11 +768,21 @@ html.no-intro .cine-intro { display: none; }
   60% { transform: translate(0, 0) scale(1); }
 }
 
-/* ---------- WhatsApp flutuante ---------- */
+/* ---------- WhatsApp/Instagram flutuante ---------- */
+/* Pedido em 03/09/2026: os dois ícones flutuantes (WhatsApp verde vivo, Instagram com o
+   gradiente colorido oficial da marca) destoavam da paleta do site — pediu pra ficar "mais
+   minimalista, amadeirado", com a mesma cor de fundo do site em vez das cores das marcas.
+   Os dois passam a usar o mesmo fundo (gradiente marrom escuro, tom de madeira, igual o resto
+   da paleta quente do site) e o mesmo dourado (--accent) no ícone — só o desenho do SVG
+   continua diferenciando WhatsApp de Instagram, a cor de fundo virou neutra/consistente. */
+.whatsapp-float, .instagram-float {
+  background: linear-gradient(155deg, #3a2a18, #17110a);
+  border: 1px solid rgba(201,162,39,0.3);
+  color: var(--accent);
+}
 .whatsapp-float {
   position: fixed; bottom: 24px; right: 24px; z-index: 600;
   width: 58px; height: 58px; border-radius: 50%;
-  background: #25D366; color: #08130b;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   animation: waPulse 2.6s ease-in-out infinite;
@@ -782,14 +792,12 @@ html.no-intro .cine-intro { display: none; }
 .instagram-float {
   position: fixed; bottom: 92px; right: 24px; z-index: 600;
   width: 50px; height: 50px; border-radius: 50%;
-  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
-  color: #fff;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   transition: transform 0.3s var(--ease);
 }
 .instagram-float:hover { transform: scale(0.98); }
-@keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(37,211,102,0.25);} 50% { box-shadow: 0 8px 30px rgba(37,211,102,0.55);} }
+@keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(201,162,39,0.18);} 50% { box-shadow: 0 8px 30px rgba(201,162,39,0.4);} }
 
 /* ---------- Lightbox ---------- */
 .lightbox {
