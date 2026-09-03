@@ -382,17 +382,36 @@ section { padding: 110px 0; position: relative; }
 .work-card .play {
   /* Antes só aparecia no hover (opacity:0 por padrão) - em celular/tablet (sem mouse) isso
      nunca acontece, então o card de um projeto com vídeo ficava parecendo só uma foto.
-     Pedido do usuário em 03/09/2026: deixar sempre visível, com um leve efeito no hover
-     como bônus pra quem usa mouse. */
-  position: absolute; top: 20px; right: 20px;
-  width: 40px; height: 40px; border-radius: 50%;
-  background: rgba(0,0,0,0.35);
-  border: 1px solid rgba(255,255,255,0.7);
+     Pedido do usuário em 03/09/2026: deixar sempre visível. Depois (03/09/2026) pedido de
+     deixar centralizado no meio do card e mais animado/bonito, tanto no cel quanto no pc. */
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: 62px; height: 62px; border-radius: 50%;
+  background: rgba(18,16,10,0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1.5px solid rgba(255,255,255,0.85);
   display: flex; align-items: center; justify-content: center;
-  opacity: 1; transform: scale(0.88);
-  transition: all 0.35s var(--ease);
+  opacity: 1;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(255,255,255,0.35);
+  transition: transform 0.35s var(--ease), background 0.35s var(--ease), box-shadow 0.35s var(--ease), color 0.35s var(--ease);
+  animation: playPulse 2.6s ease-in-out infinite;
+  color: #fff;
+  z-index: 2;
 }
-.work-card:hover .play { opacity: 1; transform: scale(1); background: rgba(0,0,0,0.5); }
+.work-card .play svg { width: 22px; height: 22px; margin-left: 3px; }
+.work-card:hover .play {
+  transform: translate(-50%, -50%) scale(1.15);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #12100a;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.45);
+  animation-play-state: paused;
+}
+@keyframes playPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(255,255,255,0.32); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 12px rgba(255,255,255,0); }
+}
 
 .work-cursor {
   position: fixed; top: 0; left: 0; z-index: 900;
