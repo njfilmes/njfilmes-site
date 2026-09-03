@@ -1028,7 +1028,7 @@ function renderProjectsTable(projects) {
       <td><img class="thumb-sm" src="${escapeHtml(p.cover_photo || '/img/project-placeholder.jpg')}" alt=""></td>
       <td><a href="/admin/projetos/${p.id}">${escapeHtml(p.title)}</a></td>
       <td class="muted">${escapeHtml(p.category_name || '—')}</td>
-      <td>${p.published ? '<span class="tag tag-published">Publicado</span>' : '<span class="tag tag-draft">Rascunho</span>'} ${p.featured ? '<span class="tag tag-featured">Destaque</span>' : ''}</td>
+      <td>${p.published ? '<span class="tag tag-published">Publicado</span>' : '<span class="tag tag-draft">Rascunho</span>'} ${p.featured ? '<span class="tag tag-featured">Destaque</span>' : ''} ${p.hide_from_recent ? '<span class="tag">Fora da vitrine</span>' : ''}</td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/projetos/${p.id}">Editar</a>
         <form method="post" action="/admin/projetos/${p.id}/excluir" data-confirm="Excluir o projeto &quot;${escapeHtml(p.title)}&quot;? Isso remove também as fotos e vídeos dele."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
@@ -1069,6 +1069,10 @@ function projectInfoForm({ action, project = {}, categories }) {
       ${checkboxField({ label: 'Publicado (visível no site)', name: 'published', checked: !!project.published })}
       ${checkboxField({ label: 'Projeto em destaque na Home', name: 'featured', checked: !!project.featured })}
     </div>
+    <div class="form-row">
+      ${checkboxField({ label: 'Ocultar da vitrine "Portfólio selecionado" da Home', name: 'hide_from_recent', checked: !!project.hide_from_recent })}
+    </div>
+    <p style="margin-top:-8px;color:var(--muted, #888);font-size:0.85rem;">A vitrine "Portfólio selecionado" mostra automaticamente os projetos publicados mais recentes. Marque esta opção pra esse projeto continuar publicado e acessível pelo Portfólio, só sem aparecer nessa vitrine da Home.</p>
     <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
   </form>`;
 }
@@ -1094,6 +1098,7 @@ export async function projectCreate(req, res, body) {
     additional_info: body.additional_info,
     published: !!body.published,
     featured: !!body.featured,
+    hide_from_recent: !!body.hide_from_recent,
   });
   redirect(res, `/admin/projetos/${id}` + withFlash(res, 'success', 'Projeto criado! Agora adicione vídeos e fotos.'));
 }
@@ -1203,6 +1208,7 @@ export async function projectUpdate(req, res, body, id) {
     additional_info: body.additional_info,
     published: !!body.published,
     featured: !!body.featured,
+    hide_from_recent: !!body.hide_from_recent,
     sort_order: project.sort_order,
   });
   redirect(res, `/admin/projetos/${id}` + withFlash(res, 'success', 'Projeto atualizado.'));

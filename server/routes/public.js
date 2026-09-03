@@ -68,7 +68,7 @@ export async function homePage(req, res) {
   const settings = await getSettings();
   const categories = await listCategories();
   const featured = (await listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }))[0];
-  const recent = (await listProjects({ onlyPublished: true, limit: 7 })).filter((p) => !featured || p.id !== featured.id).slice(0, 6);
+  const recent = (await listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 })).filter((p) => !featured || p.id !== featured.id).slice(0, 6);
   const services = (await listServices({ onlyPublished: true })).slice(0, 6);
   const brands = await listBrands();
   const people = await listPeople();
