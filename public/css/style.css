@@ -1044,20 +1044,23 @@ html.no-intro .cine-intro { display: none; }
 .comment-reply .comment-reply-label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--accent); display: block; margin-bottom: 4px; }
 .comments-empty { color: var(--fg-dim); }
 
-/* ---------- Fundo com profundidade (paralaxe discreto) ---------- */
-/* Pedido em 03/09/2026: um "plano de fundo" com sensação de profundidade/3D no site inteiro,
-   se movendo de forma discreta — sem ser scroll-jacking nem chamar atenção. Reaproveita o mesmo
-   padrão já usado no .cursor-glow (camada fixa, pointer-events:none, mix-blend-mode:screen,
-   desfoque) só que aqui são 3 manchas de luz espalhadas pela tela inteira, cada uma "vagando"
-   devagar sozinha (keyframe própria, velocidade e direção diferentes) — a diferença de
-   velocidade entre elas é o que dá a sensação de profundidade/paralaxe, como se estivessem em
-   distâncias diferentes. Fica atrás de qualquer seção que já tenha fundo próprio (foto, vídeo,
-   .alt-bg) porque essas pintam por cima na ordem normal do documento; só aparece nos trechos de
-   fundo liso. z-index bem baixo (abaixo de qualquer conteúdo, que começa em z-index:2 no site) e
-   sempre pointer-events:none, pra nunca atrapalhar clique em nada.
-   Propositalmente SEM depender de JS/scroll: assim nunca engasga a rolagem em celular mais
-   fraco, funciona igual em toda página e já nasce desligado sozinho em quem pediu menos
-   movimento (prefers-reduced-motion), sem precisar de nenhuma lógica extra pra isso. */
+/* ---------- Fundo com profundidade (paralaxe) ---------- */
+/* Pedido em 03/09/2026, ajustado em 03/09/2026 depois de testar ao vivo: a primeira versão
+   (só deriva ambiente via CSS, sem JS) ficou sutil demais — em boa parte da página as manchas
+   de luz ficam atrás de seções com fundo próprio (foto, vídeo, .alt-bg) e, nos trechos de fundo
+   liso onde aparecem, o movimento era pequeno e lento demais pra se notar num relance. Mantém o
+   mesmo padrão visual do .cursor-glow (camada fixa, pointer-events:none, mix-blend-mode:screen,
+   desfoque), mas agora com: cores mais fortes, manchas maiores, animação mais rápida — e, além
+   da deriva ambiente própria de cada uma (continua rodando sozinha via @keyframes), um
+   deslocamento extra que ACOMPANHA A ROLAGEM da página (ver site.js), pra dar a sensação real
+   de profundidade/paralaxe (camadas "andando" em velocidades diferentes conforme rola).
+   O deslocamento de scroll é aplicado via `translate` (propriedade separada de `transform`,
+   ver https://developer.mozilla.org/docs/Web/CSS/translate) exatamente pra não conflitar com a
+   animação CSS abaixo, que usa `transform` — as duas se somam automaticamente no elemento.
+   Continua atrás de qualquer seção com fundo próprio (essas pintam por cima na ordem normal do
+   documento) e sempre pointer-events:none, pra nunca atrapalhar clique em nada. Continua
+   desligando sozinho pra quem pediu menos movimento (prefers-reduced-motion) — tanto a deriva
+   CSS quanto o listener de scroll no JS respeitam essa preferência. */
 .parallax-bg {
   position: fixed;
   inset: 0;
@@ -1068,37 +1071,41 @@ html.no-intro .cine-intro { display: none; }
 .parallax-layer {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
+  filter: blur(70px);
   mix-blend-mode: screen;
   will-change: transform;
 }
 .parallax-layer-1 {
-  width: 46vw; height: 46vw; max-width: 640px; max-height: 640px;
+  width: 50vw; height: 50vw; max-width: 680px; max-height: 680px;
   top: -14%; left: -10%;
-  background: radial-gradient(circle, rgba(201,162,39,0.12), transparent 70%);
+  background: radial-gradient(circle, rgba(201,162,39,0.26), transparent 70%);
 }
 .parallax-layer-2 {
-  width: 38vw; height: 38vw; max-width: 540px; max-height: 540px;
+  width: 42vw; height: 42vw; max-width: 580px; max-height: 580px;
   bottom: -14%; right: -8%;
-  background: radial-gradient(circle, rgba(120,55,15,0.11), transparent 70%);
+  background: radial-gradient(circle, rgba(120,55,15,0.24), transparent 70%);
 }
 .parallax-layer-3 {
-  width: 32vw; height: 32vw; max-width: 460px; max-height: 460px;
+  width: 36vw; height: 36vw; max-width: 500px; max-height: 500px;
   top: 42%; left: 58%;
-  background: radial-gradient(circle, rgba(255,150,60,0.07), transparent 70%);
+  background: radial-gradient(circle, rgba(255,150,60,0.2), transparent 70%);
 }
-.js .parallax-layer-1 { animation: parallaxDrift1 34s ease-in-out infinite; }
-.js .parallax-layer-2 { animation: parallaxDrift2 42s ease-in-out infinite; }
-.js .parallax-layer-3 { animation: parallaxDrift3 27s ease-in-out infinite; }
-@keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6vw, 8vh); } }
-@keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-7vw, -6vh); } }
-@keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-5vw, 7vh); } }
+.js .parallax-layer-1 { animation: parallaxDrift1 20s ease-in-out infinite; }
+.js .parallax-layer-2 { animation: parallaxDrift2 26s ease-in-out infinite; }
+.js .parallax-layer-3 { animation: parallaxDrift3 15s ease-in-out infinite; }
+@keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10vw, 13vh); } }
+@keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-11vw, -10vh); } }
+@keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-9vw, 12vh); } }
 @media (prefers-reduced-motion: reduce) {
   .parallax-layer-1, .parallax-layer-2, .parallax-layer-3 { animation: none; }
 }
-/* Celular: uma camada só (mais leve pra bateria/GPU) e movimento menor. */
+/* Celular: uma camada só (mais leve pra bateria/GPU), mas com brilho mais forte já que é a
+   única visível — senão fica fraca demais numa tela pequena. */
 @media (max-width: 720px) {
   .parallax-layer-2, .parallax-layer-3 { display: none; }
-  .parallax-layer-1 { filter: blur(60px); }
-  @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(3vw, 4vh); } }
+  .parallax-layer-1 {
+    filter: blur(50px);
+    background: radial-gradient(circle, rgba(201,162,39,0.34), transparent 70%);
+  }
+  @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(6vw, 8vh); } }
 }
