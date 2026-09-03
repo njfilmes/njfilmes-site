@@ -150,9 +150,13 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
         <li style="--i:3"><a href="/servicos"><span class="nav-link-num">04</span><span class="nav-link-text">Serviços</span></a></li>
         <li style="--i:4"><a href="/contato"><span class="nav-link-num">05</span><span class="nav-link-text">Contato</span></a></li>
       </ul>
+      <!-- Pedido em 03/09/2026: tirar o link do YouTube daqui do rodapé do menu (não do
+           rodapé do site -- esse continua com YouTube, ninguém pediu tirar de lá). Por isso usa
+           a variável 'socials' (Instagram/Vimeo/TikTok/Facebook) em vez de 'allSocials', que
+           inclui o 'youtubeFooterLink' -- ver onde essas duas variáveis são montadas, mais acima. -->
       <div class="nav-drawer-footer">
         ${wa ? `<a class="btn btn-solid" href="${escapeHtml(wa)}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
-        ${allSocials ? `<div class="social-links">${allSocials}</div>` : ''}
+        ${socials ? `<div class="social-links">${socials}</div>` : ''}
       </div>
     </nav>
     <div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
