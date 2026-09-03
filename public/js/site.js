@@ -378,7 +378,7 @@
               var viewCountEl = viewsBlock.querySelector('[data-view-count]');
               if (viewCountEl) viewCountEl.textContent = data.views;
               var viewWordEl = viewsBlock.querySelector('[data-view-word]');
-              if (viewWordEl) viewWordEl.textContent = data.views === 1 ? 'ção' : 'ções';
+              if (viewWordEl) viewWordEl.textContent = data.views === 1 ? 'visualização' : 'visualizações';
             }
           })
           .catch(function () { /* falha de rede: mantém o número já exibido na página */ });
