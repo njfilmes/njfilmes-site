@@ -38,30 +38,39 @@
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 
-  // Paralaxe do fundo (plano com as manchas de luz): soma um deslocamento vertical que
-  // acompanha a rolagem da página em cima da deriva ambiente que o CSS já faz sozinho
-  // (@keyframes parallaxDriftN no style.css). Usa a propriedade `translate` (separada de
-  // `transform`) só pra não conflitar com a animação CSS, que já usa `transform` no mesmo
-  // elemento — as duas se somam automaticamente. O deslocamento é calculado com seno, então
-  // fica sempre dentro de uma faixa curta (não cresce sem limite conforme a página é rolada) e
-  // cada camada tem uma frequência/fase diferente, pra dar a sensação de profundidade (camadas
-  // "andando" em ritmos diferentes conforme rola), que é o efeito de paralaxe pedido.
+  // Paralaxe do fundo (plano com as manchas de luz): soma um deslocamento que acompanha a
+  // rolagem da página em cima da deriva ambiente que o CSS já faz sozinho (@keyframes
+  // parallaxDriftN no style.css). Usa a propriedade `translate` (separada de `transform`) só
+  // pra não conflitar com a animação CSS, que já usa `transform` no mesmo elemento — as duas se
+  // somam automaticamente. Ajustado em 03/09/2026: a primeira versão deste deslocamento variava
+  // só uns 60-80px, o que é quase nada perto do tamanho da tela — de longe parecia uma mancha
+  // parada num canto só. Agora o alcance é proporcional ao tamanho da tela (uma fração bem maior
+  // da altura/largura da janela) tanto em Y quanto em X, então as manchas realmente atravessam
+  // boa parte da tela conforme a pessoa rola, em vez de só balançar no lugar onde nasceram. Cada
+  // camada tem frequência/fase/alcance diferente nos dois eixos, o que dá a sensação de
+  // profundidade (camadas "andando" em ritmos e direções diferentes conforme rola) — o efeito de
+  // paralaxe pedido. O cálculo usa seno, então o deslocamento sempre fica dentro de uma faixa
+  // fixa (não cresce sem limite numa página muito comprida) mas continua mudando de direção o
+  // tempo todo conforme a posição de rolagem muda.
   // Sem throttle via requestAnimationFrame de propósito: em aba sem foco/fora da tela o rAF
   // pode nunca disparar, e como só escreve 3 valores simples de estilo (nada de layout/reflow
   // pesado), rodar direto a cada evento de scroll é barato e não tem risco de travar o efeito.
   var parallaxLayers = document.querySelectorAll('.parallax-layer');
   if (parallaxLayers.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var vw = Math.min(window.innerWidth, 1400);
+    var vh = Math.min(window.innerHeight, 1000);
     var parallaxFactors = [
-      { freq: 0.0022, amp: 60, phase: 0 },
-      { freq: 0.0016, amp: 80, phase: 1.4 },
-      { freq: 0.0031, amp: 46, phase: 2.6 }
+      { freqY: 0.0021, ampY: vh * 0.42, phaseY: 0, freqX: 0.0012, ampX: vw * 0.22, phaseX: 0.8 },
+      { freqY: 0.0015, ampY: vh * 0.5, phaseY: 1.4, freqX: 0.002, ampX: vw * 0.26, phaseX: 2.1 },
+      { freqY: 0.003, ampY: vh * 0.34, phaseY: 2.6, freqX: 0.0016, ampX: vw * 0.18, phaseX: 3.4 }
     ];
     var updateParallax = function () {
       var y = window.scrollY;
       parallaxLayers.forEach(function (el, i) {
         var f = parallaxFactors[i % parallaxFactors.length];
-        var offset = Math.sin(y * f.freq + f.phase) * f.amp;
-        el.style.translate = '0 ' + offset.toFixed(1) + 'px';
+        var offsetY = Math.sin(y * f.freqY + f.phaseY) * f.ampY;
+        var offsetX = Math.sin(y * f.freqX + f.phaseX) * f.ampX;
+        el.style.translate = offsetX.toFixed(1) + 'px ' + offsetY.toFixed(1) + 'px';
       });
     };
     window.addEventListener('scroll', updateParallax, { passive: true });
@@ -278,18 +287,27 @@
     }, { passive: true });
   }
 
-  // Faixa "Bastidores" (página Sobre): rola sozinha, mas a pessoa pode segurar e arrastar/
-  // deslizar pros lados a qualquer momento pra navegar no próprio ritmo — a rolagem automática
-  // para assim que ela mexe pela primeira vez, pra não "brigar" com o gesto dela. Clicar numa
-  // foto sem arrastar continua abrindo ela ampliada (o lightbox acima já cuida disso sozinho,
-  // pelo atributo data-lightbox-trigger). Pedido do usuário em 03/09/2026.
-  var dragTrack = document.querySelector('[data-drag-scroll-track]');
-  if (dragTrack) {
+  // Faixas horizontais que rolam sozinhas mas podem ser arrastadas (Bastidores, Clientes,
+  // Marcas — e qualquer faixa nova que reaproveite os mesmos atributos data-drag-scroll /
+  // data-drag-scroll-track na marcação, sem precisar tocar em JS de novo: é assim que fica
+  // "padrão em todo tipo de carrossel" pedido pelo usuário). Cada uma rola sozinha, a pessoa
+  // pode segurar e arrastar/deslizar pros lados a qualquer momento pra navegar no próprio ritmo,
+  // e a rolagem automática PARA assim que ela mexe pela primeira vez pra não "brigar" com o
+  // gesto dela — e volta a rolar sozinha automaticamente depois de alguns segundos parada,
+  // retomando exatamente de onde a pessoa deixou (sem pular pro começo). Corrigido em 03/09/2026:
+  // antes a rolagem nunca mais voltava depois que a pessoa mexia uma vez (ficava "morta" pro
+  // resto da visita) — o usuário reparou isso na faixa de Bastidores. Clicar numa foto sem
+  // arrastar continua abrindo ela ampliada (o lightbox acima já cuida disso sozinho, pelo
+  // atributo data-lightbox-trigger).
+  var DRAG_SCROLL_RESUME_MS = 3000;
+  document.querySelectorAll('[data-drag-scroll-track]').forEach(function (dragTrack) {
     var dragActive = false;
     var dragMoved = false;
     var dragStartX = 0;
     var dragBaseX = 0;
     var dragSetWidth = 0;
+    var resumeTimer = null;
+    var baseAnim = null; // { name, duration, timing, iteration } lido antes de travar a animação
 
     var readTranslateX = function () {
       var t = window.getComputedStyle(dragTrack).transform;
@@ -301,10 +319,50 @@
       return 0;
     };
 
+    var captureBaseAnim = function () {
+      if (baseAnim) return;
+      var cs = window.getComputedStyle(dragTrack);
+      if (cs.animationName && cs.animationName !== 'none') {
+        baseAnim = {
+          name: cs.animationName,
+          duration: cs.animationDuration,
+          timing: cs.animationTimingFunction,
+          iteration: cs.animationIterationCount
+        };
+      }
+    };
+
+    var clearResumeTimer = function () {
+      if (resumeTimer) { clearTimeout(resumeTimer); resumeTimer = null; }
+    };
+
+    // Retoma a rolagem automática de onde a faixa está agora, sem pular pro começo: calcula
+    // quanto (em fração de 0 a 1) do ciclo a posição atual representa e usa isso como
+    // animation-delay negativo — a animação CSS "entra" já naquele ponto do ciclo em vez de
+    // reiniciar do zero, então não dá nenhum pulo visual.
+    var resumeAuto = function () {
+      resumeTimer = null;
+      if (!baseAnim || dragActive) return;
+      var setWidth = dragTrack.scrollWidth / 2;
+      if (!setWidth) return;
+      var x = readTranslateX();
+      while (x > 0) x -= setWidth;
+      while (x <= -setWidth) x += setWidth;
+      var progress = (-x) / setWidth;
+      var durationSec = parseFloat(baseAnim.duration) || 0;
+      dragTrack.classList.remove('dragging');
+      dragTrack.style.transform = '';
+      dragTrack.style.animation = baseAnim.name + ' ' + baseAnim.duration + ' ' + baseAnim.timing + ' ' + baseAnim.iteration;
+      dragTrack.style.animationDelay = (-progress * durationSec) + 's';
+    };
+
     dragTrack.addEventListener('pointerdown', function (e) {
+      clearResumeTimer();
+      captureBaseAnim();
       if (!dragTrack.classList.contains('dragging')) {
         dragBaseX = readTranslateX();
         dragTrack.style.animation = 'none';
+        dragTrack.style.animationDelay = '';
         dragTrack.style.transform = 'translateX(' + dragBaseX + 'px)';
         dragTrack.classList.add('dragging');
         dragSetWidth = dragTrack.scrollWidth / 2;
@@ -326,14 +384,19 @@
       }
       dragTrack.style.transform = 'translateX(' + nextX + 'px)';
     });
-    var endDrag = function () { dragActive = false; };
+    var endDrag = function () {
+      if (!dragActive) return;
+      dragActive = false;
+      clearResumeTimer();
+      resumeTimer = setTimeout(resumeAuto, DRAG_SCROLL_RESUME_MS);
+    };
     window.addEventListener('pointerup', endDrag);
     window.addEventListener('pointercancel', endDrag);
     // Só suprime o clique (que abriria o lightbox) quando teve arrasto de verdade.
     dragTrack.addEventListener('click', function (e) {
       if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
     }, true);
-  }
+  });
 
   // Botão de tela cheia nos vídeos embutidos (Mega/YouTube/Vimeo/Drive). Fica fora da área do
   // player pra não brigar com o play/pause dele; clicar chama fullscreen no próprio iframe.
