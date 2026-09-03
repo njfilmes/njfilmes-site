@@ -643,13 +643,20 @@ export async function aboutPage(req, res) {
     <div class="container">
       <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Bastidores</span>
       <h2 class="reveal text-center">${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}</h2>
-      <div class="bio-gallery reveal">
-        <div class="bio-gallery-track">
-          ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<div class="bio-gallery-item"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"></div>`).join('')}
+      <div class="bio-gallery reveal" data-drag-scroll>
+        <div class="bio-gallery-track" data-drag-scroll-track>
+          ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<button type="button" class="bio-gallery-item" data-lightbox-trigger data-full="${escapeHtml(src)}" data-caption="${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"></button>`).join('')}
         </div>
       </div>
     </div>
-  </section>` : ''}
+  </section>
+  <div class="lightbox" data-lightbox>
+    <button class="lightbox-close" data-lightbox-close aria-label="Fechar">&times;</button>
+    <button class="lightbox-prev" data-lightbox-prev aria-label="Anterior">&#8249;</button>
+    <img src="" alt="">
+    <button class="lightbox-next" data-lightbox-next aria-label="Próxima">&#8250;</button>
+    <span class="lightbox-counter" data-lightbox-counter></span>
+  </div>` : ''}
 
   ${bio.trajectory ? `<section><div class="container" style="max-width:820px;">
     <span class="eyebrow reveal">Trajetória</span>
