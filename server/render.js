@@ -153,9 +153,11 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
       <!-- Pedido em 03/09/2026: tirar o link do YouTube daqui do rodapé do menu (não do
            rodapé do site -- esse continua com YouTube, ninguém pediu tirar de lá). Por isso usa
            a variável 'socials' (Instagram/Vimeo/TikTok/Facebook) em vez de 'allSocials', que
-           inclui o 'youtubeFooterLink' -- ver onde essas duas variáveis são montadas, mais acima. -->
+           inclui o 'youtubeFooterLink' -- ver onde essas duas variáveis são montadas, mais acima.
+           Botão "Falar no WhatsApp" também removido daqui (pedido em 03/09/2026): já existe o
+           ícone flutuante de WhatsApp visível por cima do próprio drawer, então o botão de texto
+           ficava redundante. -->
       <div class="nav-drawer-footer">
-        ${wa ? `<a class="btn btn-solid" href="${escapeHtml(wa)}" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
         ${socials ? `<div class="social-links">${socials}</div>` : ''}
       </div>
     </nav>
