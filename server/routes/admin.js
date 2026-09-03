@@ -951,11 +951,52 @@ export async function bioGalleryPhotoMove(req, res, body, id) {
   redirect(res, '/admin/bio');
 }
 
+// ---------------- Fotos de destaque da Home (crossfade) ----------------
+
+export async function heroPhotosUpload(req, res, body) {
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let saved = 0;
+  for (const dataUrl of photos) {
+    try {
+      const url = await saveMiscImage(dataUrl);
+      await Q.addHeroPhoto(url);
+      saved += 1;
+    } catch (err) {
+      console.error('Erro ao salvar foto de destaque da Home:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export async function heroPhotoDelete(req, res, id) {
+  await Q.deleteHeroPhoto(id);
+  redirect(res, '/admin/configuracoes' + withFlash(res, 'success', 'Foto excluída.'));
+}
+
+export async function heroPhotoMove(req, res, body, id) {
+  const items = await Q.listHeroPhotos();
+  const idx = items.findIndex((p) => p.id === id);
+  if (idx === -1) return redirect(res, '/admin/configuracoes');
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, '/admin/configuracoes');
+  const a = items[idx], b = items[swapWith];
+  await query('UPDATE hero_photos SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
+  await query('UPDATE hero_photos SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
+  redirect(res, '/admin/configuracoes');
+}
+
 // ---------------- Configurações ----------------
 
 export async function settingsPage(req, res, admin) {
   const flash = readFlash(req);
   const s = await Q.getSettings();
+  const heroPhotos = await Q.listHeroPhotos();
   const content = `
   <div class="panel">
     <h2>Identidade e SEO</h2>
@@ -1007,6 +1048,30 @@ export async function settingsPage(req, res, admin) {
       ${field({ label: 'Facebook', name: 'facebook_url', value: s.facebook_url, type: 'url' })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar configurações</button></div>
     </form>
+  </div>
+  <div class="panel">
+    <h2>Mais fotos de destaque da Home (passam com transição suave)</h2>
+    <p class="muted" style="margin-top:-8px;">Além da foto de destaque acima, envie aqui outras fotos suas pra elas ficarem se revezando na primeira tela do site, uma passando pra outra suavemente. A foto de destaque acima sempre entra como a primeira do rodízio; as que você enviar aqui entram depois, na ordem que você organizar. Só funciona quando não tem vídeo de fundo configurado.</p>
+    <div class="upload-drop" data-hero-photos-upload>
+      <input type="file" accept="image/*" multiple>
+      <p>Clique aqui ou arraste as fotos para enviar</p>
+      <div id="hero-photos-preview"></div>
+      <p data-hero-photos-status style="margin-top:10px;font-size:0.82rem;"></p>
+    </div>
+    ${heroPhotos.length ? `<div class="photo-grid">${heroPhotos
+      .map(
+        (p, i) => `<div class="photo-card">
+        <img src="${escapeHtml(p.filename)}" alt="">
+        <div class="pc-body">
+          <div class="pc-actions">
+            <form method="post" action="/admin/hero/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+            <form method="post" action="/admin/hero/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === heroPhotos.length - 1 ? 'disabled' : ''}>↓</button></form>
+            <form method="post" action="/admin/hero/fotos/${p.id}/excluir" data-confirm="Excluir esta foto do rodízio da Home?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+          </div>
+        </div>
+      </div>`
+      )
+      .join('')}</div>` : '<p class="empty-hint">Nenhuma foto extra adicionada ainda — só a foto de destaque acima está sendo usada.</p>'}
   </div>
   <div class="panel">
     <h2>Minha conta</h2>

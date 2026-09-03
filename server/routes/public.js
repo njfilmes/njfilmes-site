@@ -14,6 +14,7 @@ import {
   listTestimonials,
   listBioPhotos,
   listBioGalleryPhotos,
+  listHeroPhotos,
   incrementProjectViews,
   incrementProjectLikes,
   listCommentsForProject,
@@ -82,9 +83,21 @@ export async function homePage(req, res) {
   // esse arquivo padrão é fixo no código). O upload pelo painel já gera um arquivo
   // com nome único a cada troca, então não precisa de carimbo de versão nele.
   const heroPosterUrl = settings.hero_photo || `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
+
+  // Fotos de destaque da Home passando com transição suave (crossfade), uma pra outra — pedido
+  // do usuário em 03/09/2026 pra poder colocar mais de uma foto e escolher quais entram no
+  // rodízio, editável pelo painel (Configurações). A foto de destaque de sempre continua sendo a
+  // primeira da sequência; as extras enviadas na nova galeria "Fotos de destaque da Home" entram
+  // depois, na ordem escolhida lá. Só se aplica quando não tem vídeo de fundo configurado.
+  const heroGalleryPhotos = await listHeroPhotos();
+  const heroPhotoUrls = [heroPosterUrl, ...heroGalleryPhotos.map((p) => p.filename)].filter(
+    (src, idx, arr) => src && arr.indexOf(src) === idx
+  );
   const heroVideo = settings.hero_video_url
     ? `<video autoplay muted loop playsinline poster="${heroPosterUrl}" src="${escapeHtml(settings.hero_video_url)}"></video>`
-    : `<div class="hero-photo-split"><img class="hero-photo-a" src="${heroPosterUrl}" alt="NJFILMES"><img class="hero-photo-b" src="${heroPosterUrl}" alt="NJFILMES"></div>`;
+    : `<div class="hero-photo-split">${heroPhotoUrls
+        .map((src, i) => `<img class="hero-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="NJFILMES">`)
+        .join('')}</div>`;
 
   // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
   // sempre coloridos — sem preto e branco.
