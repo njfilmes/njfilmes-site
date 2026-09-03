@@ -287,8 +287,17 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   position: absolute; inset: 0;
   width: 100%; height: 100%;
 }
-.hero-photo-a, .hero-photo-b {
+/* Fotos de destaque da Home passando com crossfade — mesmo esquema das fotos da página Sobre
+   (.about-photo-slide), adaptado pra cobrir o hero inteiro. O zoom suave (heroZoom) continua
+   vindo de ".hero-media img" ali em cima, então cada foto já nasce com ele. */
+.hero-photo-slide {
   position: absolute; inset: 0;
+  opacity: 0;
+  transition: opacity 1.4s ease;
+}
+.hero-photo-slide.is-active { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hero-photo-slide { transition: none; }
 }
 .hero-media::after {
   content: '';
