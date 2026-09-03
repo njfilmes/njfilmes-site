@@ -169,6 +169,7 @@ export async function dashboardPage(req, res, admin) {
       <a class="shortcut-card" href="/admin/bio">Editar biografia</a>
       <a class="shortcut-card" href="/admin/configuracoes">Configurar WhatsApp</a>
       <a class="shortcut-card" href="/admin/links">Links externos</a>
+      <a class="shortcut-card" href="/admin/menu">Editar menu do site</a>
     </div>
   </div>
   <div class="panel">
@@ -782,6 +783,108 @@ export async function linkMove(req, res, body, id) {
   await query('UPDATE links SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
   await query('UPDATE links SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
   redirect(res, '/admin/links');
+}
+
+// ---------------- Menu do site (pedido em 03/09/2026) ----------------
+// Home/Portfólio/Sobre/Serviços/Contato eram fixos no código; agora vivem na tabela
+// nav_links e dão pra editar por aqui -- adicionar, remover, renomear ou reordenar. Mesmo
+// padrão de "Links externos" acima, com edição adicionada (que os links externos não têm).
+// Se a lista de itens ficar vazia, server/render.js cai de volta nos 5 itens padrão
+// (DEFAULT_NAV_LINKS), então o site nunca fica sem menu de navegação.
+
+export async function menuPage(req, res, admin) {
+  const flash = readFlash(req);
+  const items = await Q.listNavLinks();
+  const rows = items
+    .map(
+      (item, i) => `<tr>
+      <td>${escapeHtml(item.label)}</td>
+      <td class="muted" style="max-width:320px;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(item.url)}</td>
+      <td>
+        <form method="post" action="/admin/menu/${item.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+        <form method="post" action="/admin/menu/${item.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === items.length - 1 ? 'disabled' : ''}>↓</button></form>
+      </td>
+      <td class="row-actions">
+        <a class="btn-a btn-a-sm" href="/admin/menu/${item.id}/editar">Editar</a>
+        <form method="post" action="/admin/menu/${item.id}/excluir" data-confirm="Excluir o item &quot;${escapeHtml(item.label)}&quot; do menu?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+      </td>
+    </tr>`
+    )
+    .join('');
+
+  const content = `
+  <div class="panel">
+    <p class="muted" style="margin-top:0;">Estes são os itens do menu principal do site (topo de cada página e menu do celular). O item cuja URL for exatamente <code>/portfolio</code> continua ganhando automaticamente o submenu com as categorias e a setinha ao lado.</p>
+  </div>
+  <div class="panel">
+    <h2>Novo item de menu</h2>
+    <form method="post" action="/admin/menu/criar">
+      <div class="form-row">
+        ${field({ label: 'Texto', name: 'label', placeholder: 'Ex: Depoimentos', required: true })}
+        ${field({ label: 'URL', name: 'url', placeholder: '/depoimentos ou https://...', required: true, help: 'Um caminho do próprio site (ex: /sobre) ou um link completo (https://...) pra abrir outra página.' })}
+      </div>
+      <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Adicionar ao menu</button></div>
+    </form>
+  </div>
+  <div class="panel">
+    <h2>Itens do menu (${items.length})</h2>
+    ${items.length ? `<table class="admin-table"><thead><tr><th>Texto</th><th>URL</th><th>Ordem</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`
+      : '<p class="empty-hint">Nenhum item no menu ainda. Adicione o primeiro acima.</p>'}
+  </div>`;
+  res.end(adminLayout({ title: 'Menu do site', activePath: '/admin/menu', admin, content, flash }));
+}
+
+export async function menuEditPage(req, res, admin, id) {
+  const item = await Q.getNavLink(id);
+  if (!item) return redirect(res, '/admin/menu');
+  const content = `
+  <div class="panel">
+    <h2>Editar item do menu</h2>
+    <form method="post" action="/admin/menu/${item.id}/atualizar">
+      ${field({ label: 'Texto', name: 'label', value: item.label, required: true })}
+      ${field({ label: 'URL', name: 'url', value: item.url, required: true, help: 'Um caminho do próprio site (ex: /sobre) ou um link completo (https://...).' })}
+      <div class="form-actions">
+        <button class="btn-a btn-a-primary" type="submit">Salvar</button>
+        <a class="btn-a" href="/admin/menu">Cancelar</a>
+      </div>
+    </form>
+  </div>`;
+  res.end(adminLayout({ title: 'Editar item do menu', activePath: '/admin/menu', admin, content }));
+}
+
+export async function menuCreate(req, res, body) {
+  const label = (body.label || '').trim();
+  const url = (body.url || '').trim();
+  if (!label || !url) return redirect(res, '/admin/menu');
+  const maxOrder = await maxSortOrder('nav_links');
+  await Q.createNavLink({ label, url, sort_order: maxOrder + 1 });
+  redirect(res, '/admin/menu' + withFlash(res, 'success', 'Item adicionado ao menu.'));
+}
+
+export async function menuUpdate(req, res, body, id) {
+  const item = await Q.getNavLink(id);
+  if (!item) return redirect(res, '/admin/menu');
+  const label = (body.label || '').trim() || item.label;
+  const url = (body.url || '').trim() || item.url;
+  await Q.updateNavLink(id, { label, url, sort_order: item.sort_order });
+  redirect(res, '/admin/menu' + withFlash(res, 'success', 'Item do menu atualizado.'));
+}
+
+export async function menuDelete(req, res, id) {
+  await Q.deleteNavLink(id);
+  redirect(res, '/admin/menu' + withFlash(res, 'success', 'Item removido do menu.'));
+}
+
+export async function menuMove(req, res, body, id) {
+  const items = await Q.listNavLinks();
+  const idx = items.findIndex((l) => l.id === id);
+  if (idx === -1) return redirect(res, '/admin/menu');
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, '/admin/menu');
+  const a = items[idx], b = items[swapWith];
+  await query('UPDATE nav_links SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
+  await query('UPDATE nav_links SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
+  redirect(res, '/admin/menu');
 }
 
 // ---------------- Biografia ----------------

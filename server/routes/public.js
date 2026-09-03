@@ -5,6 +5,7 @@ import {
   getSettings,
   getBio,
   listCategoriesWithProjects,
+  listNavLinks,
   getCategoryBySlug,
   listServices,
   listLinks,
@@ -66,6 +67,7 @@ function heroHeadlineHtml(text) {
 export async function homePage(req, res) {
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
   const featured = (await listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }))[0];
   const recent = (await listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 })).filter((p) => !featured || p.id !== featured.id).slice(0, 6);
   const services = (await listServices({ onlyPublished: true })).slice(0, 6);
@@ -246,6 +248,7 @@ export async function homePage(req, res) {
       path: '/',
       settings,
       categories,
+      navLinks,
       content,
       // Preload da primeira foto do hero (LCP da Home) — só faz sentido no modo foto; com vídeo
       // de fundo configurado o navegador já prioriza o próprio <video>/poster sozinho.
@@ -264,6 +267,7 @@ export async function homePage(req, res) {
 export async function portfolioIndexPage(req, res) {
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
   const projects = await listProjects({ onlyPublished: true });
 
   const content = `
@@ -292,6 +296,7 @@ export async function portfolioIndexPage(req, res) {
       path: '/portfolio',
       settings,
       categories,
+      navLinks,
       content,
     })
   );
@@ -301,6 +306,7 @@ export async function categoryOrProjectPage(req, res) {
   const slug = req.params.slug;
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
 
   const category = await getCategoryBySlug(slug);
   if (category) {
@@ -329,6 +335,7 @@ export async function categoryOrProjectPage(req, res) {
         path: `/portfolio/${category.slug}`,
         settings,
         categories,
+        navLinks,
         content,
       })
     );
@@ -339,7 +346,7 @@ export async function categoryOrProjectPage(req, res) {
     // A visualização não é somada aqui: a página do projeto passa a ser gerada como HTML
     // estático (sem código rodando a cada acesso) — quem soma é uma chamada fetch() do
     // navegador pra /api/visualizar/:slug assim que a página carrega (ver public/js/site.js).
-    return projectPage(req, res, project, settings, categories);
+    return projectPage(req, res, project, settings, categories, navLinks);
   }
 
   res.statusCode = 404;
@@ -350,6 +357,7 @@ export async function categoryOrProjectPage(req, res) {
       path: req.url,
       settings,
       categories,
+      navLinks,
       noindex: true,
       content: `<section class="simple-hero text-center"><div class="container"><h1>404</h1><p>Esse conteúdo não existe ou foi removido.</p><a href="/portfolio" class="btn btn-solid">Voltar ao portfólio</a></div></section>`,
     })
@@ -489,7 +497,7 @@ export async function postComment(req, res, slug, body) {
   }));
 }
 
-function projectPage(req, res, project, settings, categories) {
+function projectPage(req, res, project, settings, categories, navLinks) {
   const mainVideo = project.videos[0];
   const otherPhotos = project.photos;
 
@@ -578,6 +586,7 @@ function projectPage(req, res, project, settings, categories) {
       ogImage: project.cover_photo,
       settings,
       categories,
+      navLinks,
       content,
       structuredData: {
         '@context': 'https://schema.org',
@@ -593,6 +602,7 @@ function projectPage(req, res, project, settings, categories) {
 export async function aboutPage(req, res) {
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
   const bio = await getBio();
   const specialties = (bio.specialties || '')
     .split(/\n|,/)
@@ -728,6 +738,7 @@ export async function aboutPage(req, res) {
       ogImage: bio.profile_photo,
       settings,
       categories,
+      navLinks,
       content,
     })
   );
@@ -736,6 +747,7 @@ export async function aboutPage(req, res) {
 export async function servicesPage(req, res) {
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
   const services = await listServices({ onlyPublished: true });
 
   const content = `
@@ -772,6 +784,7 @@ export async function servicesPage(req, res) {
       path: '/servicos',
       settings,
       categories,
+      navLinks,
       content,
     })
   );
@@ -780,6 +793,7 @@ export async function servicesPage(req, res) {
 export async function contactPage(req, res) {
   const settings = await getSettings();
   const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
   const links = await listLinks();
   const digits = String(settings.whatsapp_number || '').replace(/\D/g, '');
   const waUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(settings.whatsapp_message || '')}` : null;
@@ -820,6 +834,7 @@ export async function contactPage(req, res) {
       path: '/contato',
       settings,
       categories,
+      navLinks,
       content,
     })
   );
