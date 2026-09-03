@@ -781,16 +781,17 @@ html.no-intro .cine-intro { display: none; }
   color: var(--accent);
 }
 .whatsapp-float {
-  position: fixed; bottom: 24px; right: 24px; z-index: 600;
-  width: 58px; height: 58px; border-radius: 50%;
+  position: fixed; bottom: 20px; right: 24px; z-index: 600;
+  width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
   animation: waPulse 2.6s ease-in-out infinite;
   transition: transform 0.3s var(--ease);
 }
+.whatsapp-float svg { width: 24px; height: 24px; }
 .whatsapp-float:hover { transform: scale(0.98); }
 .instagram-float {
-  position: fixed; bottom: 92px; right: 24px; z-index: 600;
+  position: fixed; bottom: 82px; right: 24px; z-index: 600;
   width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
@@ -1170,10 +1171,10 @@ html.no-intro .cine-intro { display: none; }
     width: 42px; height: 42px;
     right: 16px;
   }
-  .whatsapp-float { bottom: 16px; }
-  .instagram-float { bottom: 66px; }
-  .whatsapp-float svg { width: 20px; height: 20px; }
-  .instagram-float svg { width: 17px; height: 17px; }
+  .whatsapp-float { bottom: 14px; }
+  .instagram-float { bottom: 64px; }
+  .whatsapp-float svg { width: 19px; height: 19px; }
+  .instagram-float svg { width: 19px; height: 19px; }
 }
 
 /* ---------- Barra de progresso de rolagem ---------- */
