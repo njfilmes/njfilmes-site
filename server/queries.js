@@ -154,6 +154,29 @@ export async function deleteLink(id) {
   await query('DELETE FROM links WHERE id = $1', [id]);
 }
 
+// Menu principal do site (Home/Portfólio/Sobre/...) — editável pelo painel desde 03/09/2026,
+// mesmo padrão de listLinks/createLink/updateLink/deleteLink acima.
+export async function listNavLinks() {
+  return queryRows('SELECT * FROM nav_links ORDER BY sort_order ASC, id ASC');
+}
+export async function getNavLink(id) {
+  return queryOne('SELECT * FROM nav_links WHERE id = $1', [id]);
+}
+export async function createNavLink({ label, url, sort_order = 0 }) {
+  const row = await queryOne('INSERT INTO nav_links (label, url, sort_order) VALUES ($1, $2, $3) RETURNING id', [
+    label,
+    url,
+    sort_order,
+  ]);
+  return row.id;
+}
+export async function updateNavLink(id, { label, url, sort_order }) {
+  await query('UPDATE nav_links SET label=$1, url=$2, sort_order=$3 WHERE id=$4', [label, url, sort_order, id]);
+}
+export async function deleteNavLink(id) {
+  await query('DELETE FROM nav_links WHERE id = $1', [id]);
+}
+
 // ---------- Projetos ----------
 
 async function attachRelations(project) {

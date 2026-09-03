@@ -248,6 +248,20 @@ export async function initSchema() {
                                   );
                                     `);
 
+  // Menu principal do site (pedido em 03/09/2026): antes os itens "Home/Portfólio/Sobre/
+  // Serviços/Contato" eram fixos no código -- agora ficam nessa tabela pra dar pra
+  // adicionar, remover, renomear ou reordenar pelo painel administrativo, igual já
+  // acontece com "Links externos" e "Categorias". O item cuja url for exatamente
+  // "/portfolio" continua ganhando o submenu de categorias automaticamente (não muda).
+  await query(`
+      CREATE TABLE IF NOT EXISTS nav_links (
+            id SERIAL PRIMARY KEY,
+                  label TEXT NOT NULL,
+                        url TEXT NOT NULL,
+                              sort_order INTEGER NOT NULL DEFAULT 0
+                                  );
+                                    `);
+
   await query(`
       CREATE TABLE IF NOT EXISTS projects (
             id SERIAL PRIMARY KEY,
@@ -468,6 +482,23 @@ export async function initSchema() {
                   await query('INSERT INTO bio_gallery_photos (filename, sort_order) VALUES ($1, $2)', [`/img/bio/bio-${i}.jpg`, i]);
           }
     }
+
+  // Semeia o menu principal com os 5 itens que já existiam fixos no código -- só na
+  // primeira vez (tabela vazia), pra ninguém que já tinha o site no ar perder um item
+  // do menu quando essa versão for publicada.
+  const navLinksCountRow = await queryOne('SELECT COUNT(*)::int as n FROM nav_links');
+  if (navLinksCountRow.n === 0) {
+    const defaultNavLinks = [
+      ['Home', '/'],
+      ['Portfólio', '/portfolio'],
+      ['Sobre', '/sobre'],
+      ['Serviços', '/servicos'],
+      ['Contato', '/contato'],
+    ];
+    for (let i = 0; i < defaultNavLinks.length; i += 1) {
+      await query('INSERT INTO nav_links (label, url, sort_order) VALUES ($1, $2, $3)', [defaultNavLinks[i][0], defaultNavLinks[i][1], i]);
+    }
+  }
 }
 
 export function nowIso() {

@@ -3,6 +3,7 @@ import { escapeHtml } from './util.js';
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: '◆' },
+  { href: '/admin/menu', label: 'Menu do site', icon: '☰' },
   { href: '/admin/projetos', label: 'Projetos', icon: '▤' },
   { href: '/admin/categorias', label: 'Categorias', icon: '▦' },
   { href: '/admin/servicos', label: 'Serviços', icon: '✦' },

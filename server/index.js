@@ -241,6 +241,13 @@ async function router(req, res) {
       if (method === 'POST') return SeedAdmin.seedSubmit(req, res, admin);
     }
 
+    if (pathname === '/admin/menu' && method === 'GET') return Admin.menuPage(req, res, admin);
+    if (pathname === '/admin/menu/criar' && method === 'POST') return Admin.menuCreate(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/menu\/(\d+)\/editar$/)) && method === 'GET') return Admin.menuEditPage(req, res, admin, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/menu\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.menuUpdate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/menu\/(\d+)\/excluir$/)) && method === 'POST') return Admin.menuDelete(req, res, Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/menu\/(\d+)\/mover$/)) && method === 'POST') return Admin.menuMove(req, res, await parseBody(req), Number(m[1]));
+
     if (pathname === '/admin/categorias' && method === 'GET') return Admin.categoriesPage(req, res, admin);
     if (pathname === '/admin/categorias/criar' && method === 'POST') return Admin.categoryCreate(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/categorias\/(\d+)\/editar$/)) && method === 'GET') return Admin.categoryEditPage(req, res, admin, Number(m[1]));

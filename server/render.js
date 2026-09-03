@@ -24,6 +24,18 @@ function waLink(settings) {
 // relativas (mesmo domínio), sem precisar mudar nada.
 const PUBLIC_API_BASE = process.env.PUBLIC_API_BASE || '';
 
+// Menu principal (Home/Portfólio/Sobre/...) — usado só como rede de segurança caso alguma
+// chamada de layout() esqueça de passar navLinks (ver tabela nav_links / listNavLinks em
+// queries.js, editável pelo painel em /admin/menu desde 03/09/2026). Nunca deve aparecer na
+// prática, mas garante que o site nunca fica sem menu de navegação.
+const DEFAULT_NAV_LINKS = [
+  { label: 'Home', url: '/' },
+  { label: 'Portfólio', url: '/portfolio' },
+  { label: 'Sobre', url: '/sobre' },
+  { label: 'Serviços', url: '/servicos' },
+  { label: 'Contato', url: '/contato' },
+];
+
 export function layout({
   title,
   description,
@@ -31,6 +43,7 @@ export function layout({
   ogImage,
   settings,
   categories = [],
+  navLinks = [],
   bodyClass = '',
   content,
   structuredData = null,
@@ -57,6 +70,22 @@ export function layout({
       (c) =>
         `<li><a href="/portfolio/${escapeHtml(c.slug)}">${escapeHtml(c.name)}</a></li>`
     )
+    .join('');
+
+  // Pedido em 03/09/2026: o item cujo url é exatamente "/portfolio" continua ganhando o
+  // submenu de categorias e a setinha (.has-sub) automaticamente, não importa a posição ou
+  // o texto que a pessoa escolher pra ele no painel -- só a URL "/portfolio" é especial.
+  const navItems = navLinks.length ? navLinks : DEFAULT_NAV_LINKS;
+  const navLinksHtml = navItems
+    .map((item, i) => {
+      const num = String(i + 1).padStart(2, '0');
+      const isPortfolio = item.url === '/portfolio';
+      const chevron = isPortfolio
+        ? `<span class="nav-link-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>`
+        : '';
+      const subNav = isPortfolio && navCats ? `<ul class="sub-nav">${navCats}</ul>` : '';
+      return `<li${navLiAttrs(item.url, isPortfolio ? 'has-sub' : '')} style="--i:${i}"><a href="${escapeHtml(item.url)}"><span class="nav-link-num">${num}</span><span class="nav-link-text">${escapeHtml(item.label)}</span>${chevron}</a>${subNav}</li>`;
+    })
     .join('');
 
   // Link do YouTube no rodapé: pedido em 02/09/2026 pra ficar com a logo vermelha e uma
@@ -149,16 +178,7 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
       </button>
       <span class="nav-menu-label eyebrow">Menu</span>
-      <ul class="nav-links-list">
-        <li${navLiAttrs('/')} style="--i:0"><a href="/"><span class="nav-link-num">01</span><span class="nav-link-text">Home</span></a></li>
-        <li${navLiAttrs('/portfolio', 'has-sub')} style="--i:1">
-          <a href="/portfolio"><span class="nav-link-num">02</span><span class="nav-link-text">Portfólio</span><span class="nav-link-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></a>
-          ${navCats ? `<ul class="sub-nav">${navCats}</ul>` : ''}
-        </li>
-        <li${navLiAttrs('/sobre')} style="--i:2"><a href="/sobre"><span class="nav-link-num">03</span><span class="nav-link-text">Sobre</span></a></li>
-        <li${navLiAttrs('/servicos')} style="--i:3"><a href="/servicos"><span class="nav-link-num">04</span><span class="nav-link-text">Serviços</span></a></li>
-        <li${navLiAttrs('/contato')} style="--i:4"><a href="/contato"><span class="nav-link-num">05</span><span class="nav-link-text">Contato</span></a></li>
-      </ul>
+      <ul class="nav-links-list">${navLinksHtml}</ul>
       <!-- Pedido em 03/09/2026: rodapé do drawer (link do YouTube, depois botão "Falar no
            WhatsApp" e por fim o ícone do Instagram) foi todo removido ao longo do dia -- o
            ícone flutuante de WhatsApp/Instagram já aparece por cima do próprio drawer quando
