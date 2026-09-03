@@ -1323,27 +1323,95 @@ html.no-intro .cine-intro { display: none; }
   top: 62%; left: 4%;
   background: radial-gradient(circle, rgba(255,224,150,0.3), transparent 70%);
 }
-.js .parallax-layer-1 { animation: parallaxDrift1 14s ease-in-out infinite; }
-.js .parallax-layer-2 { animation: parallaxDrift2 18s ease-in-out infinite; }
-.js .parallax-layer-3 { animation: parallaxDrift3 10s ease-in-out infinite; }
-.js .parallax-layer-4 { animation: parallaxDrift4 8s ease-in-out infinite; }
-@keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(16vw, 20vh); } }
-@keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-18vw, -16vh); } }
-@keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-15vw, 19vh); } }
-@keyframes parallaxDrift4 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(13vw, -17vh); } }
+/* Pedido em 03/09/2026: as luzes só balançavam entre 2 pontos (ida e volta na mesma linha),
+   o usuário pediu movimento "tipo 360, aleatório, por todo o site" em vez de deslocamentos
+   curtos. Cada keyframe agora visita vários pontos espalhados em todas as direções (não só
+   um eixo), com sinais de X/Y diferentes a cada parada — dá a sensação de passeio livre pela
+   tela toda em vez de um vaivém previsível. Duração bem mais longa (30-46s) pra o percurso
+   inteiro não repetir rápido demais e ficar suave/ambiente, não frenético. Continua somando
+   com o deslocamento de scroll do site.js (translate, ver ali) e desligando por completo com
+   prefers-reduced-motion, igual antes. */
+.js .parallax-layer-1 { animation: parallaxDrift1 38s ease-in-out infinite; }
+.js .parallax-layer-2 { animation: parallaxDrift2 46s ease-in-out infinite; }
+.js .parallax-layer-3 { animation: parallaxDrift3 30s ease-in-out infinite; }
+.js .parallax-layer-4 { animation: parallaxDrift4 22s ease-in-out infinite; }
+@keyframes parallaxDrift1 {
+  0%   { transform: translate(0, 0); }
+  13%  { transform: translate(24vw, 10vh); }
+  25%  { transform: translate(14vw, 34vh); }
+  38%  { transform: translate(-12vw, 40vh); }
+  50%  { transform: translate(-30vw, 16vh); }
+  63%  { transform: translate(-22vw, -16vh); }
+  75%  { transform: translate(-4vw, -34vh); }
+  88%  { transform: translate(20vw, -20vh); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes parallaxDrift2 {
+  0%   { transform: translate(0, 0); }
+  14%  { transform: translate(-20vw, -18vh); }
+  28%  { transform: translate(-36vw, 6vh); }
+  42%  { transform: translate(-18vw, 30vh); }
+  56%  { transform: translate(8vw, 36vh); }
+  70%  { transform: translate(28vw, 14vh); }
+  84%  { transform: translate(16vw, -20vh); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes parallaxDrift3 {
+  0%   { transform: translate(0, 0); }
+  16%  { transform: translate(18vw, -22vh); }
+  33%  { transform: translate(32vw, 2vh); }
+  50%  { transform: translate(18vw, 26vh); }
+  66%  { transform: translate(-10vw, 32vh); }
+  83%  { transform: translate(-24vw, 8vh); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes parallaxDrift4 {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(16vw, 14vh); }
+  40%  { transform: translate(4vw, -18vh); }
+  60%  { transform: translate(-16vw, -12vh); }
+  80%  { transform: translate(-8vw, 16vh); }
+  100% { transform: translate(0, 0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .parallax-layer-1, .parallax-layer-2, .parallax-layer-3, .parallax-layer-4 { animation: none; }
 }
 /* Celular: 3 camadas em vez de 4 (mais leve pra bateria/GPU) — a 4ª (menor e mais rápida) some,
    ficam a 1, 2 e 3, cobrindo topo, meio e fundo da página em vez de só uma manchinha no canto —
-   senão fica parecendo "parado num lugar só". */
+   senão fica parecendo "parado num lugar só". Mesma ideia de percurso com várias paradas em
+   direções diferentes, só que com alcance um pouco menor (a tela é mais estreita) e duração um
+   pouco mais curta. */
 @media (max-width: 720px) {
   .parallax-layer-4 { display: none; }
   .parallax-layer-1, .parallax-layer-2, .parallax-layer-3 { filter: blur(50px); }
   .parallax-layer-1 { background: radial-gradient(circle, rgba(201,162,39,0.34), transparent 70%); }
   .parallax-layer-2 { background: radial-gradient(circle, rgba(120,55,15,0.32), transparent 70%); }
   .parallax-layer-3 { background: radial-gradient(circle, rgba(255,150,60,0.3), transparent 70%); width: 44vw; height: 44vw; }
-  @keyframes parallaxDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(10vw, 14vh); } }
-  @keyframes parallaxDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-12vw, -12vh); } }
-  @keyframes parallaxDrift3 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-10vw, 13vh); } }
+  .js .parallax-layer-1 { animation: parallaxDrift1 30s ease-in-out infinite; }
+  .js .parallax-layer-2 { animation: parallaxDrift2 34s ease-in-out infinite; }
+  .js .parallax-layer-3 { animation: parallaxDrift3 24s ease-in-out infinite; }
+  @keyframes parallaxDrift1 {
+    0%   { transform: translate(0, 0); }
+    16%  { transform: translate(16vw, 8vh); }
+    33%  { transform: translate(8vw, 24vh); }
+    50%  { transform: translate(-10vw, 20vh); }
+    66%  { transform: translate(-16vw, -6vh); }
+    83%  { transform: translate(-2vw, -22vh); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes parallaxDrift2 {
+    0%   { transform: translate(0, 0); }
+    20%  { transform: translate(-14vw, -14vh); }
+    40%  { transform: translate(-22vw, 8vh); }
+    60%  { transform: translate(-6vw, 22vh); }
+    80%  { transform: translate(14vw, 10vh); }
+    100% { transform: translate(0, 0); }
+  }
+  @keyframes parallaxDrift3 {
+    0%   { transform: translate(0, 0); }
+    25%  { transform: translate(14vw, -14vh); }
+    50%  { transform: translate(10vw, 18vh); }
+    75%  { transform: translate(-14vw, 12vh); }
+    100% { transform: translate(0, 0); }
+  }
 }
