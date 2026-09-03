@@ -875,7 +875,10 @@ html.no-intro .cine-intro { display: none; }
   .hero { min-height: 84svh; }
   .hero-scroll { bottom: 18px; }
   .hero-media::after {
-    background: linear-gradient(180deg, rgba(0,0,0,0.84) 0%, rgba(0,0,0,0.8) 35%, rgba(2,2,3,0.99) 100%);
+    /* Pedido do usuario em 03/09/2026: a foto do hero tava escura demais so no cel
+       (aqui era mais escuro que no PC de proposito p/ legibilidade do texto) - clareado
+       um pouco, mantendo o texto ainda legivel por cima. */
+    background: linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.62) 35%, rgba(2,2,3,0.93) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
@@ -912,6 +915,12 @@ html.no-intro .cine-intro { display: none; }
   .hero-eyebrow-lower { margin-top: 0.9em; }
   .hero-content h1 .hero-punct {
     margin-left: 0.08em;
+  }
+  /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
+     site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
+     site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo). */
+  .grade-overlay {
+    background: linear-gradient(160deg, rgba(255,140,50,0.07) 0%, rgba(255,120,40,0.05) 45%, rgba(140,60,15,0.08) 100%);
   }
 }
 @media (max-width: 480px) {
