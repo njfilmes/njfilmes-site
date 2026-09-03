@@ -383,3 +383,38 @@ export async function updateTestimonial(id, { client_name, role, provider, video
 export async function deleteTestimonial(id) {
   await query('DELETE FROM testimonials WHERE id = $1', [id]);
 }
+
+// ---------- Comentários (visitantes comentando nas páginas de projeto) ----------
+export async function listCommentsForProject(projectId) {
+  return queryRows('SELECT * FROM comments WHERE project_id = $1 ORDER BY created_at ASC', [projectId]);
+}
+export async function listAllComments() {
+  return queryRows(
+    `SELECT c.*, p.title as project_title, p.slug as project_slug
+     FROM comments c JOIN projects p ON p.id = c.project_id
+     ORDER BY c.created_at DESC
+     LIMIT 500`
+  );
+}
+export async function getComment(id) {
+  return queryOne('SELECT * FROM comments WHERE id = $1', [id]);
+}
+export async function createComment({ project_id, author_name, content }) {
+  const now = new Date().toISOString();
+  const row = await queryOne(
+    'INSERT INTO comments (project_id, author_name, content, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
+    [project_id, author_name, content, now]
+  );
+  return row;
+}
+export async function updateCommentReply(id, adminReply) {
+  const now = new Date().toISOString();
+  await query('UPDATE comments SET admin_reply = $1, admin_reply_at = $2 WHERE id = $3', [adminReply, adminReply ? now : null, id]);
+}
+export async function deleteComment(id) {
+  await query('DELETE FROM comments WHERE id = $1', [id]);
+}
+export async function countComments() {
+  const row = await queryOne('SELECT COUNT(*)::int as n FROM comments');
+  return row ? row.n : 0;
+}

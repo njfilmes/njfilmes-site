@@ -356,6 +356,23 @@ export async function initSchema() {
                                                           );
                                                             `);
 
+  // Comentários dos visitantes nas páginas de projeto (fotos e vídeos, o mesmo mural pra
+  // qualquer tipo de projeto — pedido do usuário em 03/09/2026). admin_reply guarda uma
+  // resposta pública opcional escrita pelo painel (/admin/comentarios); fica vazia até o
+  // administrador responder. Excluir um comentário aqui é definitivo (igual excluir uma foto).
+  await query(`
+      CREATE TABLE IF NOT EXISTS comments (
+            id SERIAL PRIMARY KEY,
+                  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+                        author_name TEXT NOT NULL,
+                              content TEXT NOT NULL,
+                                    admin_reply TEXT DEFAULT '',
+                                          admin_reply_at TIMESTAMPTZ,
+                                                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                                    );
+                                                      `);
+  await query('CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id);');
+
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_videos_project ON project_videos(project_id);');

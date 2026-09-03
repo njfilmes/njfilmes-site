@@ -200,6 +200,15 @@ export function formatDatePtBr(isoDate) {
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
+// Igual formatDatePtBr, mas aceita objetos Date (como os que vêm de colunas TIMESTAMPTZ, ex.:
+// comments.created_at) além de strings, e mostra também a hora — usado no painel de comentários.
+export function formatDateTimePtBr(value) {
+  if (!value) return '';
+  const d = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(d.getTime())) return String(value);
+  return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 export function truncate(str, len = 160) {
   const s = String(str || '').replace(/\s+/g, ' ').trim();
   if (s.length <= len) return s;

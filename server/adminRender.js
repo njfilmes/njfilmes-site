@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: '/admin/marcas', label: 'Marcas', icon: '◈' },
   { href: '/admin/pessoas', label: 'Pessoas', icon: '☻' },
   { href: '/admin/depoimentos', label: 'Depoimentos', icon: '▶' },
+  { href: '/admin/comentarios', label: 'Comentários', icon: '✉' },
   { href: '/admin/links', label: 'Links externos', icon: '⛓' },
   { href: '/admin/bio', label: 'Biografia / Sobre', icon: '☺' },
   { href: '/admin/configuracoes', label: 'Configurações', icon: '⚙' },

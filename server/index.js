@@ -132,7 +132,7 @@ function applyCors(req, res) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
@@ -166,7 +166,7 @@ async function router(req, res) {
   // pelo navegador ao carregar a página do projeto — necessário porque a página em si passa a
   // ser HTML estático). As duas aceitam chamadas de outra origem (o site estático), por isso o
   // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
-  if (pathname.match(/^\/api\/(curtir|visualizar)\/[a-z0-9-]+$/)) {
+  if (pathname.match(/^\/api\/(curtir|visualizar|comentarios)\/[a-z0-9-]+$/)) {
     applyCors(req, res);
     if (method === 'OPTIONS') {
       res.statusCode = 204;
@@ -178,6 +178,15 @@ async function router(req, res) {
   }
   if ((m = pathname.match(/^\/api\/visualizar\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.registerView(req, res, m[1]);
+  }
+  // Comentários dos visitantes: GET lista os comentários de um projeto, POST cria um novo. Não
+  // fazem parte do HTML pré-gerado (ver scripts/build-static.js), por isso o site estático busca
+  // isso aqui via JS no carregamento da página, igual já faz com curtir/visualizar.
+  if ((m = pathname.match(/^\/api\/comentarios\/([a-z0-9-]+)$/)) && method === 'GET') {
+    return Pub.getComments(req, res, m[1]);
+  }
+  if ((m = pathname.match(/^\/api\/comentarios\/([a-z0-9-]+)$/)) && method === 'POST') {
+    return Pub.postComment(req, res, m[1], await parseBody(req));
   }
 
   // ---------------- Admin ----------------
@@ -266,6 +275,13 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.testimonialUpdate(req, res, await parseBody(req), Number(m[1]));
     if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.testimonialDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/depoimentos\/(\d+)\/mover$/)) && method === 'POST') return Admin.testimonialMove(req, res, await parseBody(req), Number(m[1]));
+
+    // Comentários: "responder"/"remover" (não "atualizar"/"excluir") de propósito, pra NÃO cair no
+    // regex de republicação do site estático logo acima — comentários não fazem parte do HTML
+    // pré-gerado, então moderar/responder um comentário não precisa disparar rebuild nenhum.
+    if (pathname === '/admin/comentarios' && method === 'GET') return Admin.commentsPage(req, res, admin);
+    if ((m = pathname.match(/^\/admin\/comentarios\/(\d+)\/responder$/)) && method === 'POST') return Admin.commentReply(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/comentarios\/(\d+)\/remover$/)) && method === 'POST') return Admin.commentDelete(req, res, Number(m[1]));
 
     if (pathname === '/admin/links' && method === 'GET') return Admin.linksPage(req, res, admin);
     if (pathname === '/admin/links/criar' && method === 'POST') return Admin.linkCreate(req, res, await parseBody(req));
