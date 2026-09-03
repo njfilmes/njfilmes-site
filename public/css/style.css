@@ -267,11 +267,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    .nav-toggle acima) - por isso o X aparecia solto no topo da versao de PC. */
 .nav-close { display: none; }
 .nav-backdrop { display: none; }
-/* Numeração, rótulo "Menu" e rodapé (WhatsApp + redes) do menu mobile só existem visualmente
-   no celular — no desktop o link mostra só o texto, igual sempre foi. */
+/* Numeração, rótulo "Menu" e a setinha do submenu do menu mobile só existem visualmente
+   no celular — no desktop o link mostra só o texto e o submenu abre no hover, igual sempre
+   foi (ver .has-sub:hover .sub-nav mais acima). */
 .nav-link-num { display: none; }
 .nav-menu-label { display: none; }
-.nav-drawer-footer { display: none; }
+.nav-link-chevron { display: none; }
 
 /* ---------- Hero ---------- */
 .hero {
@@ -1014,10 +1015,13 @@ html.no-intro .cine-intro { display: none; }
   .main-nav.open .nav-menu-label { opacity: 0.9; translate: 0 0; }
   .js .nav-menu-label { animation: navLabelFloat 4s ease-in-out infinite; }
   @keyframes navLabelFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  /* Pedido em 03/09/2026: a lista ficava centralizada no meio do drawer (justify-content:
+     center numa área com flex:1), sobrando um vão vazio grande embaixo do rótulo "MENU" —
+     trocado pra começar logo abaixo do rótulo (flex-start) em vez de flutuar no meio. */
   .main-nav > ul.nav-links-list {
     position: relative;
     flex: 1;
-    display: flex; flex-direction: column; justify-content: center;
+    display: flex; flex-direction: column; justify-content: flex-start;
     gap: 6px;
   }
   .nav-links-list li {
@@ -1065,20 +1069,28 @@ html.no-intro .cine-intro { display: none; }
   @keyframes navNumFloat { 0%, 100% { transform: translateY(0) rotateX(0); } 50% { transform: translateY(-3px) rotateX(12deg); } }
   .has-sub.open > a .nav-link-text { color: var(--accent); }
   .has-sub.open > a .nav-link-num { border-color: var(--accent); background: linear-gradient(155deg, rgba(201,162,39,0.34), rgba(201,162,39,0.08)); }
+  /* Pedido em 03/09/2026: destacar a página atual no menu (nada indicava antes onde a
+     pessoa já estava) — mesmo tratamento visual (texto dourado + chip com borda/fundo
+     dourados) já usado no ".has-sub.open" acima, pra ficar consistente. */
+  .nav-links-list li.active > a .nav-link-text { color: var(--accent); }
+  .nav-links-list li.active > a .nav-link-num { border-color: var(--accent); background: linear-gradient(155deg, rgba(201,162,39,0.34), rgba(201,162,39,0.08)); }
+  /* Setinha indicando que "Portfólio" abre um submenu de categorias em vez de navegar
+     direto (pedido em 03/09/2026 -- antes não tinha nenhuma pista disso). Empurrada pro
+     final da linha com margin-left:auto (a própria .nav-links-list a já é flex). Gira
+     180deg quando o submenu abre, mesma convenção de "rotate" como propriedade separada
+     usada no resto do menu, pra não brigar com nenhuma outra transição. */
+  .nav-link-chevron {
+    margin-left: auto;
+    flex: none;
+    display: inline-flex;
+    color: var(--accent);
+    opacity: 0.8;
+    transition: rotate 0.3s var(--ease);
+  }
+  .has-sub.open > a .nav-link-chevron { rotate: 180deg; }
   .sub-nav { position: static; opacity: 1; visibility: visible; transform: none; border: none; background: none; padding: 4px 0 6px 40px; display: none; }
   .has-sub.open .sub-nav { display: block; }
   .sub-nav li a { font-family: var(--font-body); font-size: 0.76rem; font-weight: 600; padding: 8px 2px; color: rgba(245,242,235,0.62); }
-  .nav-drawer-footer {
-    display: flex; flex-direction: column; gap: 14px;
-    position: relative;
-    padding-top: 20px; margin-top: 18px;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    opacity: 0; transform: translateY(12px);
-    transition: opacity 0.5s var(--ease) 0.5s, transform 0.5s var(--ease) 0.5s;
-  }
-  .main-nav.open .nav-drawer-footer { opacity: 1; transform: translateY(0); }
-  .nav-drawer-footer .btn { width: 100%; justify-content: center; text-align: center; }
-  .nav-drawer-footer .social-links { margin-bottom: 0; }
   .nav-toggle { display: flex; }
   /* Pedido em 03/09/2026: o X de fechar o menu tava discreto demais (pequeno, parado) — deixar
      maior e mais animado, igual foi pedido pro X da foto ampliada (mesmo truque de rotate/scale
