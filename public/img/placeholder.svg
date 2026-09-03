@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="800" height="1000" viewBox="0 0 800 1000">
-<rect width="800" height="1000" fill="#141416"/>
-<g stroke="#3a3a3d" stroke-width="2">
-  <line x1="0" y1="0" x2="800" y2="1000"/>
-  <line x1="800" y1="0" x2="0" y2="1000"/>
+<defs>
+  <linearGradient id="bg" x1="0" y1="0" x2="0.3" y2="1">
+    <stop offset="0%" stop-color="#1c1c1f"/>
+    <stop offset="100%" stop-color="#0a0a0b"/>
+  </linearGradient>
+</defs>
+<rect width="800" height="1000" fill="url(#bg)"/>
+<g stroke="#c9a227" stroke-opacity="0.5" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <rect x="298" y="392" width="204" height="150" rx="10"/>
+  <path d="M298 432 L246 402 L246 532 L298 502 Z"/>
+  <circle cx="400" cy="467" r="34" stroke-width="5"/>
 </g>
-<text x="400" y="510" font-family="Arial, sans-serif" font-size="34" fill="#6f6e6a" text-anchor="middle" letter-spacing="4">NJFILMES</text>
+<text x="400" y="606" font-family="Arial, sans-serif" font-size="30" fill="#8a8a86" text-anchor="middle" letter-spacing="6">NJFILMES</text>
 </svg>
