@@ -159,7 +159,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .service-card img,
   .js .work-card img,
   .js .person-card img,
-  .js .gallery-grid img {
+  .js .gallery-grid img,
+  .js .nav-link-num,
+  .js .nav-link-text,
+  .js .nav-glow-1,
+  .js .nav-glow-2 {
     animation: none;
   }
 }
@@ -949,6 +953,34 @@ html.no-intro .cine-intro { display: none; }
       radial-gradient(circle at 0% 100%, rgba(120,55,15,0.09), transparent 60%);
     pointer-events: none;
   }
+  /* Pedido em 03/09/2026: além do vidro deixar a luz de fundo da página aparecer borrada atrás
+     do menu, o usuário pediu uma luz se mexendo dentro do próprio menu também — como o efeito
+     de fundo depende de onde as manchas do .parallax-bg estão na hora em que o menu abre, nem
+     sempre dava pra notar. Essas duas aqui são próprias do menu (mesma técnica das manchas do
+     paralaxe: blur + mix-blend-mode: screen + drift via `transform`, ver mais abaixo no
+     arquivo), então sempre tem luz visivelmente andando aqui dentro, direto. */
+  .nav-glow {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(46px);
+    mix-blend-mode: screen;
+    pointer-events: none;
+    will-change: transform;
+  }
+  .nav-glow-1 {
+    width: 220px; height: 220px;
+    top: -8%; right: -18%;
+    background: radial-gradient(circle, rgba(201,162,39,0.4), transparent 70%);
+  }
+  .nav-glow-2 {
+    width: 180px; height: 180px;
+    bottom: 8%; left: -16%;
+    background: radial-gradient(circle, rgba(255,150,60,0.32), transparent 70%);
+  }
+  .js .nav-glow-1 { animation: navGlowDrift1 9s ease-in-out infinite; }
+  .js .nav-glow-2 { animation: navGlowDrift2 11s ease-in-out infinite; }
+  @keyframes navGlowDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-38px, 46px); } }
+  @keyframes navGlowDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -40px); } }
   .main-nav.open { transform: translateX(0); }
   .nav-menu-label {
     display: block;
@@ -977,16 +1009,22 @@ html.no-intro .cine-intro { display: none; }
   .main-nav.open .nav-links-list li { opacity: 1; transform: perspective(700px) rotateY(0) translateX(0) translateZ(0); }
   .nav-links-list a {
     display: flex; align-items: center; gap: 14px;
-    padding: 13px 2px;
+    padding: 11px 2px;
     font-family: var(--font-display);
-    font-size: clamp(1.28rem, 5.6vw, 1.56rem);
-    letter-spacing: 0.015em;
+    font-size: clamp(1rem, 4.4vw, 1.2rem);
+    letter-spacing: 0.02em;
     line-height: 1;
     color: rgba(245,242,235,0.82);
     text-shadow: 0 1px 0 rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.3);
     transition: color 0.3s var(--ease), scale 0.15s var(--ease);
   }
   .nav-links-list a:active { scale: 0.97; color: var(--fg); }
+  /* Pedido em 03/09/2026: fonte dos links achada grande, e pediu a mesma animação de
+     "balançar" que já existe no resto do menu (números, label "MENU") aplicada no texto
+     também — mesmo keyframe/padrão do .js .eyebrow (labelFloat) usado no site inteiro, só que
+     com o atraso por item (--i) igual já fazíamos nos números, pra não balançar tudo junto. */
+  .js .nav-link-text { display: inline-block; animation: navTextFloat 5s ease-in-out infinite; animation-delay: calc(var(--i, 0) * 0.15s); }
+  @keyframes navTextFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
   .nav-link-num {
     display: inline-flex; align-items: center; justify-content: center;
     flex: none;
