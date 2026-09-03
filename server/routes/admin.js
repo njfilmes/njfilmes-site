@@ -919,6 +919,14 @@ export async function settingsPage(req, res, admin) {
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
       ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Link direto para um arquivo de vídeo .mp4 hospedado (ex: no seu storage). Deixe vazio para usar imagem.' })}
+      <div class="form-field" data-single-upload>
+        <label>Foto de destaque da Home (fundo da primeira tela do site)</label>
+        <input type="file" accept="image/*">
+        <input type="hidden" name="hero_photo_data">
+        <img data-preview src="${escapeHtml(s.hero_photo || '/img/hero-poster.jpg')}" style="max-width:280px;border-radius:6px;margin-top:8px;display:block;">
+        <input type="hidden" name="hero_photo_existing" value="${escapeHtml(s.hero_photo || '')}">
+        <small>Envie uma foto na horizontal, de boa qualidade (ideal acima de 1600px de largura). O efeito de escurecido/película que já existe no site continua funcionando automaticamente em cima da foto nova, sem precisar mexer em mais nada. Se não enviar nenhuma, o site continua usando a foto atual.</small>
+      </div>
       ${field({ label: 'Título para o Google (meta title)', name: 'meta_title', value: s.meta_title })}
       ${field({ label: 'Descrição para o Google (meta description)', name: 'meta_description', value: s.meta_description, textarea: true, rows: 2 })}
       <div class="form-field" data-single-upload>
@@ -991,12 +999,19 @@ export async function settingsUpdate(req, res, body) {
   if (body.og_image_data) {
     try { og_image = await saveMiscImage(body.og_image_data); } catch { /* mantém imagem anterior */ }
   }
+  // Foto de destaque da Home: mesma lógica (mantém a atual se nada de novo for enviado
+  // ou se o upload falhar). Vazio = continua usando a imagem padrão do site.
+  let hero_photo = body.hero_photo_existing || '';
+  if (body.hero_photo_data) {
+    try { hero_photo = await saveMiscImage(body.hero_photo_data); } catch { /* mantém foto anterior */ }
+  }
   await Q.updateSettings({
     site_name: body.site_name || 'NJFILMES',
     tagline: body.tagline || '',
     hero_headline: body.hero_headline || '',
     hero_subheadline: body.hero_subheadline || '',
     hero_video_url: body.hero_video_url || '',
+    hero_photo,
     meta_title: body.meta_title || '',
     meta_description: body.meta_description || '',
     og_image,
