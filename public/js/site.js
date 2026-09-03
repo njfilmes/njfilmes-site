@@ -438,7 +438,16 @@
         } catch (e) { return ''; }
       };
 
+      // Contador de comentários que aparece junto com curtir/visualizações, no estilo rede
+      // social (Instagram/YouTube) — pedido do usuário em 03/09/2026. Fica fora da seção de
+      // comentários, então precisa ser atualizado à parte sempre que a lista é buscada/muda.
+      var updateCommentsCount = function (count) {
+        var countEls = document.querySelectorAll('[data-comments-count]');
+        for (var i = 0; i < countEls.length; i++) countEls[i].textContent = count;
+      };
+
       var renderComments = function (comments) {
+        updateCommentsCount(comments ? comments.length : 0);
         if (!commentsListEl) return;
         commentsListEl.textContent = '';
         if (!comments || !comments.length) {
@@ -493,6 +502,7 @@
           .then(function (r) { return r.json(); })
           .then(function (data) { renderComments(data && data.comments); })
           .catch(function () {
+            updateCommentsCount(0);
             if (commentsListEl) {
               commentsListEl.textContent = '';
               var err = document.createElement('p');
