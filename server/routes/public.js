@@ -16,6 +16,8 @@ import {
   listBioGalleryPhotos,
   incrementProjectViews,
   incrementProjectLikes,
+  listCommentsForProject,
+  createComment,
 } from '../queries.js';
 
 function coverUrl(project) {
@@ -381,6 +383,92 @@ export async function registerView(req, res, slug) {
   res.end(JSON.stringify({ views }));
 }
 
+// ---------- Comentários dos visitantes (fotos e vídeos, mesmo mural pra qualquer tipo de
+// projeto — pedido do usuário em 03/09/2026). Não fazem parte do HTML pré-gerado do site
+// estático (ver scripts/build-static.js): o navegador busca e envia via fetch/JS, exatamente
+// como já acontece com curtir/visualizar acima. Sem pré-moderação — comentário aparece na hora;
+// o administrador pode excluir ou responder publicamente depois pelo painel (/admin/comentarios).
+
+// Anti-spam simples: campo-armadilha (honeypot) invisível no formulário — se vier preenchido é
+// quase certo que é um robô, então respondemos como se tivesse dado certo (sem avisar o robô)
+// mas não gravamos nada. E um limite de comentários por IP num período curto, guardado em
+// memória (reinicia se o serviço reiniciar, o que é aceitável pra esse nível de proteção).
+const COMMENT_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutos
+const COMMENT_RATE_LIMIT_MAX = 6; // no máximo 6 comentários por IP nesse período
+const commentRateLimitByIp = new Map();
+
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || 'desconhecido';
+}
+
+function commentRateLimitOk(ip) {
+  const now = Date.now();
+  const previous = (commentRateLimitByIp.get(ip) || []).filter((t) => now - t < COMMENT_RATE_LIMIT_WINDOW_MS);
+  if (previous.length >= COMMENT_RATE_LIMIT_MAX) {
+    commentRateLimitByIp.set(ip, previous);
+    return false;
+  }
+  previous.push(now);
+  commentRateLimitByIp.set(ip, previous);
+  return true;
+}
+
+export async function getComments(req, res, slug) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const project = await getProjectBySlug(slug);
+  if (!project || !project.published) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Projeto não encontrado.' }));
+  }
+  const comments = await listCommentsForProject(project.id);
+  res.end(JSON.stringify({
+    comments: comments.map((c) => ({
+      id: c.id,
+      author_name: c.author_name,
+      content: c.content,
+      admin_reply: c.admin_reply || '',
+      admin_reply_at: c.admin_reply_at || null,
+      created_at: c.created_at,
+    })),
+  }));
+}
+
+export async function postComment(req, res, slug, body) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const project = await getProjectBySlug(slug);
+  if (!project || !project.published) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Projeto não encontrado.' }));
+  }
+  if (body.empresa) {
+    // honeypot: finge sucesso, não grava nada
+    res.statusCode = 201;
+    return res.end(JSON.stringify({
+      ok: true,
+      comment: { id: 0, author_name: body.author_name || '', content: body.content || '', admin_reply: '', admin_reply_at: null, created_at: new Date().toISOString() },
+    }));
+  }
+  const authorName = String(body.author_name || '').trim().slice(0, 80);
+  const content = String(body.content || '').trim().slice(0, 1000);
+  if (!authorName || !content) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ ok: false, error: 'Preencha seu nome e o comentário.' }));
+  }
+  const ip = getClientIp(req);
+  if (!commentRateLimitOk(ip)) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ ok: false, error: 'Muitos comentários em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const comment = await createComment({ project_id: project.id, author_name: authorName, content });
+  res.statusCode = 201;
+  res.end(JSON.stringify({
+    ok: true,
+    comment: { id: comment.id, author_name: comment.author_name, content: comment.content, admin_reply: '', admin_reply_at: null, created_at: comment.created_at },
+  }));
+}
+
 function projectPage(req, res, project, settings, categories) {
   const mainVideo = project.videos[0];
   const otherPhotos = project.photos;
@@ -427,6 +515,24 @@ function projectPage(req, res, project, settings, categories) {
       ${project.additional_info ? `<p>${nl2br(project.additional_info)}</p>` : ''}
     </div>
   </section>` : ''}
+
+  <section class="comments-section" data-comments data-project="${escapeHtml(project.slug)}">
+    <div class="container" style="max-width:820px;">
+      <h3 class="reveal">Comentários</h3>
+      <div class="comments-list" data-comments-list>
+        <p class="muted" data-comments-loading>Carregando comentários...</p>
+      </div>
+      <form class="comment-form reveal" data-comment-form novalidate>
+        <input type="text" name="author_name" placeholder="Seu nome" maxlength="80" required>
+        <textarea name="content" placeholder="Deixe seu comentário sobre este projeto..." rows="3" maxlength="1000" required></textarea>
+        <input type="text" name="empresa" class="comment-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+        <div class="form-actions">
+          <button type="submit" class="btn btn-solid">Enviar comentário</button>
+          <span class="comment-form-status" data-comment-status></span>
+        </div>
+      </form>
+    </div>
+  </section>
 
   <section class="cta-section alt-bg">
     <div class="container">

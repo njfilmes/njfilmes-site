@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { adminLayout, loginLayout, field, checkboxField, selectField } from '../adminRender.js';
 import { escapeHtml } from '../util.js';
-import { parseVideoUrl, videoEmbedHtml, uniqueSlug, formatDatePtBr } from '../util.js';
+import { parseVideoUrl, videoEmbedHtml, uniqueSlug, formatDatePtBr, formatDateTimePtBr } from '../util.js';
 import { query, queryOne } from '../db.js';
 import {
   createAdminUser,
@@ -670,6 +670,54 @@ export async function testimonialMove(req, res, body, id) {
   await query('UPDATE testimonials SET sort_order = $1 WHERE id = $2', [b.sort_order, a.id]);
   await query('UPDATE testimonials SET sort_order = $1 WHERE id = $2', [a.sort_order, b.id]);
   redirect(res, '/admin/depoimentos');
+}
+
+// ---------------- Comentários (visitantes comentando nas páginas de projeto) ----------------
+
+export async function commentsPage(req, res, admin) {
+  const flash = readFlash(req);
+  const comments = await Q.listAllComments();
+  const rows = comments
+    .map(
+      (c) => `<div class="panel comment-admin-item">
+        <div class="comment-admin-head">
+          <div>
+            <b>${escapeHtml(c.author_name)}</b>
+            <span class="muted"> em </span>
+            <a href="/portfolio/${escapeHtml(c.project_slug)}" target="_blank">${escapeHtml(c.project_title)}</a>
+            <span class="muted"> · ${escapeHtml(formatDateTimePtBr(c.created_at))}</span>
+          </div>
+          <form method="post" action="/admin/comentarios/${c.id}/remover" data-confirm="Excluir este comentário de &quot;${escapeHtml(c.author_name)}&quot;?">
+            <button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button>
+          </form>
+        </div>
+        <p class="comment-admin-content">${escapeHtml(c.content)}</p>
+        <form method="post" action="/admin/comentarios/${c.id}/responder" class="comment-admin-reply-form">
+          ${field({ label: 'Sua resposta (aparece publicamente logo abaixo do comentário)', name: 'admin_reply', value: c.admin_reply || '', textarea: true, rows: 2, placeholder: 'Escreva uma resposta pública (opcional)...' })}
+          <div class="form-actions"><button class="btn-a btn-a-primary btn-a-sm" type="submit">Salvar resposta</button></div>
+        </form>
+      </div>`
+    )
+    .join('');
+  const content = `
+  <div class="panel">
+    <h2>Comentários (${comments.length})</h2>
+    <p class="muted" style="margin-top:-8px;">Comentários deixados por visitantes nas páginas dos projetos (fotos e vídeos). Você pode responder publicamente ou excluir comentários indesejados.</p>
+  </div>
+  ${comments.length ? rows : '<div class="panel"><p class="empty-hint">Nenhum comentário ainda.</p></div>'}`;
+  res.end(adminLayout({ title: 'Comentários', activePath: '/admin/comentarios', admin, content, flash }));
+}
+
+export async function commentReply(req, res, body, id) {
+  const comment = await Q.getComment(id);
+  if (!comment) return redirect(res, '/admin/comentarios');
+  await Q.updateCommentReply(id, (body.admin_reply || '').trim());
+  redirect(res, '/admin/comentarios' + withFlash(res, 'success', 'Resposta salva.'));
+}
+
+export async function commentDelete(req, res, id) {
+  await Q.deleteComment(id);
+  redirect(res, '/admin/comentarios' + withFlash(res, 'success', 'Comentário excluído.'));
 }
 
 // ---------------- Links externos ----------------
