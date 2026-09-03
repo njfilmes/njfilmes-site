@@ -17,6 +17,26 @@
     });
   });
 
+  // Corrigido em 03/09/2026: sem isso, se o usuário soltasse o arquivo alguns pixels fora
+  // da área de upload (ou o navegador não reconhecesse o "drop" por algum motivo), o
+  // Chrome/Firefox tentam abrir a foto direto na aba (saindo do painel) em vez de simplesmente
+  // ignorar — o que parecia "arrastar e soltar não faz nada". Bloqueia esse comportamento
+  // padrão em toda a página; as áreas de upload continuam com sua própria lógica de arrastar.
+  window.addEventListener('dragover', (e) => e.preventDefault());
+  window.addEventListener('drop', (e) => e.preventDefault());
+
+  // Corrigido em 03/09/2026: ao clicar em "Clique aqui..." e escolher fotos pelo seletor do
+  // sistema, o navegador sempre preenche file.type corretamente (o próprio seletor já filtra
+  // por accept="image/*"). Mas ao ARRASTAR arquivos direto do Finder/Explorer, alguns
+  // navegadores/formatos (ex.: .heic do iPhone, ou certas versões do Windows) entregam
+  // file.type vazio — aí o filtro antigo (só file.type.startsWith('image/')) descartava a
+  // foto em silêncio, sem nenhum aviso, dando a impressão de que arrastar não fazia nada.
+  // Agora, se o tipo não vier preenchido, cai para checar a extensão do arquivo.
+  const IMAGE_EXT_RE = /\.(jpe?g|png|gif|webp|bmp|tiff?|heic|heif|avif)$/i;
+  function isImageFile(f) {
+    return (f.type && f.type.startsWith('image/')) || IMAGE_EXT_RE.test(f.name || '');
+  }
+
   // -------- Upload de fotos do projeto (multi-arquivo, converte para base64 e envia via fetch) --------
   const uploadDrop = document.querySelector('[data-upload-drop]');
   if (uploadDrop) {
@@ -48,8 +68,14 @@
     }
 
     async function handleFiles(fileList) {
-      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-      if (!files.length) return;
+      const files = Array.from(fileList).filter(isImageFile);
+      if (!files.length) {
+        if (fileList.length && statusEl) {
+          statusEl.textContent = 'Nenhum arquivo de imagem reconhecido (só JPG, PNG, GIF, WEBP, HEIC...). Tente novamente ou use o clique pra selecionar.';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
       preview.innerHTML = '';
       files.forEach((f) => {
         const img = document.createElement('img');
@@ -120,8 +146,14 @@
     }
 
     async function handleBioFiles(fileList) {
-      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-      if (!files.length) return;
+      const files = Array.from(fileList).filter(isImageFile);
+      if (!files.length) {
+        if (fileList.length && statusEl) {
+          statusEl.textContent = 'Nenhum arquivo de imagem reconhecido (só JPG, PNG, GIF, WEBP, HEIC...). Tente novamente ou use o clique pra selecionar.';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
       preview.innerHTML = '';
       files.forEach((f) => {
         const img = document.createElement('img');
@@ -189,8 +221,14 @@
     }
 
     async function handleGalleryFiles(fileList) {
-      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-      if (!files.length) return;
+      const files = Array.from(fileList).filter(isImageFile);
+      if (!files.length) {
+        if (fileList.length && statusEl) {
+          statusEl.textContent = 'Nenhum arquivo de imagem reconhecido (só JPG, PNG, GIF, WEBP, HEIC...). Tente novamente ou use o clique pra selecionar.';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
       preview.innerHTML = '';
       files.forEach((f) => {
         const img = document.createElement('img');
@@ -256,8 +294,14 @@
     }
 
     async function handleHeroFiles(fileList) {
-      const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-      if (!files.length) return;
+      const files = Array.from(fileList).filter(isImageFile);
+      if (!files.length) {
+        if (fileList.length && statusEl) {
+          statusEl.textContent = 'Nenhum arquivo de imagem reconhecido (só JPG, PNG, GIF, WEBP, HEIC...). Tente novamente ou use o clique pra selecionar.';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
       preview.innerHTML = '';
       files.forEach((f) => {
         const img = document.createElement('img');
