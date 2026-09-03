@@ -128,6 +128,7 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
   <span class="parallax-layer parallax-layer-1"></span>
   <span class="parallax-layer parallax-layer-2"></span>
   <span class="parallax-layer parallax-layer-3"></span>
+  <span class="parallax-layer parallax-layer-4"></span>
 </div>
 <header class="site-header" data-header>
   <div class="container header-inner">
