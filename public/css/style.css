@@ -638,14 +638,23 @@ html.no-intro .cine-intro { display: none; }
   gap: 14px;
   width: max-content;
   animation: marquee-scroll 46s linear infinite;
+  cursor: grab;
+  touch-action: pan-y;
 }
 .bio-gallery:hover .bio-gallery-track { animation-play-state: paused; }
+/* Depois que a pessoa arrasta/toca pra navegar manualmente (pedido do usuário em 03/09/2026), o
+   JS (site.js) troca a animação por um transform controlado por ela e adiciona essa classe. */
+.bio-gallery-track.dragging { cursor: grabbing; }
 .bio-gallery-item {
   flex-shrink: 0;
   width: 230px;
   height: 340px;
   overflow: hidden;
   background: var(--bg-card);
+  border: none;
+  padding: 0;
+  display: block;
+  cursor: pointer;
 }
 .bio-gallery-item img {
   width: 100%; height: 100%; object-fit: cover;
