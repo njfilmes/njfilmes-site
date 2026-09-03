@@ -74,7 +74,12 @@ export async function homePage(req, res) {
   const people = await listPeople();
   const testimonials = await listTestimonials();
 
-  const heroPosterUrl = `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
+  // 03/09/2026: a foto de destaque da Home agora pode ser trocada pelo painel
+  // (Configurações). Se o usuário já enviou uma pelo painel (settings.hero_photo),
+  // usa ela; senão cai pra imagem padrão do site (com o carimbo de versão, já que
+  // esse arquivo padrão é fixo no código). O upload pelo painel já gera um arquivo
+  // com nome único a cada troca, então não precisa de carimbo de versão nele.
+  const heroPosterUrl = settings.hero_photo || `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
   const heroVideo = settings.hero_video_url
     ? `<video autoplay muted loop playsinline poster="${heroPosterUrl}" src="${escapeHtml(settings.hero_video_url)}"></video>`
     : `<div class="hero-photo-split"><img class="hero-photo-a" src="${heroPosterUrl}" alt="NJFILMES"><img class="hero-photo-b" src="${heroPosterUrl}" alt="NJFILMES"></div>`;
