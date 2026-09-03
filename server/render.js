@@ -43,6 +43,15 @@ export function layout({
   const image = absoluteUrl(ogImage || settings.og_image || '/img/og-default.jpg');
   const wa = waLink(settings);
 
+  // Pedido em 03/09/2026: destacar no menu mobile em qual página a pessoa já está (nada
+  // indicava isso antes). '/' só conta como ativo na home exata; os demais contam como
+  // ativos também nas sub-rotas (ex: '/portfolio' fica ativo em '/portfolio/casamentos').
+  const isNavActive = (p) => (p === '/' ? routePath === '/' : routePath === p || routePath.startsWith(`${p}/`));
+  const navLiAttrs = (p, extraClass = '') => {
+    const classes = [extraClass, isNavActive(p) ? 'active' : ''].filter(Boolean).join(' ');
+    return classes ? ` class="${classes}"` : '';
+  };
+
   const navCats = categories
     .map(
       (c) =>
@@ -141,25 +150,22 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
       </button>
       <span class="nav-menu-label eyebrow">Menu</span>
       <ul class="nav-links-list">
-        <li style="--i:0"><a href="/"><span class="nav-link-num">01</span><span class="nav-link-text">Home</span></a></li>
-        <li class="has-sub" style="--i:1">
-          <a href="/portfolio"><span class="nav-link-num">02</span><span class="nav-link-text">Portfólio</span></a>
+        <li${navLiAttrs('/')} style="--i:0"><a href="/"><span class="nav-link-num">01</span><span class="nav-link-text">Home</span></a></li>
+        <li${navLiAttrs('/portfolio', 'has-sub')} style="--i:1">
+          <a href="/portfolio"><span class="nav-link-num">02</span><span class="nav-link-text">Portfólio</span><span class="nav-link-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span></a>
           ${navCats ? `<ul class="sub-nav">${navCats}</ul>` : ''}
         </li>
-        <li style="--i:2"><a href="/sobre"><span class="nav-link-num">03</span><span class="nav-link-text">Sobre</span></a></li>
-        <li style="--i:3"><a href="/servicos"><span class="nav-link-num">04</span><span class="nav-link-text">Serviços</span></a></li>
-        <li style="--i:4"><a href="/contato"><span class="nav-link-num">05</span><span class="nav-link-text">Contato</span></a></li>
+        <li${navLiAttrs('/sobre')} style="--i:2"><a href="/sobre"><span class="nav-link-num">03</span><span class="nav-link-text">Sobre</span></a></li>
+        <li${navLiAttrs('/servicos')} style="--i:3"><a href="/servicos"><span class="nav-link-num">04</span><span class="nav-link-text">Serviços</span></a></li>
+        <li${navLiAttrs('/contato')} style="--i:4"><a href="/contato"><span class="nav-link-num">05</span><span class="nav-link-text">Contato</span></a></li>
       </ul>
-      <!-- Pedido em 03/09/2026: tirar o link do YouTube daqui do rodapé do menu (não do
-           rodapé do site -- esse continua com YouTube, ninguém pediu tirar de lá). Por isso usa
-           a variável 'socials' (Instagram/Vimeo/TikTok/Facebook) em vez de 'allSocials', que
-           inclui o 'youtubeFooterLink' -- ver onde essas duas variáveis são montadas, mais acima.
-           Botão "Falar no WhatsApp" também removido daqui (pedido em 03/09/2026): já existe o
-           ícone flutuante de WhatsApp visível por cima do próprio drawer, então o botão de texto
-           ficava redundante. -->
-      <div class="nav-drawer-footer">
-        ${socials ? `<div class="social-links">${socials}</div>` : ''}
-      </div>
+      <!-- Pedido em 03/09/2026: rodapé do drawer (link do YouTube, depois botão "Falar no
+           WhatsApp" e por fim o ícone do Instagram) foi todo removido ao longo do dia -- o
+           ícone flutuante de WhatsApp/Instagram já aparece por cima do próprio drawer quando
+           ele tá aberto (z-index maior), então qualquer link social repetido aqui dentro só
+           duplicava o que a pessoa já via na tela. O <nav> agora termina direto na lista de
+           links; 'socials'/'allSocials' continuam definidas acima porque o rodapé do site
+           (footer, mais abaixo) ainda usa 'allSocials' normalmente. -->
     </nav>
     <div class="nav-backdrop" data-nav-backdrop aria-hidden="true"></div>
     <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false">
