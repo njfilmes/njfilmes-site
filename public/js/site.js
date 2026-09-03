@@ -427,6 +427,19 @@
     }, 3500);
   }
 
+  // Fotos de destaque da Home passando sozinhas (crossfade) — mesmo esquema acima, só que num
+  // ritmo um pouco mais lento (a foto do hero fica mais tempo em tela). Pedido do usuário em
+  // 03/09/2026.
+  var heroSlides = document.querySelectorAll('.hero-photo-slide');
+  if (heroSlides.length > 1) {
+    var heroIndex = 0;
+    setInterval(function () {
+      heroSlides[heroIndex].classList.remove('is-active');
+      heroIndex = (heroIndex + 1) % heroSlides.length;
+      heroSlides[heroIndex].classList.add('is-active');
+    }, 5000);
+  }
+
   // Botão "voltar ao topo"
   var backToTop = document.querySelector('[data-back-to-top]');
   if (backToTop) {
