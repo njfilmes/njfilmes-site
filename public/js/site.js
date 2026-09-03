@@ -46,6 +46,9 @@
   // fica sempre dentro de uma faixa curta (não cresce sem limite conforme a página é rolada) e
   // cada camada tem uma frequência/fase diferente, pra dar a sensação de profundidade (camadas
   // "andando" em ritmos diferentes conforme rola), que é o efeito de paralaxe pedido.
+  // Sem throttle via requestAnimationFrame de propósito: em aba sem foco/fora da tela o rAF
+  // pode nunca disparar, e como só escreve 3 valores simples de estilo (nada de layout/reflow
+  // pesado), rodar direto a cada evento de scroll é barato e não tem risco de travar o efeito.
   var parallaxLayers = document.querySelectorAll('.parallax-layer');
   if (parallaxLayers.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var parallaxFactors = [
@@ -53,7 +56,6 @@
       { freq: 0.0016, amp: 80, phase: 1.4 },
       { freq: 0.0031, amp: 46, phase: 2.6 }
     ];
-    var parallaxTicking = false;
     var updateParallax = function () {
       var y = window.scrollY;
       parallaxLayers.forEach(function (el, i) {
@@ -61,14 +63,8 @@
         var offset = Math.sin(y * f.freq + f.phase) * f.amp;
         el.style.translate = '0 ' + offset.toFixed(1) + 'px';
       });
-      parallaxTicking = false;
     };
-    window.addEventListener('scroll', function () {
-      if (!parallaxTicking) {
-        window.requestAnimationFrame(updateParallax);
-        parallaxTicking = true;
-      }
-    }, { passive: true });
+    window.addEventListener('scroll', updateParallax, { passive: true });
     updateParallax();
   }
 
