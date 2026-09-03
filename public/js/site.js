@@ -225,6 +225,84 @@
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();
     });
+
+    // Deslizar o dedo pros lados na foto ampliada troca pra próxima/anterior, igual redes
+    // sociais — pedido do usuário em 03/09/2026, além dos botões de seta que já existiam.
+    var touchStartX = null;
+    var touchStartY = null;
+    lightbox.addEventListener('touchstart', function (e) {
+      if (e.touches.length !== 1) return;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    lightbox.addEventListener('touchend', function (e) {
+      if (touchStartX === null) return;
+      var touch = e.changedTouches[0];
+      var dx = touch.clientX - touchStartX;
+      var dy = touch.clientY - touchStartY;
+      touchStartX = null;
+      touchStartY = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        if (dx < 0) next(); else prev();
+      }
+    }, { passive: true });
+  }
+
+  // Faixa "Bastidores" (página Sobre): rola sozinha, mas a pessoa pode segurar e arrastar/
+  // deslizar pros lados a qualquer momento pra navegar no próprio ritmo — a rolagem automática
+  // para assim que ela mexe pela primeira vez, pra não "brigar" com o gesto dela. Clicar numa
+  // foto sem arrastar continua abrindo ela ampliada (o lightbox acima já cuida disso sozinho,
+  // pelo atributo data-lightbox-trigger). Pedido do usuário em 03/09/2026.
+  var dragTrack = document.querySelector('[data-drag-scroll-track]');
+  if (dragTrack) {
+    var dragActive = false;
+    var dragMoved = false;
+    var dragStartX = 0;
+    var dragBaseX = 0;
+    var dragSetWidth = 0;
+
+    var readTranslateX = function () {
+      var t = window.getComputedStyle(dragTrack).transform;
+      if (!t || t === 'none') return 0;
+      var m3d = t.match(/matrix3d\(([^)]+)\)/);
+      if (m3d) return parseFloat(m3d[1].split(',')[12]) || 0;
+      var m2d = t.match(/matrix\(([^)]+)\)/);
+      if (m2d) return parseFloat(m2d[1].split(',')[4]) || 0;
+      return 0;
+    };
+
+    dragTrack.addEventListener('pointerdown', function (e) {
+      if (!dragTrack.classList.contains('dragging')) {
+        dragBaseX = readTranslateX();
+        dragTrack.style.animation = 'none';
+        dragTrack.style.transform = 'translateX(' + dragBaseX + 'px)';
+        dragTrack.classList.add('dragging');
+        dragSetWidth = dragTrack.scrollWidth / 2;
+      } else {
+        dragBaseX = readTranslateX();
+      }
+      dragActive = true;
+      dragMoved = false;
+      dragStartX = e.clientX;
+    });
+    window.addEventListener('pointermove', function (e) {
+      if (!dragActive) return;
+      var delta = e.clientX - dragStartX;
+      if (Math.abs(delta) > 4) dragMoved = true;
+      var nextX = dragBaseX + delta;
+      if (dragSetWidth > 0) {
+        while (nextX <= -dragSetWidth) nextX += dragSetWidth;
+        while (nextX > 0) nextX -= dragSetWidth;
+      }
+      dragTrack.style.transform = 'translateX(' + nextX + 'px)';
+    });
+    var endDrag = function () { dragActive = false; };
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+    // Só suprime o clique (que abriria o lightbox) quando teve arrasto de verdade.
+    dragTrack.addEventListener('click', function (e) {
+      if (dragMoved) { e.preventDefault(); e.stopPropagation(); }
+    }, true);
   }
 
   // Botão de tela cheia nos vídeos embutidos (Mega/YouTube/Vimeo/Drive). Fica fora da área do
