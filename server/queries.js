@@ -211,8 +211,8 @@ export async function incrementProjectLikes(id) {
 export async function createProject(data) {
   const now = new Date().toISOString();
   const row = await queryOne(
-    `INSERT INTO projects (title, slug, category_id, description, project_date, location, cover_photo, credits, additional_info, published, featured, hide_from_recent, sort_order, created_at, updated_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`,
+    `INSERT INTO projects (title, slug, category_id, description, project_date, location, cover_photo, credits, additional_info, published, featured, hide_from_recent, hide_gallery, sort_order, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16) RETURNING id`,
     [
       data.title,
       data.slug,
@@ -226,6 +226,7 @@ export async function createProject(data) {
       data.published ? 1 : 0,
       data.featured ? 1 : 0,
       data.hide_from_recent ? 1 : 0,
+      data.hide_gallery ? 1 : 0,
       data.sort_order || 0,
       now,
       now,
@@ -236,8 +237,8 @@ export async function createProject(data) {
 
 export async function updateProject(id, data) {
   await query(
-    `UPDATE projects SET title=$1, slug=$2, category_id=$3, description=$4, project_date=$5, location=$6, cover_photo=$7, credits=$8, additional_info=$9, published=$10, featured=$11, hide_from_recent=$12, sort_order=$13, updated_at=$14
-     WHERE id=$15`,
+    `UPDATE projects SET title=$1, slug=$2, category_id=$3, description=$4, project_date=$5, location=$6, cover_photo=$7, credits=$8, additional_info=$9, published=$10, featured=$11, hide_from_recent=$12, hide_gallery=$13, sort_order=$14, updated_at=$15
+     WHERE id=$16`,
     [
       data.title,
       data.slug,
@@ -251,6 +252,7 @@ export async function updateProject(id, data) {
       data.published ? 1 : 0,
       data.featured ? 1 : 0,
       data.hide_from_recent ? 1 : 0,
+      data.hide_gallery ? 1 : 0,
       data.sort_order || 0,
       new Date().toISOString(),
       id,
