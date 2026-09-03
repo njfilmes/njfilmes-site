@@ -1002,10 +1002,11 @@ html.no-intro .cine-intro { display: none; }
   .nav-menu-label {
     display: block;
     position: relative;
-    padding-left: 40px;
+    padding-left: 34px;
     margin-bottom: 30px;
     font-size: clamp(1rem, 4.4vw, 1.2rem);
     letter-spacing: 0.1em;
+    color: var(--fg);
     opacity: 0; translate: 0 -10px;
     transition: opacity 0.5s var(--ease) 0.1s, translate 0.5s var(--ease) 0.1s;
   }
@@ -1049,10 +1050,10 @@ html.no-intro .cine-intro { display: none; }
   .nav-link-num {
     display: inline-flex; align-items: center; justify-content: center;
     flex: none;
-    width: 26px; height: 26px;
-    border-radius: 7px;
+    width: 20px; height: 20px;
+    border-radius: 6px;
     font-family: var(--font-display);
-    font-size: 0.62rem;
+    font-size: 0.54rem;
     letter-spacing: 0.03em;
     color: var(--accent);
     background: linear-gradient(155deg, rgba(201,162,39,0.2), rgba(201,162,39,0.03));
