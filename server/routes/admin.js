@@ -1012,7 +1012,7 @@ export async function settingsPage(req, res, admin) {
         <label>Foto de destaque da Home (fundo da primeira tela do site)</label>
         <input type="file" accept="image/*">
         <input type="hidden" name="hero_photo_data">
-        <img data-preview src="${escapeHtml(s.hero_photo || '/img/hero-poster.jpg')}" style="max-width:280px;border-radius:6px;margin-top:8px;display:block;">
+        <img data-preview src="${escapeHtml(s.hero_photo || '/img/hero-poster.webp')}" style="max-width:280px;border-radius:6px;margin-top:8px;display:block;">
         <input type="hidden" name="hero_photo_existing" value="${escapeHtml(s.hero_photo || '')}">
         <small>Envie uma foto na horizontal, de boa qualidade (ideal acima de 1600px de largura). O efeito de escurecido/película que já existe no site continua funcionando automaticamente em cima da foto nova, sem precisar mexer em mais nada. Se não enviar nenhuma, o site continua usando a foto atual.</small>
       </div>

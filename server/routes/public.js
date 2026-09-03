@@ -1,9 +1,10 @@
 import { layout } from '../render.js';
 import { escapeHtml, nl2br, videoEmbedHtml, formatDatePtBr, truncate } from '../util.js';
+import { ASSET_VERSION } from '../assetVersion.js';
 import {
   getSettings,
   getBio,
-  listCategories,
+  listCategoriesWithProjects,
   getCategoryBySlug,
   listServices,
   listLinks,
@@ -62,14 +63,9 @@ function heroHeadlineHtml(text) {
   return `${escapeHtml(rest)} ${wrapAccent(last)}`;
 }
 
-// Versao do arquivo do hero, usada como "carimbo" (?v=) na URL da foto/poster
-// pra forcar navegadores e CDNs a buscarem a versao mais nova sempre que a
-// foto for trocada pelo painel/commit, sem precisar de Ctrl+F5 no cliente.
-const HERO_IMG_VERSION = '20260829b';
-
 export async function homePage(req, res) {
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
   const featured = (await listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }))[0];
   const recent = (await listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 })).filter((p) => !featured || p.id !== featured.id).slice(0, 6);
   const services = (await listServices({ onlyPublished: true })).slice(0, 6);
@@ -82,7 +78,7 @@ export async function homePage(req, res) {
   // usa ela; senão cai pra imagem padrão do site (com o carimbo de versão, já que
   // esse arquivo padrão é fixo no código). O upload pelo painel já gera um arquivo
   // com nome único a cada troca, então não precisa de carimbo de versão nele.
-  const heroPosterUrl = settings.hero_photo || `/img/hero-poster.jpg?v=${HERO_IMG_VERSION}`;
+  const heroPosterUrl = settings.hero_photo || `/img/hero-poster.webp?v=${ASSET_VERSION}`;
 
   // Fotos de destaque da Home passando com transição suave (crossfade), uma pra outra — pedido
   // do usuário em 03/09/2026 pra poder colocar mais de uma foto e escolher quais entram no
@@ -184,7 +180,7 @@ export async function homePage(req, res) {
 
   <section class="alt-bg">
     <div class="container about-split">
-      <img class="reveal" src="/img/about-placeholder.jpg" alt="NJFILMES">
+      <img class="reveal" src="/img/about-placeholder.webp?v=${ASSET_VERSION}" alt="NJFILMES">
       <div class="reveal">
         <span class="eyebrow">A NJFILMES</span>
         <h2>Cinema, no seu momento mais importante</h2>
@@ -251,6 +247,9 @@ export async function homePage(req, res) {
       settings,
       categories,
       content,
+      // Preload da primeira foto do hero (LCP da Home) — só faz sentido no modo foto; com vídeo
+      // de fundo configurado o navegador já prioriza o próprio <video>/poster sozinho.
+      preloadImage: settings.hero_video_url ? null : heroPosterUrl,
       structuredData: {
         '@context': 'https://schema.org',
         '@type': 'ProfessionalService',
@@ -264,7 +263,7 @@ export async function homePage(req, res) {
 
 export async function portfolioIndexPage(req, res) {
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
   const projects = await listProjects({ onlyPublished: true });
 
   const content = `
@@ -301,7 +300,7 @@ export async function portfolioIndexPage(req, res) {
 export async function categoryOrProjectPage(req, res) {
   const slug = req.params.slug;
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
 
   const category = await getCategoryBySlug(slug);
   if (category) {
@@ -593,7 +592,7 @@ function projectPage(req, res, project, settings, categories) {
 
 export async function aboutPage(req, res) {
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
   const bio = await getBio();
   const specialties = (bio.specialties || '')
     .split(/\n|,/)
@@ -619,7 +618,7 @@ export async function aboutPage(req, res) {
   // primeiro, depois todas as fotos que o usuario enviar no painel em "Fotos da
   // pagina Sobre" — pedido do usuario em 30/08/2026 pra poder colocar mais de 2 fotos.
   const aboutPhotoUrls = [
-    bio.profile_photo || '/img/about-placeholder.jpg',
+    bio.profile_photo || `/img/about-placeholder.webp?v=${ASSET_VERSION}`,
     ...(await listBioPhotos()).map((p) => p.filename),
   ].filter((src, idx, arr) => src && arr.indexOf(src) === idx);
 
@@ -736,7 +735,7 @@ export async function aboutPage(req, res) {
 
 export async function servicesPage(req, res) {
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
   const services = await listServices({ onlyPublished: true });
 
   const content = `
@@ -780,7 +779,7 @@ export async function servicesPage(req, res) {
 
 export async function contactPage(req, res) {
   const settings = await getSettings();
-  const categories = await listCategories();
+  const categories = await listCategoriesWithProjects();
   const links = await listLinks();
   const digits = String(settings.whatsapp_number || '').replace(/\D/g, '');
   const waUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(settings.whatsapp_message || '')}` : null;
