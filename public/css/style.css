@@ -163,7 +163,8 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .nav-link-num,
   .js .nav-link-text,
   .js .nav-glow-1,
-  .js .nav-glow-2 {
+  .js .nav-glow-2,
+  .js .nav-menu-label {
     animation: none;
   }
 }
@@ -991,15 +992,26 @@ html.no-intro .cine-intro { display: none; }
   @keyframes navGlowDrift1 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-38px, 46px); } }
   @keyframes navGlowDrift2 { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, -40px); } }
   .main-nav.open { transform: translateX(0); }
+  /* Pedido em 03/09/2026: label "MENU" ficava pequeno perto dos nomes dos links (Home,
+     Portfólio...) e desalinhado deles (o texto dos links começa depois do numerinho, ~40px
+     de recuo) - aqui igualamos o tamanho da fonte ao dos links, alinhamos o recuo com
+     padding-left e demos um efeito de flutuação maior que o resto (8px em vez dos 3-6px
+     usados nos outros elementos). Usa 'translate' (propriedade separada) pra entrada
+     deslizante e deixa 'transform' livre pra animação, mesmo truque já usado no .nav-close
+     e no .lightbox-close, pra uma não cancelar a outra. */
   .nav-menu-label {
     display: block;
     position: relative;
+    padding-left: 40px;
     margin-bottom: 30px;
-    font-size: 0.68rem;
-    opacity: 0; transform: translateY(-10px);
-    transition: opacity 0.5s var(--ease) 0.1s, transform 0.5s var(--ease) 0.1s;
+    font-size: clamp(1rem, 4.4vw, 1.2rem);
+    letter-spacing: 0.1em;
+    opacity: 0; translate: 0 -10px;
+    transition: opacity 0.5s var(--ease) 0.1s, translate 0.5s var(--ease) 0.1s;
   }
-  .main-nav.open .nav-menu-label { opacity: 0.85; transform: translateY(0); }
+  .main-nav.open .nav-menu-label { opacity: 0.9; translate: 0 0; }
+  .js .nav-menu-label { animation: navLabelFloat 4s ease-in-out infinite; }
+  @keyframes navLabelFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
   .main-nav > ul.nav-links-list {
     position: relative;
     flex: 1;
