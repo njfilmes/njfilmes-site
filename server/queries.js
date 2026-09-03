@@ -156,7 +156,8 @@ export async function listProjects({ onlyPublished = false, categoryId = null, f
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const lim = limit ? `LIMIT ${Number(limit)}` : '';
   return queryRows(
-    `SELECT p.*, c.name as category_name, c.slug as category_slug
+    `SELECT p.*, c.name as category_name, c.slug as category_slug,
+       (SELECT COUNT(*) FROM project_videos pv WHERE pv.project_id = p.id) as video_count
      FROM projects p LEFT JOIN categories c ON c.id = p.category_id
      ${where}
      ORDER BY p.sort_order ASC, p.created_at DESC ${lim}`,
