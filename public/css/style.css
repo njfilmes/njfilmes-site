@@ -380,14 +380,19 @@ section { padding: 110px 0; position: relative; }
 .work-card .cat { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.16em; color: var(--accent); margin-bottom: 6px; display: block; }
 .work-card h3 { font-size: 1.3rem; margin: 0; }
 .work-card .play {
+  /* Antes só aparecia no hover (opacity:0 por padrão) - em celular/tablet (sem mouse) isso
+     nunca acontece, então o card de um projeto com vídeo ficava parecendo só uma foto.
+     Pedido do usuário em 03/09/2026: deixar sempre visível, com um leve efeito no hover
+     como bônus pra quem usa mouse. */
   position: absolute; top: 20px; right: 20px;
   width: 40px; height: 40px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.5);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.7);
   display: flex; align-items: center; justify-content: center;
-  opacity: 0; transform: scale(0.7);
+  opacity: 1; transform: scale(0.88);
   transition: all 0.35s var(--ease);
 }
-.work-card:hover .play { opacity: 1; transform: scale(1); }
+.work-card:hover .play { opacity: 1; transform: scale(1); background: rgba(0,0,0,0.5); }
 
 .work-cursor {
   position: fixed; top: 0; left: 0; z-index: 900;
