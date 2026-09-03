@@ -410,7 +410,7 @@ function projectPage(req, res, project, settings, categories) {
     <div class="work-grid">${project.videos.slice(1).map((v) => `<div class="reveal">${videoEmbedHtml(v)}</div>`).join('')}</div>
   </div></section>` : ''}
 
-  ${otherPhotos.length ? `<section class="${project.videos.length ? 'alt-bg' : ''}">
+  ${otherPhotos.length && !project.hide_gallery ? `<section class="${project.videos.length ? 'alt-bg' : ''}">
     <div class="container">
       <h3 class="reveal">Galeria</h3>
       <div class="gallery-grid reveal" data-lightbox-source>
