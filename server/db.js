@@ -263,6 +263,7 @@ export async function initSchema() {
                                                                         published INTEGER NOT NULL DEFAULT 0,
                                                                               featured INTEGER NOT NULL DEFAULT 0,
                                                                                     hide_from_recent INTEGER NOT NULL DEFAULT 0,
+                                                                                    hide_gallery INTEGER NOT NULL DEFAULT 0,
                                                                                     sort_order INTEGER NOT NULL DEFAULT 0,
                                                                                           views INTEGER NOT NULL DEFAULT 0,
                                                                                                 likes INTEGER NOT NULL DEFAULT 0,
@@ -406,6 +407,13 @@ export async function initSchema() {
     // sem precisar despublicar ele (essa vitrine antes so respeitava featured + mais recentes).
     if (!projectCols.includes('hide_from_recent')) {
           await query('ALTER TABLE projects ADD COLUMN hide_from_recent INTEGER NOT NULL DEFAULT 0');
+    }
+    // 03/09/2026: permite esconder so a secao "Galeria" da pagina publica do projeto, sem afetar
+    // a foto de capa (que continua sendo usada normalmente nos cards da Home/Portfolio). Pedido do
+    // usuario depois de um caso onde a unica foto de um projeto era ao mesmo tempo a capa e a unica
+    // foto da galeria — ele queria só a galeria escondida, não a foto excluída.
+    if (!projectCols.includes('hide_gallery')) {
+          await query('ALTER TABLE projects ADD COLUMN hide_gallery INTEGER NOT NULL DEFAULT 0');
     }
 
   const bioCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'bio'")).map(
