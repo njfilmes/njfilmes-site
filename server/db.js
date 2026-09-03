@@ -278,6 +278,7 @@ export async function initSchema() {
                                                                               featured INTEGER NOT NULL DEFAULT 0,
                                                                                     hide_from_recent INTEGER NOT NULL DEFAULT 0,
                                                                                     hide_gallery INTEGER NOT NULL DEFAULT 0,
+                                                                                    gallery_title TEXT DEFAULT 'Galeria',
                                                                                     sort_order INTEGER NOT NULL DEFAULT 0,
                                                                                           views INTEGER NOT NULL DEFAULT 0,
                                                                                                 likes INTEGER NOT NULL DEFAULT 0,
@@ -457,6 +458,12 @@ export async function initSchema() {
     // foto da galeria — ele queria só a galeria escondida, não a foto excluída.
     if (!projectCols.includes('hide_gallery')) {
           await query('ALTER TABLE projects ADD COLUMN hide_gallery INTEGER NOT NULL DEFAULT 0');
+    }
+    // 03/09/2026: o título "Galeria" acima das fotos de cada projeto era fixo no código — pedido
+    // do usuário pra poder trocar (ex: "Bastidores", "Fotos do dia") projeto por projeto, igual
+    // já é possível com o título da galeria de bastidores da página Sobre.
+    if (!projectCols.includes('gallery_title')) {
+          await query("ALTER TABLE projects ADD COLUMN gallery_title TEXT DEFAULT 'Galeria'");
     }
 
   const bioCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'bio'")).map(
