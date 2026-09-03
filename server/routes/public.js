@@ -349,11 +349,19 @@ export async function categoryOrProjectPage(req, res) {
 // quem soma é uma chamada fetch() do navegador pra /api/visualizar/:slug logo que a página carrega
 // (ver public/js/site.js) — aqui só mostramos o número já conhecido no momento da geração.
 function likeViewsBlock(project) {
+  // O número de comentários não é conhecido no momento em que essa página é gerada (o site é
+  // estático, e comentários são dados que mudam depois do build — ver comments-section mais
+  // abaixo), então esse link nasce com "..." e o JS troca pelo número real assim que busca os
+  // comentários (mesma chamada que já alimenta a lista, ver public/js/site.js). Clicar rola até
+  // a seção de comentários (#comentarios), como nas redes sociais.
   return `<div class="video-actions reveal" data-views-block data-project="${escapeHtml(project.slug)}">
     <button type="button" class="video-like-btn" data-like-btn data-project="${escapeHtml(project.slug)}">
       <span class="heart"></span> <span data-like-count>${project.likes || 0}</span>
     </button>
     <span class="video-views"><span class="eye">👁</span> <span data-view-count>${project.views || 0}</span> <span data-view-word>${project.views === 1 ? 'visualização' : 'visualizações'}</span></span>
+    <a href="#comentarios" class="video-comments-link" data-comments-count-link>
+      <span class="comment-ico">💬</span> <span data-comments-count>…</span> comentários
+    </a>
   </div>`;
 }
 
@@ -516,7 +524,7 @@ function projectPage(req, res, project, settings, categories) {
     </div>
   </section>` : ''}
 
-  <section class="comments-section" data-comments data-project="${escapeHtml(project.slug)}">
+  <section class="comments-section" id="comentarios" data-comments data-project="${escapeHtml(project.slug)}">
     <div class="container" style="max-width:820px;">
       <h3 class="reveal">Comentários</h3>
       <div class="comments-list" data-comments-list>
