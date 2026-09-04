@@ -721,6 +721,7 @@ html.no-intro .cine-intro { display: none; }
    JS (site.js) troca a animação por um transform controlado por ela e adiciona essa classe. */
 .bio-gallery-track.dragging { cursor: grabbing; }
 .bio-gallery-item {
+  position: relative;
   flex-shrink: 0;
   width: 230px;
   height: 340px;
@@ -737,6 +738,12 @@ html.no-intro .cine-intro { display: none; }
   transition: filter 0.4s ease, transform 0.6s var(--ease);
 }
 .bio-gallery-item:hover img { filter: grayscale(0%); transform: scale(1.04); }
+/* Mesmo indicador de "toque pra ampliar" (seta diagonal dourada pulsando) já usado na galeria de
+   fotos do projeto (.project-gallery-expand/.gallery-expand-arrow, ver mais abaixo) — pedido do
+   usuário em 04/09/2026 pra ficar padrão em qualquer galeria com foto ampliável do site, Bastidores
+   incluso. Reaproveita as mesmas classes (só o hover muda de seletor pra este componente). */
+.bio-gallery-item:hover .project-gallery-expand { color: #fff; }
+.bio-gallery-item:hover .gallery-expand-arrow { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .bio-gallery-track { animation: none; }
 }
