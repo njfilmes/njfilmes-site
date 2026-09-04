@@ -308,7 +308,10 @@ export async function initSchema() {
                                     caption TEXT DEFAULT '',
                                           is_cover INTEGER NOT NULL DEFAULT 0,
                                                 sort_order INTEGER NOT NULL DEFAULT 0,
-                                                      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                                      width INTEGER,
+                                                            height INTEGER,
+                                                                  likes INTEGER NOT NULL DEFAULT 0,
+                                                                        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                                                           );
                                                             `);
 
@@ -474,6 +477,29 @@ export async function initSchema() {
     }
     if (!bioCols.includes('trajectory_title')) {
           await query("ALTER TABLE bio ADD COLUMN trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'");
+    }
+
+  // 04/09/2026: guarda a largura/altura real de cada foto enviada (em pixels), capturada no
+  // momento do upload pelo sharp. Serve pra galeria rolante do projeto poder reservar o espaço
+  // exato de cada foto (proporção real) sem precisar esperar a foto carregar no navegador pra
+  // descobrir o tamanho — isso evita um bug encontrado nesta mesma data (foto ficando cinza/
+  // invisível na rolagem) e também tira o excesso de "sobra" cinza nas laterais que aparecia com
+  // a caixa de tamanho fixo usada antes. Fotos enviadas antes desta data ficam com essas colunas
+  // vazias (NULL) até o próximo `build-static.js` rodar, que faz uma varredura única e preenche
+  // width/height das fotos antigas medindo o arquivo já publicado (ver scripts/build-static.js).
+  const photoCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'photos'")).map(
+        (c) => c.column_name
+      );
+    if (!photoCols.includes('width')) {
+          await query('ALTER TABLE photos ADD COLUMN width INTEGER');
+    }
+    if (!photoCols.includes('height')) {
+          await query('ALTER TABLE photos ADD COLUMN height INTEGER');
+    }
+    // 04/09/2026: pedido do usuário — cada foto da galeria rolante do projeto ganha o mesmo botão
+    // de curtir (coração) que já existe no vídeo principal, só que por foto individual.
+    if (!photoCols.includes('likes')) {
+          await query('ALTER TABLE photos ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
     }
 
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).

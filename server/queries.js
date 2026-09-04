@@ -340,10 +340,10 @@ export async function getProjectVideo(id) {
 }
 
 // ---------- Fotos do projeto ----------
-export async function addPhoto(projectId, { filename, thumbFilename, caption = '', sort_order = 0, is_cover = 0 }) {
+export async function addPhoto(projectId, { filename, thumbFilename, caption = '', sort_order = 0, is_cover = 0, width = null, height = null }) {
   const row = await queryOne(
-    'INSERT INTO photos (project_id, filename, thumb_filename, caption, is_cover, sort_order) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id',
-    [projectId, filename, thumbFilename, caption, is_cover, sort_order]
+    'INSERT INTO photos (project_id, filename, thumb_filename, caption, is_cover, sort_order, width, height) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+    [projectId, filename, thumbFilename, caption, is_cover, sort_order, width, height]
   );
   return row.id;
 }
@@ -355,6 +355,27 @@ export async function deletePhoto(id) {
 }
 export async function setPhotoCaption(id, caption) {
   await query('UPDATE photos SET caption = $1 WHERE id = $2', [caption, id]);
+}
+// Preenche width/height de fotos antigas (enviadas antes de 04/09/2026, quando essas colunas
+// não existiam ainda) — usado só pelo backfill de scripts/build-static.js.
+export async function listPhotosMissingDimensions() {
+  return queryRows('SELECT id, filename FROM photos WHERE width IS NULL OR height IS NULL');
+}
+export async function setPhotoDimensions(id, width, height) {
+  await query('UPDATE photos SET width = $1, height = $2 WHERE id = $3', [width, height, id]);
+}
+// Soma 1 na curtida de uma foto individual (botão de coração na galeria rolante do projeto,
+// pedido do usuário em 04/09/2026 — igual já existe pro vídeo principal). Só soma se a foto
+// pertencer a um projeto publicado, pra um ID de foto "adivinhado" não conseguir curtir nada de
+// um projeto ainda em rascunho.
+export async function incrementPhotoLikesIfPublished(id) {
+  const row = await queryOne(
+    `UPDATE photos SET likes = likes + 1
+     WHERE id = $1 AND project_id IN (SELECT id FROM projects WHERE published = 1)
+     RETURNING likes`,
+    [id]
+  );
+  return row ? row.likes : null;
 }
 export async function setPhotoOrder(id, sort_order) {
   await query('UPDATE photos SET sort_order = $1 WHERE id = $2', [sort_order, id]);

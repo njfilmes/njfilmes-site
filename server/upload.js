@@ -72,11 +72,17 @@ export async function saveProjectPhoto(dataUrl, originalName = 'foto') {
 
   // Imagem principal: redimensiona para no máximo 2200px no maior lado, comprime em WEBP
   // preservando boa qualidade (equilíbrio entre qualidade e performance de carregamento).
-  const mainBuffer = await sharp(buffer, { failOn: 'none' })
+  // Usamos toBuffer({ resolveWithObject: true }) pra pegar de graça, no `info`, a largura/altura
+  // finais da imagem já redimensionada — sem isso precisaríamos abrir o arquivo de novo só pra
+  // medir. Essas dimensões são salvas no banco (photos.width/height) e usadas pela galeria
+  // rolante do projeto pra reservar o espaço exato de cada foto (ver server/routes/public.js).
+  const mainResult = await sharp(buffer, { failOn: 'none' })
     .rotate() // corrige orientação EXIF automaticamente
     .resize({ width: 2200, height: 2200, fit: 'inside', withoutEnlargement: true })
     .webp({ quality: 82 })
-    .toBuffer();
+    .toBuffer({ resolveWithObject: true });
+  const mainBuffer = mainResult.data;
+  const { width, height } = mainResult.info;
 
   // Thumbnail leve para grids/portfólio (lazy loading rápido)
   const thumbBuffer = await sharp(buffer, { failOn: 'none' })
@@ -93,6 +99,8 @@ export async function saveProjectPhoto(dataUrl, originalName = 'foto') {
   return {
     filename: photoUrl,
     thumbFilename: thumbUrl,
+    width,
+    height,
   };
 }
 

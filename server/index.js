@@ -166,7 +166,7 @@ async function router(req, res) {
   // pelo navegador ao carregar a página do projeto — necessário porque a página em si passa a
   // ser HTML estático). As duas aceitam chamadas de outra origem (o site estático), por isso o
   // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
-  if (pathname.match(/^\/api\/(curtir|visualizar|comentarios)\/[a-z0-9-]+$/)) {
+  if (pathname.match(/^\/api\/(curtir|curtir-foto|visualizar|comentarios)\/[a-z0-9-]+$/)) {
     applyCors(req, res);
     if (method === 'OPTIONS') {
       res.statusCode = 204;
@@ -175,6 +175,11 @@ async function router(req, res) {
   }
   if ((m = pathname.match(/^\/api\/curtir\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.likeProject(req, res, m[1]);
+  }
+  // Curtir uma foto individual da galeria rolante do projeto — pedido do usuário em 04/09/2026,
+  // mesmo mecanismo do curtir de projeto acima, só que pelo ID numérico da foto.
+  if ((m = pathname.match(/^\/api\/curtir-foto\/(\d+)$/)) && method === 'POST') {
+    return Pub.likePhoto(req, res, m[1]);
   }
   if ((m = pathname.match(/^\/api\/visualizar\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.registerView(req, res, m[1]);
