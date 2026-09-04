@@ -395,6 +395,30 @@ section { padding: 110px 0; position: relative; }
   filter: grayscale(30%) brightness(0.85);
 }
 .work-card:hover img { transform: scale(0.98); filter: grayscale(0%) brightness(1); }
+/* Prévia em vídeo nos cards do portfólio — pedido em 04/09/2026: ao passar o mouse (PC) ou quando
+   o card entra na tela (celular), o card troca a foto de capa por um trechinho do vídeo do
+   projeto tocando em loop, sem som. Foto e vídeo ficam empilhados exatamente um sobre o outro
+   (mesmo tamanho do card); o vídeo nasce invisível (opacity:0) e só aparece quando o JS soma a
+   classe .is-previewing (ver public/js/site.js) — sem JS, ou antes do JS decidir tocar, o
+   visitante sempre vê só a foto normal, sem nenhum vídeo escondido nem "flash" de tela preta.
+   Só existe pra projetos com vídeo hospedado como arquivo direto (ver workCard() em
+   routes/public.js) — vídeos de YouTube/Vimeo continuam só com o selo de play de sempre. */
+.work-card-cover, .work-card-video {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.work-card-video {
+  opacity: 0;
+  transition: opacity 0.45s ease;
+  pointer-events: none;
+}
+.work-card.is-previewing .work-card-video { opacity: 1; }
+.work-card.is-previewing .work-card-cover { opacity: 0; }
+.work-card.is-previewing .play { opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .work-card-video { display: none; }
+}
 .work-card .overlay {
   position: absolute; inset: 0;
   background: linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.88) 100%);
