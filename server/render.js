@@ -108,14 +108,21 @@ export function layout({
     YouTube
   </a>` : '';
 
+  // Ícone do Instagram (mesmo ícone neutro — só o contorno, na cor do texto — já usado na
+  // lista "Outros canais" da página Contato) faltando aqui do lado do link, ao lado do
+  // "YouTube" que já tem o dele — pedido do usuário em 04/09/2026. Cada rede social abaixo
+  // pode ter um ícone opcional (3º item da lista); as que não têm um definido continuam só
+  // com o texto, como sempre. Continua tudo puxando do mesmo link editável pelo painel
+  // (Configurações), então trocar a URL de qualquer uma delas por lá já reflete aqui sozinho.
+  const instagramIcon = `<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style="opacity:0.85;flex-shrink:0;"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.012-3.584.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>`;
   const socials = [
-    ['Instagram', settings.instagram_url],
-    ['Vimeo', settings.vimeo_url],
-    ['TikTok', settings.tiktok_url],
-    ['Facebook', settings.facebook_url],
+    ['Instagram', settings.instagram_url, instagramIcon],
+    ['Vimeo', settings.vimeo_url, null],
+    ['TikTok', settings.tiktok_url, null],
+    ['Facebook', settings.facebook_url, null],
   ]
     .filter(([, url]) => url)
-    .map(([label, url]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${label}</a>`)
+    .map(([label, url, icon]) => `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer"${icon ? ' style="display:inline-flex;align-items:center;gap:6px;"' : ''}>${icon || ''}${label}</a>`)
     .join('');
 
   const allSocials = youtubeFooterLink + socials;
