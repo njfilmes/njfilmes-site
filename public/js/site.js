@@ -104,6 +104,55 @@
     });
   }
 
+  // Prévia em vídeo nos cards do portfólio (pedido em 04/09/2026): card com vídeo hospedado como
+  // arquivo direto ganha uma tag <video> escondida (ver workCard() em routes/public.js e o CSS de
+  // .work-card-video). No PC, toca ao passar o mouse (mesmo padrão de "hover" já usado no resto do
+  // site) e para ao tirar o mouse. No celular/tablet (sem mouse de verdade) não existe "hover", então
+  // em vez disso o vídeo toca sozinho enquanto o card estiver bem visível na tela (rolando a
+  // página) e pausa assim que sai da tela - dá a mesma sensação "viva" sem precisar tocar no card
+  // (o toque continua só abrindo o projeto, como sempre). Quem pediu menos movimento no aparelho
+  // (prefers-reduced-motion) não recebe nenhuma prévia automática - o CSS já esconde a tag <video>
+  // nesse caso, então nem chegamos a tentar tocar.
+  var previewCards = document.querySelectorAll('.work-card.has-preview-video');
+  if (previewCards.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var isFineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+
+    var playPreview = function (card, video) {
+      if (!video.src && video.dataset.previewSrc) video.src = video.dataset.previewSrc;
+      card.classList.add('is-previewing');
+      var p = video.play();
+      if (p && p.catch) p.catch(function () {}); // navegador pode recusar o autoplay às vezes; sem problema, a foto continua ali
+    };
+    var stopPreview = function (card, video) {
+      card.classList.remove('is-previewing');
+      video.pause();
+      try { video.currentTime = 0; } catch (e) {}
+    };
+
+    if (isFineHover) {
+      previewCards.forEach(function (card) {
+        var video = card.querySelector('.work-card-video');
+        if (!video) return;
+        card.addEventListener('mouseenter', function () { playPreview(card, video); });
+        card.addEventListener('mouseleave', function () { stopPreview(card, video); });
+      });
+    } else if ('IntersectionObserver' in window) {
+      var previewIo = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            var card = entry.target;
+            var video = card.querySelector('.work-card-video');
+            if (!video) return;
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.6) playPreview(card, video);
+            else stopPreview(card, video);
+          });
+        },
+        { threshold: [0, 0.6, 1] }
+      );
+      previewCards.forEach(function (card) { previewIo.observe(card); });
+    }
+  }
+
   // Menu mobile (tem 3 jeitos de fechar - o X dentro do proprio menu, tocar no fundo
   // escurecido, ou arrastar o menu pro lado/pra cima)
   var nav = document.querySelector('[data-nav]');
