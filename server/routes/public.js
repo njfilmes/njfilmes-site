@@ -533,10 +533,10 @@ function projectPage(req, res, project, settings, categories, navLinks) {
   ${otherPhotos.length && !project.hide_gallery ? `<section class="${project.videos.length ? 'alt-bg' : ''}">
     <div class="container">
       <h3 class="reveal text-center" style="text-align:center;">${escapeHtml(project.gallery_title || 'Galeria')}</h3>
-      <div class="bio-gallery reveal" data-drag-scroll>
-        <div class="bio-gallery-track" data-drag-scroll-track>
-          ${(otherPhotos.length > 1 ? [...otherPhotos, ...otherPhotos] : otherPhotos).map((p) => `<button type="button" class="bio-gallery-item" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
-            <img src="${escapeHtml(p.thumb_filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
+      <div class="project-gallery reveal" data-drag-scroll>
+        <div class="project-gallery-track" data-drag-scroll-track>
+          ${(otherPhotos.length > 1 ? [...otherPhotos, ...otherPhotos] : otherPhotos).map((p) => `<button type="button" class="project-gallery-item" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
+            <img src="${escapeHtml(p.filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
           </button>`).join('')}
         </div>
       </div>
