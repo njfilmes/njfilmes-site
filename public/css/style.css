@@ -698,14 +698,21 @@ html.no-intro .cine-intro { display: none; }
    acima, mas com uma diferença pedida pelo usuário em 03/09/2026: aqui as fotos vêm de
    clientes/projetos variados, então podem ser verticais, horizontais ou quadradas — em vez de
    cortar (object-fit: cover, que corta as bordas pra preencher uma caixa de tamanho fixo como
-   o Bastidores faz), aqui cada item tem uma caixa de tamanho FIXO (igual o Bastidores, pra
-   evitar um bug real encontrado em 04/09/2026: com largura "auto" dependendo do carregamento
-   da própria foto, a rolagem contínua em CSS às vezes travava a pintura da imagem numa camada
-   antiga e ela ficava cinza/invisível até algo forçar um repaint) e a foto usa object-fit:
-   contain dentro dela, sobrando uma faixa da cor de fundo do card nas laterais/topo quando a
-   proporção da foto não bate com a da caixa — isso garante que a foto inteira sempre apareça
-   sem cortar nenhuma borda, seja qual for o tamanho/formato que a pessoa enviar, sem depender
-   do carregamento da imagem pra definir o tamanho do item. */
+   o Bastidores faz), cada item usa object-fit: contain, garantindo que a foto inteira sempre
+   apareça sem cortar nenhuma borda, seja qual for o tamanho/formato que a pessoa enviar.
+   Ajuste de 04/09/2026: a largura de cada item agora vem de "aspect-ratio", calculado no servidor
+   a partir da largura/altura REAIS da foto (salvas no banco no momento do upload — ver
+   server/upload.js e server/routes/public.js) e escrito já pronto no HTML (atributo style
+   de cada botão). Isso resolve dois problemas que a tentativa anterior (largura "auto" deixada
+   pro navegador calcular sozinho, olhando pra foto já carregada) tinha: 1) a caixa nascia sem
+   tamanho nenhum até a foto carregar, e a rolagem contínua em CSS às vezes travava a pintura da
+   imagem numa camada antiga, deixando ela cinza/invisível; 2) sem saber a proporção real de
+   antemão, a caixa tinha que usar uma largura genérica, sobrando uma faixa cinza (letterbox) nas
+   laterais quando a foto era muito mais estreita que a caixa. Com a proporção certa calculada
+   antes de mandar o HTML, a caixa já nasce do tamanho exato da foto — sem espaço sobrando e sem
+   depender do carregamento da imagem. Fotos enviadas antes desta data, que ainda não têm
+   largura/altura salvas, caem no tamanho padrão abaixo (aspect-ratio do próprio CSS) até o
+   próximo build medir e preencher elas automaticamente (backfill em scripts/build-static.js). */
 .project-gallery {
   margin-top: 32px;
   overflow: hidden;
@@ -723,30 +730,74 @@ html.no-intro .cine-intro { display: none; }
 }
 .project-gallery:hover .project-gallery-track { animation-play-state: paused; }
 .project-gallery-track.dragging { cursor: grabbing; }
+/* O item deixou de ser um único <button> (04/09/2026): agora é uma div que segura DOIS
+   controles independentes por cima da foto — o botão que abre a foto ampliada (ocupa a área
+   toda) e o botão de curtir, cada um por sua vez (não dá pra ter um <button> dentro de outro
+   <button> em HTML válido). A div em si só cuida do tamanho/posição; os dois botões dentro é
+   que reagem a clique. */
 .project-gallery-item {
+  position: relative;
   flex-shrink: 0;
-  width: 460px;
+  width: auto;
+  aspect-ratio: 3 / 2; /* usado só quando a foto não tem largura/altura salvas (ver comentário acima) */
   height: 340px;
   overflow: hidden;
   background: var(--bg-card);
-  border: none;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+}
+.project-gallery-item-view {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  background: none; border: none; padding: 0;
   cursor: pointer;
 }
-.project-gallery-item img {
+.project-gallery-item-view img {
   width: 100%; height: 100%; object-fit: contain;
   filter: grayscale(10%);
   transition: filter 0.4s ease, transform 0.6s var(--ease);
 }
-.project-gallery-item:hover img { filter: grayscale(0%); transform: scale(1.04); }
+.project-gallery-item-view:hover img { filter: grayscale(0%); transform: scale(1.04); }
+/* Ícone de "toque pra ampliar" — pedido do usuário em 04/09/2026 ("a pessoa não vai saber que
+   abre"): fica sempre visível (celular não tem hover pra descobrir sozinho), um pouco mais
+   discreto parado e destacado ao passar o mouse, pra indicar sem gritar. */
+.project-gallery-expand {
+  position: absolute; top: 10px; right: 10px;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem; line-height: 1; color: #fff;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 50%;
+  opacity: 0.8;
+  transition: opacity 0.3s var(--ease), background 0.3s var(--ease), transform 0.3s var(--ease);
+  pointer-events: none; /* decorativo — quem recebe o clique é o botão inteiro por baixo */
+}
+.project-gallery-item-view:hover .project-gallery-expand {
+  opacity: 1; background: rgba(201,162,39,0.55); transform: scale(1.08);
+}
+/* Botão de curtir por foto (pedido do usuário em 04/09/2026, igual ao do vídeo principal — ver
+   .video-like-btn — só que menor, sobreposto no canto da própria foto). */
+.photo-like-btn {
+  position: absolute; bottom: 10px; left: 10px; z-index: 2;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.35);
+  border-radius: 999px;
+  padding: 5px 11px;
+  font-size: 0.78rem; font-family: inherit; color: #fff;
+  cursor: pointer;
+  transition: border-color 0.3s var(--ease), color 0.3s var(--ease), background 0.3s var(--ease), transform 0.2s var(--ease);
+}
+.photo-like-btn:hover { border-color: var(--accent); color: var(--accent); }
+.photo-like-btn.liked { border-color: var(--accent); color: var(--accent); background: rgba(201,162,39,0.28); }
+.photo-like-btn:active { transform: scale(0.94); }
+.photo-like-btn .heart { font-size: 0.95rem; line-height: 1; }
+.photo-like-btn.liked .heart::before { content: "♥"; }
+.photo-like-btn .heart::before { content: "♡"; }
 @media (prefers-reduced-motion: reduce) {
   .project-gallery-track { animation: none; }
 }
 @media (max-width: 720px) {
-  .project-gallery-item { width: 320px; height: 248px; }
+  .project-gallery-item { height: 248px; }
 }
 
 /* ---------- Depoimentos em video (feedback de clientes) ---------- */
@@ -866,7 +917,23 @@ html.no-intro .cine-intro { display: none; }
 }
 .lightbox.open { display: flex; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-.lightbox img { max-width: 100%; max-height: 88vh; object-fit: contain; }
+/* Pedido do usuário em 04/09/2026: um efeito 3D ao tocar numa foto da galeria rolante do
+   projeto (e, por consistência, em qualquer foto que abre nessa mesma janela ampliada pelo
+   site) — a foto "vira" em 3D com uma leve perspectiva ao aparecer, em vez de só surgir estática.
+   Mesmo truque já usado no X de fechar (lightboxCloseIn logo abaixo): a animação fica sempre
+   ativa na regra, sem precisar de nenhum JS, porque o .lightbox inteiro sai de display:none pra
+   flex a cada abertura — isso já reinicia a animação sozinho toda vez. */
+.lightbox img {
+  max-width: 100%; max-height: 88vh; object-fit: contain;
+  animation: lightboxImgIn 0.6s var(--ease) both;
+}
+@keyframes lightboxImgIn {
+  from { opacity: 0; transform: perspective(1200px) rotateY(26deg) scale(0.85); }
+  to { opacity: 1; transform: perspective(1200px) rotateY(0deg) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lightbox img { animation: none; }
+}
 .lightbox-close, .lightbox-prev, .lightbox-next {
   position: absolute; background: none; border: none; color: var(--fg);
   font-size: 1.6rem; padding: 14px;
