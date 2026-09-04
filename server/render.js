@@ -138,6 +138,7 @@ try {
 } catch (e) {}
 </script>
 <meta charset="UTF-8">
+<meta name="google-site-verification" content="RbcgW1JEycuVmuk7SRDHdiMtiu2I03_IY7_ZerqS0z0" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>${escapeHtml(fullTitle)}</title>
 <meta name="description" content="${escapeHtml(desc)}">
