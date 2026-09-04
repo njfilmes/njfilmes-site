@@ -698,9 +698,14 @@ html.no-intro .cine-intro { display: none; }
    acima, mas com uma diferença pedida pelo usuário em 03/09/2026: aqui as fotos vêm de
    clientes/projetos variados, então podem ser verticais, horizontais ou quadradas — em vez de
    cortar (object-fit: cover, que corta as bordas pra preencher uma caixa de tamanho fixo como
-   o Bastidores faz), aqui a altura fica fixa mas a LARGURA de cada item se ajusta à proporção
-   real da própria foto (object-fit: contain), garantindo que a foto inteira sempre apareça
-   sem cortar nenhuma borda, seja qual for o tamanho/formato que a pessoa enviar. */
+   o Bastidores faz), aqui cada item tem uma caixa de tamanho FIXO (igual o Bastidores, pra
+   evitar um bug real encontrado em 04/09/2026: com largura "auto" dependendo do carregamento
+   da própria foto, a rolagem contínua em CSS às vezes travava a pintura da imagem numa camada
+   antiga e ela ficava cinza/invisível até algo forçar um repaint) e a foto usa object-fit:
+   contain dentro dela, sobrando uma faixa da cor de fundo do card nas laterais/topo quando a
+   proporção da foto não bate com a da caixa — isso garante que a foto inteira sempre apareça
+   sem cortar nenhuma borda, seja qual for o tamanho/formato que a pessoa enviar, sem depender
+   do carregamento da imagem pra definir o tamanho do item. */
 .project-gallery {
   margin-top: 32px;
   overflow: hidden;
@@ -720,6 +725,7 @@ html.no-intro .cine-intro { display: none; }
 .project-gallery-track.dragging { cursor: grabbing; }
 .project-gallery-item {
   flex-shrink: 0;
+  width: 460px;
   height: 340px;
   overflow: hidden;
   background: var(--bg-card);
@@ -731,7 +737,7 @@ html.no-intro .cine-intro { display: none; }
   cursor: pointer;
 }
 .project-gallery-item img {
-  height: 100%; width: auto; max-width: none; object-fit: contain;
+  width: 100%; height: 100%; object-fit: contain;
   filter: grayscale(10%);
   transition: filter 0.4s ease, transform 0.6s var(--ease);
 }
@@ -740,7 +746,7 @@ html.no-intro .cine-intro { display: none; }
   .project-gallery-track { animation: none; }
 }
 @media (max-width: 720px) {
-  .project-gallery-item { height: 248px; }
+  .project-gallery-item { width: 320px; height: 248px; }
 }
 
 /* ---------- Depoimentos em video (feedback de clientes) ---------- */
