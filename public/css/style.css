@@ -758,31 +758,29 @@ html.no-intro .cine-intro { display: none; }
 .project-gallery-item-view:hover img { filter: grayscale(0%); transform: scale(1.04); }
 /* Indicador de "toque pra ampliar" — pedido do usuário em 04/09/2026 ("a pessoa não vai saber que
    abre"): fica sempre visível (celular não tem hover pra descobrir sozinho), discreto parado e
-   destacado ao passar o mouse, pra indicar sem gritar. Trocado em 04/09/2026 (3) pro ícone
-   clássico de "tela cheia" (o mesmo desenho usado pelo YouTube/Vimeo etc.) num quadradinho
-   discreto no canto, em vez de espalhar cantos pela foto toda — visual mais familiar. */
+   destacado ao passar o mouse, pra indicar sem gritar. Trocado em 04/09/2026 (4): seta diagonal
+   ↘ no canto inferior direito, na cor dourada do site, pulsando sem parar — sem fundo/quadrado,
+   só a seta mesmo, pra ficar leve por cima da foto. */
 .project-gallery-expand {
-  position: absolute; top: 10px; right: 10px;
-  width: 28px; height: 28px;
+  position: absolute; bottom: 8px; right: 10px;
+  width: 22px; height: 22px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.55);
-  border-radius: 6px;
-  color: #fff;
-  opacity: 0.85;
-  transition: opacity 0.3s var(--ease), background 0.3s var(--ease), transform 0.3s var(--ease);
+  color: var(--accent);
+  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.85));
   pointer-events: none; /* decorativo — quem recebe o clique é o botão inteiro por baixo */
-  animation: galleryExpandPulse 2.6s ease-in-out infinite;
+  animation: galleryExpandPulse 1.8s ease-in-out infinite;
 }
-.project-gallery-expand svg { width: 16px; height: 16px; display: block; }
+.project-gallery-expand svg { width: 100%; height: 100%; display: block; }
 .project-gallery-item-view:hover .project-gallery-expand {
-  opacity: 1; background: rgba(201,162,39,0.7); transform: scale(1.1);
   animation-play-state: paused;
+  transform: scale(1.15);
+  color: #fff;
 }
 /* Pulsação leve e contínua, pra chamar atenção de que dá pra tocar (pedido do usuário em
    04/09/2026 (2)) — some no hover porque aí já tá destacado do outro jeito. */
 @keyframes galleryExpandPulse {
-  0%, 100% { transform: scale(1); opacity: 0.75; }
-  50% { transform: scale(1.12); opacity: 1; }
+  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.85; }
+  50% { transform: scale(1.2) translate(2px, 2px); opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
   .project-gallery-expand { animation: none; }
