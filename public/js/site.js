@@ -662,6 +662,44 @@
     });
   } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
 
+  // Botão de curtir por foto, na galeria rolante do projeto (pedido do usuário em 04/09/2026,
+  // igual ao botão de curtir do vídeo acima). A galeria duplica as fotos pra rolagem infinita,
+  // então pode existir mais de um botão com o mesmo data-photo-id na página — ao curtir um,
+  // atualiza todos os que forem da mesma foto, pra não ficar um "curtido" e outro não.
+  try {
+    var photoLikeBtns = Array.from(document.querySelectorAll('[data-photo-like-btn]'));
+    photoLikeBtns.forEach(function (btn) {
+      var photoId = btn.getAttribute('data-photo-id');
+      if (!photoId) return;
+      var storageKey = 'nj_liked_foto_' + photoId;
+      var already = false;
+      try { already = !!window.localStorage.getItem(storageKey); } catch (e) { already = false; }
+      if (already) btn.classList.add('liked');
+
+      btn.addEventListener('click', function () {
+        var liked = false;
+        try { liked = !!window.localStorage.getItem(storageKey); } catch (e) { liked = false; }
+        if (liked || btn.disabled) return;
+        var siblings = Array.from(document.querySelectorAll('[data-photo-like-btn][data-photo-id="' + photoId + '"]'));
+        siblings.forEach(function (b) { b.disabled = true; });
+        fetch(API_BASE + '/api/curtir-foto/' + encodeURIComponent(photoId), { method: 'POST' })
+          .then(function (r) { return r.json(); })
+          .then(function (data) {
+            if (data && typeof data.likes === 'number') {
+              siblings.forEach(function (b) {
+                var countEl = b.querySelector('[data-like-count]');
+                if (countEl) countEl.textContent = data.likes;
+                b.classList.add('liked');
+              });
+              try { window.localStorage.setItem(storageKey, '1'); } catch (e) { /* localStorage indisponível, sem problema */ }
+            }
+          })
+          .catch(function () { /* falha de rede: apenas destrava os botões pra tentar de novo */ })
+          .finally(function () { siblings.forEach(function (b) { b.disabled = false; }); });
+      });
+    });
+  } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
+
   // Comentários dos visitantes na página do projeto: como a página pode ser HTML estático, a
   // lista é buscada aqui via fetch (não vem pronta no HTML) e o formulário envia via fetch
   // também. O conteúdo digitado por visitantes é sempre inserido via textContent (nunca
