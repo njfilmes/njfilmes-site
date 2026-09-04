@@ -6,11 +6,41 @@ export async function getSettings() {
   return queryOne('SELECT * FROM settings WHERE id = 1');
 }
 
+// Lista de colunas que updateSettings/updateBio têm permissão de alterar. As duas funções
+// montam o "SET coluna = valor" dinamicamente a partir das chaves do objeto recebido - hoje
+// quem chama sempre manda um objeto fixo escrito à mão (sem risco), mas se um dia alguém
+// trocar isso por algo tipo `Q.updateSettings(body)` (o corpo da requisição direto), o nome
+// da coluna passaria a vir do visitante, o que abriria brecha pra mexer em coluna que não
+// devia. Essa lista trava isso: qualquer chave fora dela é ignorada silenciosamente.
+const SETTINGS_COLUMNS = new Set([
+  'site_name', 'tagline', 'hero_headline', 'hero_subheadline', 'hero_video_url', 'hero_photo',
+  'meta_title', 'meta_description', 'og_image', 'footer_text', 'contact_headline',
+  'contact_email', 'whatsapp_number', 'whatsapp_message', 'contact_budget_title',
+  'contact_budget_text', 'contact_whatsapp_button_text', 'contact_channels_title',
+  'instagram_url', 'youtube_url', 'vimeo_url', 'tiktok_url', 'facebook_url',
+]);
+const BIO_COLUMNS = new Set([
+  'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',
+  'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title',
+]);
+
 export async function updateSettings(fields) {
-  const keys = Object.keys(fields);
+  const keys = Object.keys(fields).filter((k) => SETTINGS_COLUMNS.has(k));
   if (!keys.length) return;
   const set = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
   await query(`UPDATE settings SET ${set} WHERE id = 1`, keys.map((k) => fields[k]));
+}
+
+// ---------- Estado interno do sistema (ver tabela app_status em server/db.js) ----------
+export async function getAppStatus(key) {
+  const row = await queryOne('SELECT value, updated_at FROM app_status WHERE key = $1', [key]);
+  return row || null;
+}
+export async function setAppStatus(key, value) {
+  await query(
+    'INSERT INTO app_status (key, value, updated_at) VALUES ($1, $2, NOW()) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()',
+    [key, value]
+  );
 }
 
 export async function getBio() {
@@ -18,7 +48,7 @@ export async function getBio() {
 }
 
 export async function updateBio(fields) {
-  const keys = Object.keys(fields);
+  const keys = Object.keys(fields).filter((k) => BIO_COLUMNS.has(k));
   if (!keys.length) return;
   const set = keys.map((k, i) => `${k} = $${i + 1}`).join(', ');
   await query(`UPDATE bio SET ${set} WHERE id = 1`, keys.map((k) => fields[k]));

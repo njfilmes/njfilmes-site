@@ -106,3 +106,55 @@ export function clearSessionCookie(res) {
 export function nowIso() {
   return new Date().toISOString();
 }
+
+export function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || 'desconhecido';
+}
+
+// Proteção contra tentativas repetidas de adivinhar a senha do admin (login) ou a chave de
+// recuperação de acesso - adicionado em 04/09/2026, nenhum dos dois tinha limite nenhum antes
+// disso, então um script conseguia tentar senha atrás de senha sem parar. Guarda em memória, por
+// IP: depois de várias tentativas ERRADAS seguidas numa janela de tempo, bloqueia novas
+// tentativas daquele IP por um tempo, mesmo que a senha certa venha em seguida logo depois (isso
+// é o que impede um script de simplesmente continuar tentando). Uma tentativa CERTA limpa o
+// histórico daquele IP na hora. Reinicia se o serviço reiniciar - aceitável pra esse nível de
+// proteção, igual ao limitador de comentários/curtidas em server/routes/public.js.
+const LOGIN_LOCKOUT_WINDOW_MS = 15 * 60 * 1000; // 15 minutos
+const LOGIN_LOCKOUT_MAX_ATTEMPTS = 8; // tentativas erradas permitidas nesse período
+const LOGIN_LOCKOUT_BLOCK_MS = 15 * 60 * 1000; // tempo bloqueado depois de estourar o limite
+
+function makeLoginGuard() {
+  const byIp = new Map(); // ip -> { attempts: number[], blockedUntil: number|null }
+  return {
+    isBlocked(ip) {
+      const entry = byIp.get(ip);
+      if (!entry || !entry.blockedUntil) return false;
+      if (Date.now() > entry.blockedUntil) {
+        entry.blockedUntil = null;
+        entry.attempts = [];
+        return false;
+      }
+      return true;
+    },
+    registerFailure(ip) {
+      const now = Date.now();
+      const entry = byIp.get(ip) || { attempts: [], blockedUntil: null };
+      entry.attempts = entry.attempts.filter((t) => now - t < LOGIN_LOCKOUT_WINDOW_MS);
+      entry.attempts.push(now);
+      if (entry.attempts.length >= LOGIN_LOCKOUT_MAX_ATTEMPTS) {
+        entry.blockedUntil = now + LOGIN_LOCKOUT_BLOCK_MS;
+      }
+      byIp.set(ip, entry);
+    },
+    registerSuccess(ip) {
+      byIp.delete(ip);
+    },
+  };
+}
+
+// Um "guarda" separado pra cada endpoint - assim estourar tentativas no login não bloqueia
+// também a recuperação de senha (e vice-versa).
+export const loginGuard = makeLoginGuard();
+export const recoveryGuard = makeLoginGuard();

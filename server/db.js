@@ -401,6 +401,18 @@ export async function initSchema() {
                                                 created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                                                     );
                                                       `);
+  // Guarda pequenos pedaços de estado interno do sistema (chave/valor), começando pelo status
+  // da última tentativa de publicar o site estático (ver server/deployHook.js) — sucesso/falha
+  // e horário. Antes disso não existia nenhum jeito de saber, olhando o painel, se a última
+  // publicação deu certo; ficava só num log que ninguém vê (adicionado em 04/09/2026).
+  await query(`
+      CREATE TABLE IF NOT EXISTS app_status (
+            key TEXT PRIMARY KEY,
+                  value TEXT NOT NULL,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                            );
+                              `);
+
   await query('CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id);');
 
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');

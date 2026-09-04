@@ -95,20 +95,36 @@ async function notFoundPublic(req, res) {
   );
 }
 
+// Formata uma data como AAAA-MM-DD (aceito pelo padrão de sitemaps como <lastmod>). Retorna
+// null se a data vier vazia/inválida, pra essas URLs simplesmente não terem <lastmod> (melhor
+// omitir do que mandar uma data errada).
+function sitemapLastmod(dateValue) {
+  if (!dateValue) return null;
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+
+// Cada <url> do sitemap agora pode levar um <lastmod> (adicionado em 04/09/2026) - sem isso o
+// Google não tinha nenhum sinal de quando uma página de projeto mudou depois de editada no
+// painel, o que podia atrasar o rastreamento de conteúdo atualizado.
+function sitemapUrlTag(loc, lastmod) {
+  return lastmod ? `  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod></url>` : `  <url><loc>${loc}</loc></url>`;
+}
+
 async function sitemapXml(req, res) {
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
+  const buildTime = sitemapLastmod(new Date());
   const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
   const categories = await listCategories();
   const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
-  const urls = [
-    ...staticPaths.map((p) => `${base}${p}`),
-    ...categories.map((c) => `${base}/portfolio/${c.slug}`),
-    ...projects.map((p) => `${base}/portfolio/${p.slug}`),
+  const tags = [
+    ...staticPaths.map((p) => sitemapUrlTag(`${base}${p}`, buildTime)),
+    ...categories.map((c) => sitemapUrlTag(`${base}/portfolio/${c.slug}`, buildTime)),
+    ...projects.map((p) => sitemapUrlTag(`${base}/portfolio/${p.slug}`, sitemapLastmod(p.updated_at))),
   ];
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((u) => `  <url><loc>${u}</loc></url>`)
-    .join('\n')}\n</urlset>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${tags.join('\n')}\n</urlset>`;
   res.end(xml);
 }
 
@@ -147,6 +163,14 @@ async function router(req, res) {
   const pathname = decodeURIComponent(url.pathname);
   const method = req.method;
   let m;
+
+  // Esse serviço (Web Service dinâmico) existe pra rodar o /admin - as páginas públicas que ele
+  // também sabe servir (mesmas rotas de server/routes/public.js) são só um efeito colateral de
+  // reaproveitar o mesmo código do site estático de verdade (o que é gerado por
+  // scripts/build-static.js e publicado no Render Static Site, esse sim o endereço que deve
+  // aparecer no Google). Sem isso, o endereço .onrender.com deste serviço podia acabar indexado
+  // como uma cópia duplicada do site real. Adicionado em 04/09/2026.
+  res.setHeader('X-Robots-Tag', 'noindex');
 
   // Arquivos estáticos
   if (
@@ -228,8 +252,10 @@ async function router(req, res) {
     // Qualquer ação de POST que crie/edite/exclua/reordene conteúdo (categoria, projeto, foto,
     // vídeo, serviço, marca, pessoa, link, bio ou configurações) dispara uma republicação do site
     // estático assim que a resposta é enviada — sem isso, o visitante continuaria vendo a versão
-    // antiga do site depois de qualquer alteração no painel.
-    if (method === 'POST' && /\/(criar|atualizar|excluir|mover|upload|capa|legenda)$/.test(pathname)) {
+    // antiga do site depois de qualquer alteração no painel. "rodar-seed-inicial" foi adicionado
+    // em 04/09/2026: era a única ação de conteúdo que faltava aqui, então rodar aquela ferramenta
+    // (usada uma vez pra popular um banco novo) não disparava a publicação do site sozinho.
+    if (method === 'POST' && /\/(criar|atualizar|excluir|mover|upload|capa|legenda|rodar-seed-inicial)$/.test(pathname)) {
       const originalEnd = res.end.bind(res);
       res.end = (...args) => {
         triggerStaticRebuild();
