@@ -1,4 +1,4 @@
-import { layout } from '../render.js';
+import { layout, absoluteUrl } from '../render.js';
 import { escapeHtml, nl2br, videoEmbedHtml, formatDatePtBr, truncate } from '../util.js';
 import { ASSET_VERSION } from '../assetVersion.js';
 import {
@@ -271,12 +271,29 @@ export async function homePage(req, res) {
       // Preload da primeira foto do hero (LCP da Home) — só faz sentido no modo foto; com vídeo
       // de fundo configurado o navegador já prioriza o próprio <video>/poster sozinho.
       preloadImage: settings.hero_video_url ? null : heroPosterUrl,
+      // Dados estruturados (JSON-LD) da home: ajuda o Google a entender que "NJFILMES" é o nome
+      // de uma empresa (não só um título de página qualquer) e a ligar esse nome ao mesmo negócio
+      // que aparece nas redes sociais/Google Meu Negócio (o "sameAs" é o jeito padrão de dizer
+      // "esse site e esses perfis são a mesma marca") — ajuda a aparecer melhor numa busca pelo
+      // nome da marca. Reforçado em 04/09/2026 com url/logo/imagem/telefone/endereço (cidade) e
+      // os links sociais já cadastrados; antes só tinha nome, descrição e área de atuação.
       structuredData: {
         '@context': 'https://schema.org',
         '@type': 'ProfessionalService',
         name: settings.site_name,
         description: settings.meta_description,
+        url: absoluteUrl('/'),
+        image: absoluteUrl(settings.og_image || heroPosterUrl),
+        logo: absoluteUrl('/img/nj-logo.png'),
         areaServed: 'Salvador, BA',
+        address: {
+          '@type': 'PostalAddress',
+          addressLocality: 'Salvador',
+          addressRegion: 'BA',
+          addressCountry: 'BR',
+        },
+        ...(settings.whatsapp_number ? { telephone: `+${String(settings.whatsapp_number).replace(/\D/g, '')}` } : {}),
+        sameAs: [settings.instagram_url, settings.youtube_url, settings.vimeo_url, settings.tiktok_url, settings.facebook_url].filter(Boolean),
       },
     })
   );
