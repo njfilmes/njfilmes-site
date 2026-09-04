@@ -382,8 +382,15 @@ section { padding: 110px 0; position: relative; }
 .work-card:nth-child(5n+5) { grid-column: span 3; grid-row: span 2; }
 .work-card.tall { grid-column: span 3; grid-row: span 3; }
 .work-card.wide { grid-column: span 4; grid-row: span 2; }
+/* Trocado de "contain" pra "cover" em 04/09/2026: com contain, uma foto de capa vertical
+   (retrato) dentro de um card horizontal (largura maior que altura, que é como boa parte dos
+   cards nascem no grid) sobrava espaço vazio nas laterais, preenchido pelo fundo escuro do
+   card (--bg-card) - aparecia como uma "barra cinza". Com cover a foto sempre preenche o
+   card inteiro (cortando um pouco as bordas quando preciso), do jeito que já funcionava só
+   no celular (ver regra @media max-width:720px mais abaixo, que agora é redundante mas foi
+   deixada como está por segurança). */
 .work-card img {
-  width: 100%; height: 100%; object-fit: contain;
+  width: 100%; height: 100%; object-fit: cover;
   transition: transform 1.1s var(--ease), filter 0.6s ease;
   filter: grayscale(30%) brightness(0.85);
 }
