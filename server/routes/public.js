@@ -31,8 +31,14 @@ function coverUrl(project) {
 function workCard(project, opts = {}) {
   const cat = project.category_name || '';
   const hasVideo = Number(project.video_count) > 0;
-  return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
-    <img src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
+  // Prévia em vídeo ao passar o mouse (ou, no celular, quando o card entra na tela): só quando o
+  // projeto tem um vídeo hospedado como arquivo direto (provider 'file') — YouTube/Vimeo continuam
+  // só com o selo de play, tocar eles automaticamente dentro do card seria pesado/instável. Ver
+  // public/js/site.js (data-work-card com preview) e o CSS de .work-card-video. Pedido em 04/09/2026.
+  const previewVideoUrl = project.preview_video_provider === 'file' ? project.preview_video_url : '';
+  return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''} ${previewVideoUrl ? 'has-preview-video' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
+    <img class="work-card-cover" src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
+    ${previewVideoUrl ? `<video class="work-card-video" muted loop playsinline preload="none" data-preview-src="${escapeHtml(previewVideoUrl)}"></video>` : ''}
     ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
     <span class="overlay">
       ${cat ? `<span class="cat">${escapeHtml(cat)}</span>` : ''}
@@ -159,8 +165,9 @@ export async function homePage(req, res) {
         <h2>${escapeHtml(featured.title)}</h2>
         <a href="/portfolio/${escapeHtml(featured.slug)}" class="btn btn-accent">Assistir projeto</a>
       </div>
-      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal" style="aspect-ratio:21/9;">
-        <img src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
+      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featured.preview_video_provider === 'file' ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
+        <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
+        ${featured.preview_video_provider === 'file' ? `<video class="work-card-video" muted loop playsinline preload="none" data-preview-src="${escapeHtml(featured.preview_video_url)}"></video>` : ''}
         ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
       </a>
@@ -659,6 +666,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
       description: truncate(project.description || `${project.title} — um projeto NJFILMES.`, 160),
       path: `/portfolio/${project.slug}`,
       ogImage: project.cover_photo,
+      ogVideo: mainVideo && mainVideo.provider === 'file' ? mainVideo.url : null,
       settings,
       categories,
       navLinks,
