@@ -159,6 +159,10 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
 <meta name="twitter:description" content="${escapeHtml(desc)}">
 <meta name="twitter:image" content="${escapeHtml(image)}">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<!-- O Google Search não reconhece favicon em SVG (apenas BMP/GIF/ICO/PNG/JPEG/PPM/TIFF), por isso
+     este PNG também aparece aqui, como alternativa, pra logo aparecer ao lado do site nos resultados
+     de busca. URL sem versionamento de cache de propósito: o Google pede uma URL estável pro favicon. -->
+<link rel="icon" href="/img/favicon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
