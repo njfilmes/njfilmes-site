@@ -236,8 +236,15 @@ export async function listProjects({ onlyPublished = false, categoryId = null, f
   const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
   const lim = limit ? `LIMIT ${Number(limit)}` : '';
   return queryRows(
+    // preview_video_provider/url: o primeiro vídeo do projeto (mesma ordem usada na página do
+    // projeto), só pra decidir se o card do portfólio pode mostrar uma prévia em vídeo ao passar
+    // o mouse (ver workCard em routes/public.js) — pedido do usuário em 04/09/2026. Só usamos essa
+    // prévia quando o vídeo é um arquivo direto (provider 'file'), que toca nativamente com
+    // <video>; vídeos do YouTube/Vimeo continuam só com o selo de "play" que já existia.
     `SELECT p.*, c.name as category_name, c.slug as category_slug,
-       (SELECT COUNT(*) FROM project_videos pv WHERE pv.project_id = p.id) as video_count
+       (SELECT COUNT(*) FROM project_videos pv WHERE pv.project_id = p.id) as video_count,
+       (SELECT pv.provider FROM project_videos pv WHERE pv.project_id = p.id ORDER BY pv.sort_order ASC, pv.id ASC LIMIT 1) as preview_video_provider,
+       (SELECT pv.url FROM project_videos pv WHERE pv.project_id = p.id ORDER BY pv.sort_order ASC, pv.id ASC LIMIT 1) as preview_video_url
      FROM projects p LEFT JOIN categories c ON c.id = p.category_id
      ${where}
      ORDER BY p.sort_order ASC, p.created_at DESC ${lim}`,

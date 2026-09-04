@@ -41,6 +41,7 @@ export function layout({
   description,
   path: routePath = '/',
   ogImage,
+  ogVideo = null,
   settings,
   categories = [],
   navLinks = [],
@@ -54,6 +55,13 @@ export function layout({
   const desc = truncate(description || settings.meta_description || '', 160);
   const canonical = absoluteUrl(routePath);
   const image = absoluteUrl(ogImage || settings.og_image || '/img/og-default.jpg');
+  // Vídeo do projeto embutido no compartilhamento (WhatsApp/Instagram/Facebook): quando a página
+  // do projeto tem um vídeo hospedado como arquivo direto (provider 'file'), essas tags deixam o
+  // link compartilhado mais rico (algumas redes chegam a tocar um preview do vídeo direto no card
+  // do link, em vez de só mostrar a foto de capa) — pedido do usuário em 04/09/2026 pra ajudar o
+  // engajamento de quem compartilha um projeto. É só um complemento: og:image continua presente
+  // pra quem não suportar vídeo.
+  const videoAbs = ogVideo ? absoluteUrl(ogVideo) : null;
   const wa = waLink(settings);
 
   // Pedido em 03/09/2026: destacar no menu mobile em qual página a pessoa já está (nada
@@ -142,6 +150,9 @@ ${noindex ? '<meta name="robots" content="noindex, nofollow">' : '<meta name="ro
 <meta property="og:url" content="${escapeHtml(canonical)}">
 <meta property="og:image" content="${escapeHtml(image)}">
 <meta property="og:locale" content="pt_BR">
+${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
+<meta property="og:video:secure_url" content="${escapeHtml(videoAbs)}">
+<meta property="og:video:type" content="video/mp4">` : ''}
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="${escapeHtml(fullTitle)}">
 <meta name="twitter:description" content="${escapeHtml(desc)}">
