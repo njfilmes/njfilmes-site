@@ -104,47 +104,94 @@
     });
   }
 
-  // Prévia em vídeo nos cards do portfólio (pedido em 04/09/2026): card com vídeo hospedado como
-  // arquivo direto ganha uma tag <video> escondida (ver workCard() em routes/public.js e o CSS de
-  // .work-card-video). No PC, toca ao passar o mouse (mesmo padrão de "hover" já usado no resto do
-  // site) e para ao tirar o mouse. No celular/tablet (sem mouse de verdade) não existe "hover", então
-  // em vez disso o vídeo toca sozinho enquanto o card estiver bem visível na tela (rolando a
-  // página) e pausa assim que sai da tela - dá a mesma sensação "viva" sem precisar tocar no card
-  // (o toque continua só abrindo o projeto, como sempre). Quem pediu menos movimento no aparelho
-  // (prefers-reduced-motion) não recebe nenhuma prévia automática - o CSS já esconde a tag <video>
-  // nesse caso, então nem chegamos a tentar tocar.
+  // Prévia em vídeo nos cards do portfólio (pedido em 04/09/2026, estendido no mesmo dia pra
+  // cobrir também YouTube/Vimeo - antes só vídeo hospedado como arquivo direto). Cada card com
+  // prévia ganha uma "moldura" vazia (.work-card-video, ver workCard() em routes/public.js e o
+  // CSS); o vídeo/iframe de verdade só é criado na primeira vez que o card precisa tocar (nada é
+  // carregado à toa nos cards que a pessoa nunca chega a ver/passar o mouse). No PC, toca ao
+  // passar o mouse (mesmo padrão de "hover" já usado no resto do site) e para ao tirar o mouse. No
+  // celular/tablet (sem mouse de verdade) não existe "hover"; em vez disso o card mais visível na
+  // tela vai tocando sozinho conforme a pessoa rola a página - mas só UM de cada vez (mesmo se dois
+  // cards estiverem visíveis ao mesmo tempo), pra não sobrecarregar o celular/o plano de dados da
+  // pessoa com vários vídeos/iframes tocando ao mesmo tempo. O toque continua só abrindo o
+  // projeto, como sempre. Quem pediu menos movimento no aparelho (prefers-reduced-motion) não
+  // recebe nenhuma prévia automática - o CSS já esconde a moldura nesse caso, então nem chegamos a
+  // tentar tocar.
   var previewCards = document.querySelectorAll('.work-card.has-preview-video');
   if (previewCards.length && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     var isFineHover = window.matchMedia('(hover: hover) and (pointer: fine)').matches;
 
-    var playPreview = function (card, video) {
-      if (!video.src && video.dataset.previewSrc) video.src = video.dataset.previewSrc;
-      card.classList.add('is-previewing');
-      var p = video.play();
-      if (p && p.catch) p.catch(function () {}); // navegador pode recusar o autoplay às vezes; sem problema, a foto continua ali
+    // Cria o <video> ou <iframe> de verdade dentro da moldura, na primeira vez que o card precisa
+    // tocar. video de arquivo direto: elemento nativo, controlado por play()/pause() normalmente.
+    // YouTube/Vimeo: iframe já com autoplay/mudo/loop na própria URL (ver previewVideoData() no
+    // servidor) - não tem play()/pause() daqui de fora sem carregar a API de cada um, então
+    // "parar" um iframe é simplesmente removê-lo (ao tocar de novo, nasce outro do zero).
+    var buildPreviewEl = function (holder) {
+      var provider = holder.dataset.previewProvider;
+      var src = holder.dataset.previewSrc;
+      var el;
+      if (provider === 'file') {
+        el = document.createElement('video');
+        el.muted = true;
+        el.loop = true;
+        el.playsInline = true;
+        el.preload = 'none';
+        el.src = src;
+      } else {
+        el = document.createElement('iframe');
+        el.src = src;
+        el.setAttribute('frameborder', '0');
+        el.setAttribute('allow', 'autoplay; encrypted-media');
+        el.setAttribute('title', 'Prévia do vídeo');
+      }
+      holder.appendChild(el);
+      return el;
     };
-    var stopPreview = function (card, video) {
+
+    var playPreview = function (card) {
+      var holder = card.querySelector('.work-card-video');
+      if (!holder) return;
+      card.classList.add('is-previewing');
+      var el = holder.firstElementChild || buildPreviewEl(holder);
+      if (el.tagName === 'VIDEO') {
+        var p = el.play();
+        if (p && p.catch) p.catch(function () {}); // navegador pode recusar o autoplay às vezes; sem problema, a foto continua ali
+      }
+    };
+    var stopPreview = function (card) {
       card.classList.remove('is-previewing');
-      video.pause();
-      try { video.currentTime = 0; } catch (e) {}
+      var holder = card.querySelector('.work-card-video');
+      if (!holder) return;
+      var el = holder.firstElementChild;
+      if (!el) return;
+      if (el.tagName === 'VIDEO') {
+        el.pause();
+        try { el.currentTime = 0; } catch (e) {}
+      } else {
+        holder.removeChild(el); // iframe: sem API carregada aqui, remover é o jeito confiável de garantir que parou
+      }
     };
 
     if (isFineHover) {
       previewCards.forEach(function (card) {
-        var video = card.querySelector('.work-card-video');
-        if (!video) return;
-        card.addEventListener('mouseenter', function () { playPreview(card, video); });
-        card.addEventListener('mouseleave', function () { stopPreview(card, video); });
+        card.addEventListener('mouseenter', function () { playPreview(card); });
+        card.addEventListener('mouseleave', function () { stopPreview(card); });
       });
     } else if ('IntersectionObserver' in window) {
+      var activeCard = null;
       var previewIo = new IntersectionObserver(
         function (entries) {
           entries.forEach(function (entry) {
             var card = entry.target;
-            var video = card.querySelector('.work-card-video');
-            if (!video) return;
-            if (entry.isIntersecting && entry.intersectionRatio >= 0.6) playPreview(card, video);
-            else stopPreview(card, video);
+            var visible = entry.isIntersecting && entry.intersectionRatio >= 0.6;
+            if (visible) {
+              if (activeCard && activeCard !== card) stopPreview(activeCard);
+              activeCard = card;
+              playPreview(card);
+            } else if (activeCard === card) {
+              stopPreview(card);
+              activeCard = null;
+            }
           });
         },
         { threshold: [0, 0.6, 1] }
