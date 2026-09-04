@@ -19,6 +19,7 @@ import {
   listHeroPhotos,
   incrementProjectViews,
   incrementProjectLikes,
+  incrementPhotoLikesIfPublished,
   listCommentsForProject,
   createComment,
 } from '../queries.js';
@@ -397,6 +398,23 @@ export async function likeProject(req, res, slug) {
   res.end(JSON.stringify({ likes }));
 }
 
+// Pedido do usuário em 04/09/2026: o mesmo botão de curtir do vídeo, só que por foto, na galeria
+// rolante do projeto. Chamado pelo navegador via fetch (POST /api/curtir-foto/:id).
+export async function likePhoto(req, res, id) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const photoId = Number(id);
+  if (!Number.isInteger(photoId) || photoId <= 0) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ error: 'Foto inválida.' }));
+  }
+  const likes = await incrementPhotoLikesIfPublished(photoId);
+  if (likes === null) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Foto não encontrada.' }));
+  }
+  res.end(JSON.stringify({ likes }));
+}
+
 // Endpoint chamado automaticamente pelo navegador ao carregar a página do projeto (fetch via JS)
 // — soma 1 visualização e devolve o total em JSON. Existe separado do render porque a página
 // pública passará a ser HTML estático (gerado antecipadamente), sem código rodando a cada acesso.
@@ -535,9 +553,29 @@ function projectPage(req, res, project, settings, categories, navLinks) {
       <h3 class="reveal text-center" style="text-align:center;">${escapeHtml(project.gallery_title || 'Galeria')}</h3>
       <div class="project-gallery reveal" data-drag-scroll>
         <div class="project-gallery-track" data-drag-scroll-track>
-          ${(otherPhotos.length > 1 ? [...otherPhotos, ...otherPhotos] : otherPhotos).map((p) => `<button type="button" class="project-gallery-item" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
-            <img src="${escapeHtml(p.filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
-          </button>`).join('')}
+          ${(otherPhotos.length > 1 ? [...otherPhotos, ...otherPhotos] : otherPhotos).map((p) => {
+            // Quando já temos a largura/altura reais da foto (salvas no upload — fotos enviadas
+            // antes de 04/09/2026 podem não ter isso ainda, até o próximo build medir elas), a
+            // caixa do item já nasce com o tamanho certo (aspect-ratio), sem depender de esperar
+            // a foto carregar no navegador pra descobrir a proporção. Sem essas dimensões, a
+            // caixa cai no tamanho padrão definido no CSS (.project-gallery-item).
+            const boxStyle = p.width && p.height ? ` style="aspect-ratio:${p.width}/${p.height};"` : '';
+            // 04/09/2026, dois pedidos do usuário juntos: 1) um ícone indicando que dá pra tocar
+            // na foto pra ver ampliada (senão a pessoa não sabe que abre); 2) um botão de curtir
+            // por foto, igual ao do vídeo principal. O item deixou de ser um <button> único (não
+            // dá pra ter um <button> de curtir DENTRO de outro <button>, o HTML não permite) e
+            // virou uma div com dois botões independentes lado a lado: um abre o lightbox
+            // (data-lightbox-trigger), o outro só curte — clicar num não aciona o outro.
+            return `<div class="project-gallery-item"${boxStyle}>
+            <button type="button" class="project-gallery-item-view" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
+              <img src="${escapeHtml(p.filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
+              <span class="project-gallery-expand" aria-hidden="true">⤢</span>
+            </button>
+            <button type="button" class="photo-like-btn" data-photo-like-btn data-photo-id="${p.id}">
+              <span class="heart"></span> <span data-like-count>${p.likes || 0}</span>
+            </button>
+          </div>`;
+          }).join('')}
         </div>
       </div>
     </div>

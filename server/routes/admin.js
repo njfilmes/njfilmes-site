@@ -1495,9 +1495,9 @@ export async function projectPhotosUpload(req, res, body, id) {
   const isFirstBatch = project.photos.length === 0;
   for (const dataUrl of photos) {
     try {
-      const { filename, thumbFilename } = await saveProjectPhoto(dataUrl);
+      const { filename, thumbFilename, width, height } = await saveProjectPhoto(dataUrl);
       order += 1;
-      await Q.addPhoto(id, { filename, thumbFilename, sort_order: order, is_cover: isFirstBatch && saved === 0 ? 1 : 0 });
+      await Q.addPhoto(id, { filename, thumbFilename, sort_order: order, is_cover: isFirstBatch && saved === 0 ? 1 : 0, width, height });
       if (isFirstBatch && saved === 0) {
         await query('UPDATE projects SET cover_photo = $1 WHERE id = $2', [filename, id]);
       }
