@@ -401,8 +401,11 @@ section { padding: 110px 0; position: relative; }
    (mesmo tamanho do card); o vídeo nasce invisível (opacity:0) e só aparece quando o JS soma a
    classe .is-previewing (ver public/js/site.js) — sem JS, ou antes do JS decidir tocar, o
    visitante sempre vê só a foto normal, sem nenhum vídeo escondido nem "flash" de tela preta.
-   Só existe pra projetos com vídeo hospedado como arquivo direto (ver workCard() em
-   routes/public.js) — vídeos de YouTube/Vimeo continuam só com o selo de play de sempre. */
+   Existe pra vídeo hospedado como arquivo direto (toca com <video> nativo) e também pra
+   YouTube/Vimeo (toca com um iframe no "modo player de fundo" deles - ver previewVideoData() em
+   routes/public.js); outros tipos de vídeo (Mega/Drive/link só) continuam só com o selo de play.
+   .work-card-video é só a "moldura" (do tamanho do card); o vídeo/iframe de verdade nasce dentro
+   dela só quando o JS decide tocar pela primeira vez, pra não carregar nada à toa. */
 .work-card-cover, .work-card-video {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -410,8 +413,24 @@ section { padding: 110px 0; position: relative; }
 }
 .work-card-video {
   opacity: 0;
+  overflow: hidden;
   transition: opacity 0.45s ease;
   pointer-events: none;
+}
+.work-card-video video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+/* Um <iframe> não aceita object-fit (o vídeo lá dentro é controlado pelo player do YouTube/Vimeo,
+   não pelo nosso CSS) — pra chegar perto do mesmo efeito de "preencher o card cortando as bordas"
+   que o <video> nativo tem de graça, o iframe nasce um pouco maior que o card e centralizado; fica
+   bom na maioria dos casos, mas sem a garantia de encaixe perfeito que o vídeo direto tem. */
+.work-card-video iframe {
+  position: absolute; top: 50%; left: 50%;
+  width: 150%; height: 150%;
+  transform: translate(-50%, -50%);
+  border: 0;
 }
 .work-card.is-previewing .work-card-video { opacity: 1; }
 .work-card.is-previewing .work-card-cover { opacity: 0; }
