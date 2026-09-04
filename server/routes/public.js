@@ -569,7 +569,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
             return `<div class="project-gallery-item"${boxStyle}>
             <button type="button" class="project-gallery-item-view" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
               <img src="${escapeHtml(p.filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
-              <span class="project-gallery-expand" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9V5H9M5 5L19 19M15 19H19V15"/></svg></span>
+              <span class="project-gallery-expand" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z" transform="translate(7,7) rotate(-45)"/><path d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z" transform="translate(17,17) rotate(135)"/></svg></span>
             </button>
             <button type="button" class="photo-like-btn" data-photo-like-btn data-photo-id="${p.id}">
               <span class="heart"></span> <span data-like-count>${p.likes || 0}</span>
