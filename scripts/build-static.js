@@ -13,6 +13,7 @@ import fs from 'node:fs';
 import fsp from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(__dirname, '..');
@@ -34,9 +35,43 @@ if (!process.env.PUBLIC_API_BASE) {
 
 const { layout } = await import('../server/render.js');
 const Pub = await import('../server/routes/public.js');
-const { listCategories, listAllProjectsForAdmin, getSettings } = await import('../server/queries.js');
+const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions } = await import(
+  '../server/queries.js'
+);
 const { initSchema } = await import('../server/db.js');
 await initSchema();
+
+// 04/09/2026: fotos enviadas antes desta data não têm width/height salvos no banco (essas
+// colunas são novas — ver server/db.js). A galeria rolante do projeto precisa dessas dimensões
+// pra reservar o espaço exato de cada foto sem depender do navegador esperar a foto carregar
+// (o que causava um bug de foto ficando cinza/invisível). Em vez de deixar essas fotos antigas
+// sem essa informação pra sempre, medimos elas aqui (uma vez só) e gravamos no banco — assim o
+// próximo build já não precisa medir de novo. Cada foto é tratada isoladamente (try/catch): se
+// uma falhar (link fora do ar, etc.) o build inteiro não é interrompido por causa dela.
+async function backfillPhotoDimensions() {
+  const rows = await listPhotosMissingDimensions();
+  if (!rows.length) return;
+  console.log(`Medindo dimensões de ${rows.length} foto(s) enviada(s) antes desta atualização (sem tamanho salvo)...`);
+  for (const row of rows) {
+    try {
+      let buffer;
+      if (/^https?:\/\//.test(row.filename)) {
+        const res = await fetch(row.filename);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        buffer = Buffer.from(await res.arrayBuffer());
+      } else {
+        buffer = await fsp.readFile(path.join(PUBLIC_DIR, row.filename.replace(/^\//, '')));
+      }
+      const meta = await sharp(buffer).metadata();
+      if (meta.width && meta.height) {
+        await setPhotoDimensions(row.id, meta.width, meta.height);
+      }
+    } catch (err) {
+      console.warn(`  ! não consegui medir a foto #${row.id} (${row.filename}): ${err.message}`);
+    }
+  }
+}
+await backfillPhotoDimensions();
 
 // "Resposta falsa": os handlers de server/routes/public.js foram escritos pra um res.end(html)
 // de verdade (http.ServerResponse). Aqui a gente só captura o texto que seria enviado, sem
