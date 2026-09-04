@@ -28,17 +28,41 @@ function coverUrl(project) {
   return project.cover_photo || (project.photos && project.photos[0] && project.photos[0].filename) || '/img/placeholder.svg';
 }
 
+// Monta os dados da prévia em vídeo de um card do portfólio (ver CSS .work-card-video e o JS em
+// public/js/site.js) — pedido em 04/09/2026, estendido no mesmo dia pra cobrir YouTube/Vimeo além
+// de arquivo direto. Vídeo hospedado como arquivo direto (provider 'file') toca com uma tag
+// <video> nativa; YouTube/Vimeo tocam com um iframe no "modo player de fundo" de cada um deles
+// (sem controles, mudo, em loop) — os parâmetros de autoplay/mute/loop já vão prontos na própria
+// URL, então o JS só precisa criar o elemento e não precisa de nenhuma biblioteca do YouTube/Vimeo.
+// Outros tipos (Mega/Drive/link só) não têm um jeito confiável de tocar em loop escondido sem
+// controles - continuam só com o selo de play de sempre, sem prévia.
+function previewVideoData(project) {
+  const provider = project.preview_video_provider;
+  const id = project.preview_video_id;
+  const url = project.preview_video_url;
+  if (provider === 'file' && url) return { provider, src: url };
+  if (provider === 'youtube' && id) {
+    return {
+      provider,
+      src: `https://www.youtube.com/embed/${encodeURIComponent(id)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(id)}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`,
+    };
+  }
+  if (provider === 'vimeo' && id) {
+    return { provider, src: `https://player.vimeo.com/video/${encodeURIComponent(id)}?autoplay=1&muted=1&loop=1&background=1` };
+  }
+  return null;
+}
+
 function workCard(project, opts = {}) {
   const cat = project.category_name || '';
   const hasVideo = Number(project.video_count) > 0;
-  // Prévia em vídeo ao passar o mouse (ou, no celular, quando o card entra na tela): só quando o
-  // projeto tem um vídeo hospedado como arquivo direto (provider 'file') — YouTube/Vimeo continuam
-  // só com o selo de play, tocar eles automaticamente dentro do card seria pesado/instável. Ver
-  // public/js/site.js (data-work-card com preview) e o CSS de .work-card-video. Pedido em 04/09/2026.
-  const previewVideoUrl = project.preview_video_provider === 'file' ? project.preview_video_url : '';
-  return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''} ${previewVideoUrl ? 'has-preview-video' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
+  // Prévia em vídeo ao passar o mouse (ou, no celular, quando o card entra na tela) — ver
+  // previewVideoData() acima. Ver public/js/site.js (data-work-card com preview) e o CSS de
+  // .work-card-video. Pedido em 04/09/2026.
+  const preview = previewVideoData(project);
+  return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''} ${preview ? 'has-preview-video' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
     <img class="work-card-cover" src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
-    ${previewVideoUrl ? `<video class="work-card-video" muted loop playsinline preload="none" data-preview-src="${escapeHtml(previewVideoUrl)}"></video>` : ''}
+    ${preview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(preview.provider)}" data-preview-src="${escapeHtml(preview.src)}"></div>` : ''}
     ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
     <span class="overlay">
       ${cat ? `<span class="cat">${escapeHtml(cat)}</span>` : ''}
@@ -90,6 +114,7 @@ export async function homePage(req, res) {
     listHeroPhotos(),
   ]);
   const featured = featuredList[0];
+  const featuredPreview = featured ? previewVideoData(featured) : null;
   const recent = recentRaw.filter((p) => !featured || p.id !== featured.id).slice(0, 6);
   const services = servicesRaw.slice(0, 6);
 
@@ -165,9 +190,9 @@ export async function homePage(req, res) {
         <h2>${escapeHtml(featured.title)}</h2>
         <a href="/portfolio/${escapeHtml(featured.slug)}" class="btn btn-accent">Assistir projeto</a>
       </div>
-      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featured.preview_video_provider === 'file' ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
+      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featuredPreview ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
-        ${featured.preview_video_provider === 'file' ? `<video class="work-card-video" muted loop playsinline preload="none" data-preview-src="${escapeHtml(featured.preview_video_url)}"></video>` : ''}
+        ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
         ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
       </a>
