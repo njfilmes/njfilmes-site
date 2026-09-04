@@ -111,17 +111,32 @@ async function copyStaticAssets() {
   }
 }
 
+// Formata uma data como AAAA-MM-DD (aceito pelo padrão de sitemaps como <lastmod>) - null se a
+// data vier vazia/inválida, pra essa URL simplesmente não levar <lastmod> nesse caso.
+function sitemapLastmod(dateValue) {
+  if (!dateValue) return null;
+  const d = new Date(dateValue);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
+function sitemapUrlTag(loc, lastmod) {
+  return lastmod ? `  <url><loc>${loc}</loc><lastmod>${lastmod}</lastmod></url>` : `  <url><loc>${loc}</loc></url>`;
+}
+
 async function buildSitemapAndRobots(categories, projects) {
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
+  // <lastmod> adicionado em 04/09/2026: sem isso o Google não tinha sinal nenhum de quando uma
+  // página mudou depois de editada no painel, o que podia atrasar o rastreamento de conteúdo
+  // atualizado. Páginas fixas (home, portfólio, categorias) usam o horário desta publicação;
+  // páginas de projeto usam a data real da última edição de cada um (updated_at).
+  const buildTime = sitemapLastmod(new Date());
   const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
-  const urls = [
-    ...staticPaths.map((p) => `${base}${p}`),
-    ...categories.map((c) => `${base}/portfolio/${c.slug}`),
-    ...projects.map((p) => `${base}/portfolio/${p.slug}`),
+  const tags = [
+    ...staticPaths.map((p) => sitemapUrlTag(`${base}${p}`, buildTime)),
+    ...categories.map((c) => sitemapUrlTag(`${base}/portfolio/${c.slug}`, buildTime)),
+    ...projects.map((p) => sitemapUrlTag(`${base}/portfolio/${p.slug}`, sitemapLastmod(p.updated_at))),
   ];
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls
-    .map((u) => `  <url><loc>${u}</loc></url>`)
-    .join('\n')}\n</urlset>`;
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${tags.join('\n')}\n</urlset>`;
   await fsp.writeFile(path.join(DIST_DIR, 'sitemap.xml'), xml, 'utf8');
 
   const robots = `User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${base}/sitemap.xml\n`;
