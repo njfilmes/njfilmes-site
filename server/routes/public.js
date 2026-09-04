@@ -66,15 +66,26 @@ function heroHeadlineHtml(text) {
 }
 
 export async function homePage(req, res) {
-  const settings = await getSettings();
-  const categories = await listCategoriesWithProjects();
-  const navLinks = await listNavLinks();
-  const featured = (await listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }))[0];
-  const recent = (await listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 })).filter((p) => !featured || p.id !== featured.id).slice(0, 6);
-  const services = (await listServices({ onlyPublished: true })).slice(0, 6);
-  const brands = await listBrands();
-  const people = await listPeople();
-  const testimonials = await listTestimonials();
+  // As consultas abaixo são todas independentes entre si (nenhuma usa o resultado de outra pra
+  // decidir o que buscar) — rodar em paralelo com Promise.all em vez de uma de cada vez (await
+  // sequencial) deixa a página bem mais rápida de montar, principalmente com o banco de dados
+  // num serviço remoto (Neon), onde cada ida-e-volta tem uma latência de rede real. Otimizado em
+  // 04/09/2026; nenhuma consulta nem o resultado final mudou, só a ordem em que rodam.
+  const [settings, categories, navLinks, featuredList, recentRaw, servicesRaw, brands, people, testimonials, heroGalleryPhotos] = await Promise.all([
+    getSettings(),
+    listCategoriesWithProjects(),
+    listNavLinks(),
+    listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }),
+    listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 }),
+    listServices({ onlyPublished: true }),
+    listBrands(),
+    listPeople(),
+    listTestimonials(),
+    listHeroPhotos(),
+  ]);
+  const featured = featuredList[0];
+  const recent = recentRaw.filter((p) => !featured || p.id !== featured.id).slice(0, 6);
+  const services = servicesRaw.slice(0, 6);
 
   // 03/09/2026: a foto de destaque da Home agora pode ser trocada pelo painel
   // (Configurações). Se o usuário já enviou uma pelo painel (settings.hero_photo),
@@ -88,7 +99,6 @@ export async function homePage(req, res) {
   // rodízio, editável pelo painel (Configurações). A foto de destaque de sempre continua sendo a
   // primeira da sequência; as extras enviadas na nova galeria "Fotos de destaque da Home" entram
   // depois, na ordem escolhida lá. Só se aplica quando não tem vídeo de fundo configurado.
-  const heroGalleryPhotos = await listHeroPhotos();
   const heroPhotoUrls = [heroPosterUrl, ...heroGalleryPhotos.map((p) => p.filename)].filter(
     (src, idx, arr) => src && arr.indexOf(src) === idx
   );
@@ -386,9 +396,44 @@ function likeViewsBlock(project) {
   </div>`;
 }
 
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) return String(xff).split(',')[0].trim();
+  return (req.socket && req.socket.remoteAddress) || 'desconhecido';
+}
+
+// Limitador genérico por IP, em memória (reinicia se o serviço reiniciar - aceitável pra esse
+// nível de proteção). Usado tanto pro mural de comentários quanto, a partir de 04/09/2026, pros
+// endpoints de curtir/visualizar - antes eles não tinham nenhum limite, então um script simples
+// rodando em loop conseguia inflar curtidas/visualizações de um projeto sem limite nenhum.
+function makeRateLimiter(windowMs, max) {
+  const hitsByIp = new Map();
+  return function rateLimitOk(ip) {
+    const now = Date.now();
+    const previous = (hitsByIp.get(ip) || []).filter((t) => now - t < windowMs);
+    if (previous.length >= max) {
+      hitsByIp.set(ip, previous);
+      return false;
+    }
+    previous.push(now);
+    hitsByIp.set(ip, previous);
+    return true;
+  };
+}
+
+const commentRateLimitOk = makeRateLimiter(10 * 60 * 1000, 6); // 6 comentários / 10 min por IP
+// Curtir/visualizar são ações bem mais corriqueiras que comentar (um visitante pode curtir várias
+// fotos numa galeria em segundos, por exemplo), então o limite aqui é bem mais generoso - existe
+// só pra barrar um script abusando do endpoint, não pra atrapalhar uso normal.
+const engagementRateLimitOk = makeRateLimiter(10 * 60 * 1000, 60); // 60 curtidas/visualizações / 10 min por IP
+
 // Endpoint chamado pelo botão de curtir (fetch via JS) — soma 1 curtida e devolve o total em JSON.
 export async function likeProject(req, res, slug) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Muitas curtidas em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
   const project = await getProjectBySlug(slug);
   if (!project || !project.published) {
     res.statusCode = 404;
@@ -402,6 +447,10 @@ export async function likeProject(req, res, slug) {
 // rolante do projeto. Chamado pelo navegador via fetch (POST /api/curtir-foto/:id).
 export async function likePhoto(req, res, id) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Muitas curtidas em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
   const photoId = Number(id);
   if (!Number.isInteger(photoId) || photoId <= 0) {
     res.statusCode = 400;
@@ -420,6 +469,10 @@ export async function likePhoto(req, res, id) {
 // pública passará a ser HTML estático (gerado antecipadamente), sem código rodando a cada acesso.
 export async function registerView(req, res, slug) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Muitas visualizações em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
   const project = await getProjectBySlug(slug);
   if (!project || !project.published) {
     res.statusCode = 404;
@@ -437,29 +490,7 @@ export async function registerView(req, res, slug) {
 
 // Anti-spam simples: campo-armadilha (honeypot) invisível no formulário — se vier preenchido é
 // quase certo que é um robô, então respondemos como se tivesse dado certo (sem avisar o robô)
-// mas não gravamos nada. E um limite de comentários por IP num período curto, guardado em
-// memória (reinicia se o serviço reiniciar, o que é aceitável pra esse nível de proteção).
-const COMMENT_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutos
-const COMMENT_RATE_LIMIT_MAX = 6; // no máximo 6 comentários por IP nesse período
-const commentRateLimitByIp = new Map();
-
-function getClientIp(req) {
-  const xff = req.headers['x-forwarded-for'];
-  if (xff) return String(xff).split(',')[0].trim();
-  return (req.socket && req.socket.remoteAddress) || 'desconhecido';
-}
-
-function commentRateLimitOk(ip) {
-  const now = Date.now();
-  const previous = (commentRateLimitByIp.get(ip) || []).filter((t) => now - t < COMMENT_RATE_LIMIT_WINDOW_MS);
-  if (previous.length >= COMMENT_RATE_LIMIT_MAX) {
-    commentRateLimitByIp.set(ip, previous);
-    return false;
-  }
-  previous.push(now);
-  commentRateLimitByIp.set(ip, previous);
-  return true;
-}
+// mas não gravamos nada.
 
 export async function getComments(req, res, slug) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -613,7 +644,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
     </div>
   </section>
 
-  <div class="lightbox" data-lightbox>
+  <div class="lightbox" data-lightbox role="dialog" aria-modal="true" aria-label="Foto ampliada" tabindex="-1">
     <button class="lightbox-close" data-lightbox-close aria-label="Fechar">&times;</button>
     <button class="lightbox-prev" data-lightbox-prev aria-label="Anterior">&#8249;</button>
     <img src="" alt="">
@@ -716,7 +747,7 @@ export async function aboutPage(req, res) {
       </div>
     </div>
   </section>
-  <div class="lightbox" data-lightbox>
+  <div class="lightbox" data-lightbox role="dialog" aria-modal="true" aria-label="Foto ampliada" tabindex="-1">
     <button class="lightbox-close" data-lightbox-close aria-label="Fechar">&times;</button>
     <button class="lightbox-prev" data-lightbox-prev aria-label="Anterior">&#8249;</button>
     <img src="" alt="">

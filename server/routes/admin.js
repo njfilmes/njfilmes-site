@@ -13,6 +13,9 @@ import {
   countAdmins,
   setSessionCookie,
   clearSessionCookie,
+  loginGuard,
+  recoveryGuard,
+  getClientIp,
 } from '../auth.js';
 import { saveProjectPhoto, saveMiscImage, deletePhotoFiles } from '../upload.js';
 import * as Q from '../queries.js';
@@ -108,13 +111,23 @@ export async function setupSubmit(req, res, body) {
 export async function loginPage(req, res) {
   if ((await countAdmins()) === 0) return redirect(res, '/admin/setup');
   const error = new URL(req.url, 'http://x').searchParams.get('erro');
+  // "bloqueado" é um erro distinto de "1" (credenciais erradas) — ver loginGuard em
+  // server/auth.js, adicionado em 04/09/2026 pra deixar claro pro usuário que não é a senha que
+  // está errada, é que ele (ou um script tentando adivinhar a senha) errou demais e precisa
+  // esperar um pouco.
+  let errorHtml = '';
+  if (error === 'bloqueado') {
+    errorHtml = `<div class="admin-flash admin-flash-error" style="margin:0 0 18px;">Muitas tentativas com senha incorreta. Tente novamente em alguns minutos.</div>`;
+  } else if (error) {
+    errorHtml = `<div class="admin-flash admin-flash-error" style="margin:0 0 18px;">E-mail ou senha inválidos.</div>`;
+  }
   res.end(
     loginLayout({
       title: 'Entrar',
       content: `
       <h1>Painel administrativo</h1>
       <p class="sub">Entre com seu e-mail e senha para gerenciar o site.</p>
-      ${error ? `<div class="admin-flash admin-flash-error" style="margin:0 0 18px;">E-mail ou senha inválidos.</div>` : ''}
+      ${errorHtml}
       <form method="post" action="/admin/login">
         ${field({ label: 'E-mail', name: 'email', type: 'email', required: true })}
         ${field({ label: 'Senha', name: 'password', type: 'password', required: true })}
@@ -125,11 +138,19 @@ export async function loginPage(req, res) {
 }
 
 export async function loginSubmit(req, res, body) {
+  const ip = getClientIp(req);
+  // Bloqueia por IP depois de várias tentativas erradas seguidas — ver loginGuard em
+  // server/auth.js (adicionado em 04/09/2026). Antes disso não havia nenhum limite de tentativas.
+  if (loginGuard.isBlocked(ip)) {
+    return redirect(res, '/admin/login?erro=bloqueado');
+  }
   const { email, password } = body;
   const admin = await findAdminByEmail(email || '');
   if (!admin || !verifyPassword(password || '', admin.password_hash, admin.salt)) {
+    loginGuard.registerFailure(ip);
     return redirect(res, '/admin/login?erro=1');
   }
+  loginGuard.registerSuccess(ip);
   const session = await createSession(admin.id);
   setSessionCookie(res, session.id, session.expires);
   redirect(res, '/admin');
@@ -143,6 +164,29 @@ export async function logoutSubmit(req, res, sessionId) {
 
 // ---------------- Dashboard ----------------
 
+// Pedido interno (não do usuário) em 04/09/2026: antes disso, salvar algo no painel só
+// confirmava que gravou no banco de dados — não tinha nenhum jeito de saber, olhando o painel,
+// se a publicação do site (que acontece à parte, na Render) realmente aconteceu. Esse aviso
+// mostra a última tentativa registrada (ver server/deployHook.js). Importante: "sucesso" aqui
+// quer dizer que o pedido de publicação foi disparado e aceito - a publicação em si ainda leva
+// alguns minutos rodando na Render depois disso, então mesmo com esse aviso verde vale conferir
+// o site no ar se a mudança for importante.
+function renderPublishStatus(status) {
+  if (!status) {
+    return `<div class="panel"><h2>Última publicação do site</h2><p class="sub">Nenhuma publicação foi registrada ainda nesta versão do painel.</p></div>`;
+  }
+  let parsed = null;
+  try { parsed = JSON.parse(status.value); } catch { /* formato inesperado, trata como ausente */ }
+  if (!parsed) {
+    return `<div class="panel"><h2>Última publicação do site</h2><p class="sub">Não foi possível ler o status da última publicação.</p></div>`;
+  }
+  const when = formatDateTimePtBr(parsed.at || status.updated_at);
+  if (parsed.ok) {
+    return `<div class="panel"><h2>Última publicação do site</h2><p class="sub" style="color:#3a9a5c;">✓ Publicação disparada com sucesso em ${when}. O site pode levar alguns minutos pra terminar de atualizar.</p></div>`;
+  }
+  return `<div class="panel"><h2>Última publicação do site</h2><p class="sub" style="color:#d0503a;">✗ A última tentativa de publicação (${when}) falhou: ${escapeHtml(parsed.detail || 'motivo não registrado')}. As mudanças que você salvou estão seguras no banco de dados, mas podem não estar aparecendo no site ainda — fale com quem cuida do site técnico.</p></div>`;
+}
+
 export async function dashboardPage(req, res, admin) {
   const flash = readFlash(req);
   const totalProjects = await Q.countProjects();
@@ -151,6 +195,7 @@ export async function dashboardPage(req, res, admin) {
   const totalPhotos = await Q.countPhotos();
   const totalCats = await Q.countCategories();
   const recentProjects = (await Q.listAllProjectsForAdmin()).slice(0, 6);
+  const publishStatus = await Q.getAppStatus('static_rebuild');
 
   const content = `
   <div class="stat-cards">
@@ -160,6 +205,7 @@ export async function dashboardPage(req, res, admin) {
     <div class="stat-card"><b>${totalPhotos}</b><span>Fotos</span></div>
     <div class="stat-card"><b>${totalCats}</b><span>Categorias</span></div>
   </div>
+  ${renderPublishStatus(publishStatus)}
   <div class="panel">
     <h2>Atalhos</h2>
     <div class="shortcut-grid">
@@ -1566,11 +1612,21 @@ export async function recoverPage(req, res) {
 }
 
 export async function recoverSubmit(req, res, body) {
+  const ip = getClientIp(req);
+  // Mesma proteção de bloqueio por IP do login (ver server/auth.js) — a recuperação de acesso é
+  // uma rota pública que basicamente aceita uma "segunda senha" (a chave de recuperação), então
+  // precisa do mesmo limite de tentativas, senão alguém poderia tentar adivinhar a chave sem
+  // parar. Guarda separado do login (recoveryGuard), então um não bloqueia o outro.
+  if (recoveryGuard.isBlocked(ip)) {
+    return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Muitas tentativas. Tente novamente em alguns minutos.'));
+  }
   const key = process.env.ADMIN_RECOVERY_KEY;
   if (!key) return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Recuperação não configurada neste site.'));
   if (!body.recovery_key || !timingSafeStringEqual(body.recovery_key, key)) {
+    recoveryGuard.registerFailure(ip);
     return redirect(res, '/admin/recuperar-senha' + withFlash(res, 'error', 'Chave de recuperação incorreta.'));
   }
+  recoveryGuard.registerSuccess(ip);
   const email = String(body.email || '').toLowerCase().trim();
   const password = String(body.password || '');
   if (!email || password.length < 8) {
