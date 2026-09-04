@@ -792,7 +792,7 @@ export async function aboutPage(req, res) {
       <h2 class="reveal text-center">${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}</h2>
       <div class="bio-gallery reveal" data-drag-scroll>
         <div class="bio-gallery-track" data-drag-scroll-track>
-          ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<button type="button" class="bio-gallery-item" data-lightbox-trigger data-full="${escapeHtml(src)}" data-caption="${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"></button>`).join('')}
+          ${[...bioGalleryImages, ...bioGalleryImages].map((src) => `<button type="button" class="bio-gallery-item" data-lightbox-trigger data-full="${escapeHtml(src)}" data-caption="${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}"><img src="${escapeHtml(src)}" alt="NJFILMES nos bastidores" loading="lazy"><span class="project-gallery-expand" aria-hidden="true"><svg viewBox="-4 -4 32 32" fill="currentColor"><g transform="translate(6,6) rotate(-45)"><path class="gallery-expand-arrow" d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z"/></g><g transform="translate(18,18) rotate(135)"><path class="gallery-expand-arrow" d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z"/></g></svg></span></button>`).join('')}
         </div>
       </div>
     </div>
