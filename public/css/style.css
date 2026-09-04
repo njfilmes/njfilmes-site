@@ -765,8 +765,18 @@ html.no-intro .cine-intro { display: none; }
   opacity: 0.75;
   transition: opacity 0.3s var(--ease);
   pointer-events: none; /* decorativo — quem recebe o clique é o botão inteiro por baixo */
+  animation: galleryFramePulse 2.6s ease-in-out infinite;
 }
-.project-gallery-item-view:hover .project-gallery-frame { opacity: 1; }
+.project-gallery-item-view:hover .project-gallery-frame { opacity: 1; animation-play-state: paused; }
+/* Pulsação leve e contínua nos cantinhos, pra chamar atenção de que dá pra tocar (pedido do
+   usuário em 04/09/2026 (2)) — some no hover porque aí já tá destacado do outro jeito. */
+@keyframes galleryFramePulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.12); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-gallery-frame { animation: none; }
+}
 .project-gallery-frame i {
   position: absolute;
   width: 16px; height: 16px;
@@ -933,11 +943,15 @@ html.no-intro .cine-intro { display: none; }
    flex a cada abertura — isso já reinicia a animação sozinho toda vez. */
 .lightbox img {
   max-width: 100%; max-height: 88vh; object-fit: contain;
-  animation: lightboxImgIn 0.6s var(--ease) both;
+  animation: lightboxImgIn 0.75s var(--ease) both;
+  filter: drop-shadow(0 20px 40px rgba(0,0,0,0.5));
 }
+/* 04/09/2026 (2): usuário disse que não percebeu o giro 3D — reforçado o efeito (mais graus de
+   giro, um pouco mais de duração e uma leve inclinação no outro eixo também) pra ficar nítido. */
 @keyframes lightboxImgIn {
-  from { opacity: 0; transform: perspective(1200px) rotateY(26deg) scale(0.85); }
-  to { opacity: 1; transform: perspective(1200px) rotateY(0deg) scale(1); }
+  from { opacity: 0; transform: perspective(900px) rotateY(45deg) rotateX(4deg) scale(0.78); }
+  60% { opacity: 1; }
+  to { opacity: 1; transform: perspective(900px) rotateY(0deg) rotateX(0deg) scale(1); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lightbox img { animation: none; }
