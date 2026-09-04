@@ -768,22 +768,29 @@ html.no-intro .cine-intro { display: none; }
   color: var(--accent);
   filter: drop-shadow(0 1px 3px rgba(0,0,0,0.85));
   pointer-events: none; /* decorativo — quem recebe o clique é o botão inteiro por baixo */
-  animation: galleryExpandPulse 1.8s ease-in-out infinite;
 }
 .project-gallery-expand svg { width: 100%; height: 100%; display: block; }
 .project-gallery-item-view:hover .project-gallery-expand {
-  animation-play-state: paused;
-  transform: scale(1.15);
   color: #fff;
 }
-/* Pulsação leve e contínua, pra chamar atenção de que dá pra tocar (pedido do usuário em
-   04/09/2026 (2)) — some no hover porque aí já tá destacado do outro jeito. */
-@keyframes galleryExpandPulse {
-  0%, 100% { transform: scale(1) translate(0, 0); opacity: 0.85; }
-  50% { transform: scale(1.2) translate(2px, 2px); opacity: 1; }
+.project-gallery-item-view:hover .gallery-expand-arrow {
+  animation-play-state: paused;
+}
+/* Pedido do usuário em 04/09/2026 (5): em vez de as duas setas pulsarem juntas paradas no
+   lugar, cada ponta agora desliza um pouquinho na direção que ela mesma aponta — a de cima
+   pra cima, a de baixo pra baixo — reforçando a ideia de "abrindo/afastando". Cada seta já
+   nasce apontando pra cima (eixo -y) dentro do seu próprio grupo rotacionado, então a MESMA
+   animação (deslizar no eixo -y local) funciona pras duas, cada uma saindo na sua direção real
+   depois da rotação do grupo pai. */
+.gallery-expand-arrow {
+  animation: galleryArrowSlide 1.6s ease-in-out infinite;
+}
+@keyframes galleryArrowSlide {
+  0%, 100% { transform: translateY(0); opacity: 0.85; }
+  50% { transform: translateY(-1.2px); opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .project-gallery-expand { animation: none; }
+  .gallery-expand-arrow { animation: none; }
 }
 /* Botão de curtir por foto (pedido do usuário em 04/09/2026, igual ao do vídeo principal — ver
    .video-like-btn — só que menor, sobreposto no canto da própria foto). */
