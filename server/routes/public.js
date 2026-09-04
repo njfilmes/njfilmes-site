@@ -499,7 +499,11 @@ export async function postComment(req, res, slug, body) {
 
 function projectPage(req, res, project, settings, categories, navLinks) {
   const mainVideo = project.videos[0];
-  const otherPhotos = project.photos;
+  // Pedido do usuário em 03/09/2026: a foto marcada como "capa" do projeto (usada nos cards
+  // da Home/Portfólio) não deve aparecer de novo, duplicada, dentro da seção "Galeria" da
+  // própria página do projeto — só as outras fotos. Isso é só uma questão de exibição: a foto
+  // continua existindo normalmente e continua sendo a capa, só não repete ela aqui embaixo.
+  const otherPhotos = project.photos.filter((p) => !p.is_cover);
 
   const content = `
   <section class="project-hero">
