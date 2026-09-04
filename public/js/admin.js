@@ -338,9 +338,15 @@
   }
 
   // -------- Upload de foto única (biografia / serviço) --------
+  // O campo escondido que recebe a foto (em base64) sempre termina em "_data" no HTML (ver
+  // server/routes/admin.js) - antes disso o código pegava "o primeiro input escondido que
+  // aparecer", que funcionava só por coincidência de ordem (o campo "_data" sempre vem antes do
+  // "_existing" quando os dois existem). Corrigido em 04/09/2026 pra mirar pelo nome, não pela
+  // posição - assim uma futura reordenação dos campos no HTML não quebra silenciosamente o
+  // upload de foto.
   document.querySelectorAll('[data-single-upload]').forEach((wrapper) => {
     const input = wrapper.querySelector('input[type=file]');
-    const hidden = wrapper.querySelector('input[type=hidden]');
+    const hidden = wrapper.querySelector('input[type=hidden][name$="_data"]') || wrapper.querySelector('input[type=hidden]');
     const preview = wrapper.querySelector('img[data-preview]');
     if (!input) return;
     input.addEventListener('change', () => {

@@ -276,15 +276,28 @@
     // idêntica de antes, pra garantir que todo celular reconheça como um estado diferente de
     // verdade e dispare o popstate de forma confiável.
     var lightboxPushed = false;
+    // Acessibilidade por teclado (pedido interno, não do usuário, mas o role="dialog" já foi
+    // adicionado na marcação): guarda quem tinha o foco antes de abrir, pra devolver o foco pra
+    // lá ao fechar - sem isso, quem navega só pelo teclado "perde o lugar" na página depois de
+    // fechar a foto ampliada.
+    var focusBeforeOpen = null;
     var closeImmediate = function () {
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
+      if (focusBeforeOpen && typeof focusBeforeOpen.focus === 'function') {
+        focusBeforeOpen.focus();
+      }
+      focusBeforeOpen = null;
     };
     var open = function (index) {
       current = index;
       show();
+      focusBeforeOpen = document.activeElement;
       lightbox.classList.add('open');
       document.body.style.overflow = 'hidden';
+      // Move o foco pra dentro da caixa de diálogo assim que ela abre (no botão de fechar, o
+      // primeiro controle útil pra quem usa teclado/leitor de tela).
+      if (closeBtn) closeBtn.focus();
       try {
         history.pushState({ njLightbox: true }, '', location.pathname + location.search + '#foto');
         lightboxPushed = true;
@@ -323,6 +336,22 @@
       if (e.key === 'Escape') close();
       if (e.key === 'ArrowRight') next();
       if (e.key === 'ArrowLeft') prev();
+      // Prende o Tab dentro da foto ampliada enquanto ela estiver aberta - sem isso, quem
+      // navega só pelo teclado consegue sair da caixa e ir parar em links/botões do conteúdo
+      // que fica visualmente escondido atrás dela.
+      if (e.key === 'Tab') {
+        var focusable = [closeBtn, prevBtn, nextBtn].filter(function (el) { return el; });
+        if (!focusable.length) return;
+        var first = focusable[0];
+        var last = focusable[focusable.length - 1];
+        if (e.shiftKey && document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        } else if (!e.shiftKey && document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     });
 
     // Deslizar o dedo pros lados na foto ampliada troca pra próxima/anterior, igual redes
