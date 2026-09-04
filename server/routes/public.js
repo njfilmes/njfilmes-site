@@ -528,11 +528,13 @@ function projectPage(req, res, project, settings, categories, navLinks) {
 
   ${otherPhotos.length && !project.hide_gallery ? `<section class="${project.videos.length ? 'alt-bg' : ''}">
     <div class="container">
-      <h3 class="reveal">${escapeHtml(project.gallery_title || 'Galeria')}</h3>
-      <div class="gallery-grid" data-lightbox-source>
-        ${otherPhotos.map((p, i) => `<button type="button" class="reveal reveal-delay-${(i % 3) + 1}" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
-          <img src="${escapeHtml(p.thumb_filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
-        </button>`).join('')}
+      <h3 class="reveal text-center" style="text-align:center;">${escapeHtml(project.gallery_title || 'Galeria')}</h3>
+      <div class="bio-gallery reveal" data-drag-scroll>
+        <div class="bio-gallery-track" data-drag-scroll-track>
+          ${(otherPhotos.length > 1 ? [...otherPhotos, ...otherPhotos] : otherPhotos).map((p) => `<button type="button" class="bio-gallery-item" data-lightbox-trigger data-full="${escapeHtml(p.filename)}" data-caption="${escapeHtml(p.caption || project.title)}">
+            <img src="${escapeHtml(p.thumb_filename)}" alt="${escapeHtml(p.caption || project.title)}" loading="lazy">
+          </button>`).join('')}
+        </div>
       </div>
     </div>
   </section>` : ''}
