@@ -101,7 +101,7 @@ export async function homePage(req, res) {
   // sequencial) deixa a página bem mais rápida de montar, principalmente com o banco de dados
   // num serviço remoto (Neon), onde cada ida-e-volta tem uma latência de rede real. Otimizado em
   // 04/09/2026; nenhuma consulta nem o resultado final mudou, só a ordem em que rodam.
-  const [settings, categories, navLinks, featuredList, recentRaw, servicesRaw, brands, people, testimonials, heroGalleryPhotos] = await Promise.all([
+  const [settings, categories, navLinks, featuredList, recentRaw, servicesRaw, brands, people, testimonials, heroGalleryPhotos, bio] = await Promise.all([
     getSettings(),
     listCategoriesWithProjects(),
     listNavLinks(),
@@ -112,6 +112,7 @@ export async function homePage(req, res) {
     listPeople(),
     listTestimonials(),
     listHeroPhotos(),
+    getBio(),
   ]);
   const featured = featuredList[0];
   const featuredPreview = featured ? previewVideoData(featured) : null;
@@ -225,7 +226,12 @@ export async function homePage(req, res) {
 
   <section class="alt-bg">
     <div class="container about-split">
-      <img class="reveal" src="/img/about-placeholder.webp?v=${ASSET_VERSION}" alt="NJFILMES">
+      <!-- Usa a mesma "Foto de perfil" editável pelo painel (Biografia/Sobre) que já
+           alimenta o topo da página Sobre — antes essa foto daqui ficava sempre travada
+           na imagem de exemplo do código, sem ligação nenhuma com o painel. Corrigido em
+           04/09/2026: se ainda não tiver foto de perfil enviada, cai pra mesma imagem de
+           exemplo de sempre (mesmo padrão usado na página Sobre, ver aboutPhotoUrls). -->
+      <img class="reveal" src="${escapeHtml(bio.profile_photo || `/img/about-placeholder.webp?v=${ASSET_VERSION}`)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">
       <div class="reveal">
         <span class="eyebrow">A NJFILMES</span>
         <h2>Cinema, no seu momento mais importante</h2>
