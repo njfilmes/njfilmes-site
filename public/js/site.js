@@ -354,11 +354,27 @@
     var triggers = Array.from(document.querySelectorAll('[data-lightbox-trigger]'));
     var current = 0;
 
+    // Passar sozinho pra próxima foto depois de alguns segundos parado numa foto — pedido do
+    // usuário em 04/09/2026, pro caso da pessoa abrir e demorar pra reparar que dá pra navegar.
+    // Mesma ideia das faixas que rolam sozinhas (ver data-drag-scroll mais abaixo): reinicia a
+    // contagem toda vez que uma foto nova aparece (seja por essa troca automática, pelas setas,
+    // teclado, arrastar o mouse ou deslizar o dedo) e some por completo ao fechar a foto ampliada.
+    var LIGHTBOX_AUTO_ADVANCE_MS = 5000;
+    var autoAdvanceTimer = null;
+    var clearAutoAdvance = function () {
+      if (autoAdvanceTimer) { clearTimeout(autoAdvanceTimer); autoAdvanceTimer = null; }
+    };
+    var scheduleAutoAdvance = function () {
+      clearAutoAdvance();
+      if (triggers.length < 2) return; // só uma foto: não tem pra onde avançar
+      autoAdvanceTimer = setTimeout(function () { next(); }, LIGHTBOX_AUTO_ADVANCE_MS);
+    };
     var show = function () {
       var full = triggers[current].dataset.full || triggers[current].querySelector('img').src;
       imgEl.src = full;
       imgEl.alt = triggers[current].dataset.caption || '';
       if (counterEl) counterEl.textContent = (current + 1) + ' / ' + triggers.length;
+      scheduleAutoAdvance();
     };
     // Pedido em 03/09/2026: no celular, apertar o botão "voltar" do aparelho com a foto
     // ampliada aberta saía da página inteira (ou voltava pra tela anterior do site) em vez de
@@ -378,6 +394,7 @@
     // fechar a foto ampliada.
     var focusBeforeOpen = null;
     var closeImmediate = function () {
+      clearAutoAdvance();
       lightbox.classList.remove('open');
       document.body.style.overflow = '';
       if (focusBeforeOpen && typeof focusBeforeOpen.focus === 'function') {
@@ -470,6 +487,45 @@
         if (dx < 0) next(); else prev();
       }
     }, { passive: true });
+
+    // No PC, arrastar o mouse na foto ampliada também troca pra próxima/anterior (pedido do
+    // usuário em 04/09/2026), sem precisar mirar nas setas pequenas dos cantos — mesmo limiar e
+    // lógica do deslizar por toque acima. Só liga em quem tem mouse de verdade (mesmo teste já
+    // usado no tilt de cards mais abaixo) pra não brigar com o toque no celular, que já tem seu
+    // próprio gesto de deslizar. Enquanto o mouse estiver sobre a foto, a troca automática por
+    // inatividade (acima) fica pausada — reparar numa foto com calma não deve ser interrompido.
+    if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+      var mouseStartX = null;
+      var mouseStartY = null;
+      var mouseDragged = false;
+      lightbox.addEventListener('mousedown', function (e) {
+        if (e.button !== 0 || e.target === closeBtn || e.target === prevBtn || e.target === nextBtn) return;
+        mouseStartX = e.clientX;
+        mouseStartY = e.clientY;
+        mouseDragged = false;
+      });
+      window.addEventListener('mousemove', function (e) {
+        if (mouseStartX === null) return;
+        if (Math.abs(e.clientX - mouseStartX) > 6 || Math.abs(e.clientY - mouseStartY) > 6) mouseDragged = true;
+      });
+      window.addEventListener('mouseup', function (e) {
+        if (mouseStartX === null) return;
+        var dx = e.clientX - mouseStartX;
+        var dy = e.clientY - mouseStartY;
+        mouseStartX = null;
+        mouseStartY = null;
+        if (mouseDragged && Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          if (dx < 0) next(); else prev();
+        }
+      });
+      // Só suprime o clique (que fecharia a foto, clicando fora dela) quando teve arrasto de
+      // verdade — mesmo truque já usado nas faixas que rolam sozinhas mais abaixo.
+      lightbox.addEventListener('click', function (e) {
+        if (mouseDragged) { mouseDragged = false; e.stopPropagation(); }
+      }, true);
+      imgEl.addEventListener('mouseenter', clearAutoAdvance);
+      imgEl.addEventListener('mouseleave', scheduleAutoAdvance);
+    }
   }
 
   // Faixas horizontais que rolam sozinhas mas podem ser arrastadas (Bastidores, Clientes,
