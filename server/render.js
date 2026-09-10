@@ -183,8 +183,12 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
 <!-- 10/09/2026: Outfit adicionada só pro título do hero (cantos mais arredondados/mais bonita,
      pedido do usuário) - as outras fontes do site continuam as mesmas de sempre.
      Pedido em seguida: peso 400 (normal, sem bold) adicionado à importação - o titulo
-     usava só 800 (bem pesado) antes. -->
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+     usava só 800 (bem pesado) antes.
+     Pedido em seguida: trocar pra fonte "Impact" em bold. Impact é uma fonte do sistema
+     (vem instalada no Windows/Mac), não existe no Google Fonts - então adicionamos "Anton",
+     que é a fonte mais parecida com Impact disponível no Google Fonts, como alternativa pra
+     quando o aparelho da pessoa (ex: celular Android) não tiver a Impact instalada. -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
