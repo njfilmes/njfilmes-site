@@ -374,13 +374,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    esse acabamento mais suave/arredondado nas letras mantendo o peso bem forte (800) que o
    titulo já tinha. Fonte importada la no <head> (server/render.js), junto com as outras do site. */
 .hero-content h1 {
-  /* Pedido em seguida (10/09/2026): trocar a fonte do titulo pra Impact em bold. Impact é
+  /* Pedido em seguida (10/09/2026): trocar a fonte do titulo pra Impact. Impact é
      fonte do sistema (não existe no Google Fonts) - então ela é usada quando o aparelho já
      tem ela instalada (comum em Windows/Mac), e "Anton" (importada la no <head>, mesmo
      "espirito" de fonte super grossa/condensada) entra como alternativa em aparelhos que não
-     tem a Impact (ex: a maioria dos celulares Android). */
+     tem a Impact (ex: a maioria dos celulares Android).
+     Pedido em seguida: sem bold - peso normal (400) em vez de bold/700. */
   font-family: 'Impact', 'Anton', var(--font-body);
-  font-weight: bold;
+  font-weight: 400;
   /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo).
      Pedido em seguida (10/09/2026): tinha virado um contorno bem marcado (4 sombras 1px
      solidas + text-stroke) - pedido pra tirar o contorno e deixar so uma sombra suave/sutil
