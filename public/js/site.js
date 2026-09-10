@@ -257,7 +257,11 @@
       if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
     });
 
-    // Arrastar o menu pro lado ou pra cima fecha, igual a maioria dos apps
+    // Arrastar o menu pra qualquer lado ou pra cima fecha, igual a maioria dos apps.
+    // Pedido em 10/09/2026: além de fechar arrastando, também abrir arrastando - puxando
+    // da borda direita da tela pra esquerda (de onde o menu "mora" quando fechado, ele
+    // desliza de lá pra dentro). Esse gesto de abrir escuta a tela toda (document), não só
+    // o próprio menu, porque quando fechado o menu fica fora da tela e não recebe toques.
     var touchStartX = 0;
     var touchStartY = 0;
     nav.addEventListener('touchstart', function (e) {
@@ -267,7 +271,29 @@
     nav.addEventListener('touchend', function (e) {
       var dx = e.changedTouches[0].clientX - touchStartX;
       var dy = e.changedTouches[0].clientY - touchStartY;
-      if (dx > 50 || dy < -50) closeNav();
+      if (Math.abs(dx) > 50 || dy < -50) closeNav();
+    }, { passive: true });
+
+    var edgeStartX = 0;
+    var edgeStartY = 0;
+    var edgeTracking = false;
+    document.addEventListener('touchstart', function (e) {
+      if (nav.classList.contains('open')) return;
+      var x = e.touches[0].clientX;
+      // só arma o gesto se o toque começar bem na borda direita da tela (últimos 24px)
+      if (x >= window.innerWidth - 24) {
+        edgeStartX = x;
+        edgeStartY = e.touches[0].clientY;
+        edgeTracking = true;
+      }
+    }, { passive: true });
+    document.addEventListener('touchend', function (e) {
+      if (!edgeTracking) return;
+      edgeTracking = false;
+      var dx = e.changedTouches[0].clientX - edgeStartX;
+      var dy = e.changedTouches[0].clientY - edgeStartY;
+      // arrastou pra esquerda (dx bem negativo) e não foi principalmente um scroll vertical
+      if (dx < -50 && Math.abs(dy) < Math.abs(dx)) openNav();
     }, { passive: true });
 
     // Em telas pequenas, o submenu de categorias abre/fecha ao tocar no link "Portfólio"
