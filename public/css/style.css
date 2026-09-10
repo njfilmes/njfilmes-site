@@ -167,6 +167,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    navegador) nao recebe nenhuma dessas animacoes novas - mesmo padrao ja
    usado no site para as outras animacoes (mais abaixo no arquivo). */
 @media (prefers-reduced-motion: reduce) {
+  .js .hero-content h1,
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
   .js .hero-content h1 .hero-punct,
@@ -405,6 +406,26 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   letter-spacing: -0.01em;
 }
 .hero-content h1 { font-size: clamp(3.4rem, 7.29vw, 6.885rem); }
+/* Pedido em seguida (10/09/2026): um efeito de "perdendo sinal" (tipo TV/tempestade, saindo do ar
+   e voltando) na frase inteira do título - de vez em quando, bem rápido, pisca e fica com aquele
+   tom acinzentado/estático por uma fração de segundo, depois volta ao normal. Aplicado no h1
+   inteiro (pai de todas as palavras, que já têm suas próprias animações) - aqui só mexemos em
+   opacity/filter/translateX do h1, então tudo dentro (papel, ideia, a interrogação, cada um com
+   sua própria animação) continua rodando por baixo sem conflito, e apaga/volta junto.
+   De propósito: o "corte" acontece só uma vez a cada ciclo (12s) e dura bem menos de 1 segundo -
+   o resto do tempo (mais de 11s) fica tudo normal, então parece um "soluço" ocasional, não um
+   piscar constante. Também de propósito, a opacidade nunca cai abaixo de ~40% (nunca fica
+   preto/branco chapado) e os cortes ficam espaçados (não vira um estroboscópio) - mais seguro pra
+   quem tem sensibilidade a luz piscando. filter: grayscale+contrast simula "estática" de TV sem
+   sinal; um dos cortes usa hue-rotate pra dar uma variação de cor, tipo interferência mesmo. */
+.js .hero-content h1 { animation: heroSignalGlitch 12s ease-in-out infinite; }
+@keyframes heroSignalGlitch {
+  0%, 79%, 100% { opacity: 1; filter: none; transform: translateX(0); }
+  79.5% { opacity: 0.45; filter: grayscale(1) contrast(1.4) brightness(1.25); transform: translateX(-3px); }
+  80.5% { opacity: 0.92; filter: none; transform: translateX(1px); }
+  82% { opacity: 0.4; filter: grayscale(1) hue-rotate(180deg) brightness(0.75); transform: translateX(3px); }
+  83% { opacity: 1; filter: none; transform: translateX(0); }
+}
 /* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
    resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
    (rotateY - o perspective() direto no transform dá a profundidade só nela, sem precisar mexer
