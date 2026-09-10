@@ -398,10 +398,23 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    flutuar/escala que já existia (heroAccentFloat) intactos, no mesmo ciclo de 4s. Criado um
    keyframe separado (em vez de editar heroAccentFloat direto) porque esse keyframe também é
    usado em outro lugar do site (.stat b, mais abaixo) que não deve ganhar a troca de cor. */
-.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroPapelColorFloat 4s ease-in-out infinite; }
+/* Ajustado em 10/09/2026: "ainda n ta fluido tenta ver isso tambem" - mesmo depois de sincronizar
+   os ciclos e aumentar o ângulo, o movimento (aqui + heroPunctSwing logo abaixo) ainda passava uma
+   sensação de "pausa e depois um salto" no pico/nas pontas do ciclo em vez de fluir direto. O motivo:
+   só existiam 2 estados (0%/50%/100%), então o navegador tinha que interpolar sozinho o "caminho"
+   inteiro entre virar pra um lado e virar pro outro, com um ease-in-out - isso faz o giro
+   desacelerar até quase parar bem no meio do trajeto (a transição de cor junto). Adicionados dois
+   pontos intermediários (25%/75%, exatamente no meio do trajeto entre as pontas, cor no meio do
+   caminho entre branco e dourado) e trocado o timing pra linear - com mais pontos descrevendo a
+   curva, o linear entre eles reproduz um movimento tipo onda contínua, sem a desaceleração dupla
+   que um único ease-in-out entre só 2 pontos causava. Os valores de cor nos novos pontos (25%/75%)
+   são os MESMOS nos dois keyframes (aqui e heroPunctSwing), pra manter a troca de cor sincronizada
+   entre "papel" e a interrogação. */
+.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroPapelColorFloat 4s linear infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
 @keyframes heroPapelColorFloat {
   0%, 100% { transform: translateY(0) scale(1); color: #fff; }
+  25%, 75% { transform: translateY(-7px) scale(1.04); color: rgb(228, 209, 147); }
   50% { transform: translateY(-10px) scale(1.06); color: var(--accent); }
 }
 
@@ -468,10 +481,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    curto pertinho do "papel" (sobra espaço em branco ao lado dela no título) - aumentado o ângulo
    (rotate de 7deg pra 10deg, rotateY de 22deg pra 32deg) pra ela girar mais pra frente/aproveitar
    melhor esse espaço, ficando um movimento mais evidente e fluido em vez de um balanço curtinho. */
+/* Ajustado em 10/09/2026 (ver comentário completo no heroPapelColorFloat, acima): mesmo ajuste de
+   fluidez aqui - dois pontos novos no meio do trajeto (25%/75%, ângulo neutro/zerado, cor no meio
+   do caminho entre branco e dourado, IGUAL ao heroPapelColorFloat pra manter a sincronia) e timing
+   trocado de ease-in-out pra linear, pra o giro correr contínuo em vez de desacelerar/"pausar" no
+   meio do balanço. */
 .hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
-.js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s ease-in-out infinite; }
+.js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s linear infinite; }
 @keyframes heroPunctSwing {
   0%, 100% { transform: perspective(300px) rotate(-10deg) rotateY(-32deg); color: #fff; }
+  25%, 75% { transform: perspective(300px) rotate(0deg) rotateY(0deg); color: rgb(228, 209, 147); }
   50% { transform: perspective(300px) rotate(10deg) rotateY(32deg); color: var(--accent); }
 }
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
