@@ -103,9 +103,11 @@ h1, h2, h3, h4 {
    pro gosto do usuario - tamanhos reduzidos aqui (e na versao mobile, mais abaixo no arquivo)
    pra compensar. So os titulos "genericos" (secoes das paginas) - o titulo do hero da Home
    tem seu proprio tamanho a parte (nao mexido). */
-h1 { font-size: clamp(2.8rem, 9vw, 8rem); line-height: 0.92; letter-spacing: -0.01em; }
-h2 { font-size: clamp(2rem, 5.5vw, 4.4rem); line-height: 0.96; }
-h3 { font-size: clamp(1.25rem, 2.6vw, 1.85rem); }
+/* Pedido em seguida (10/09/2026): reduzido de novo - primeira redução ainda ficou grande
+   demais (reparado no nome "Noberto Junior" da pagina Sobre, que e um h1 generico). */
+h1 { font-size: clamp(2.4rem, 7.5vw, 6.8rem); line-height: 0.92; letter-spacing: -0.01em; }
+h2 { font-size: clamp(1.7rem, 4.6vw, 3.7rem); line-height: 0.96; }
+h3 { font-size: clamp(1.15rem, 2.3vw, 1.6rem); }
 p { margin: 0 0 1em; color: var(--fg-muted); }
 .eyebrow {
   font-family: var(--font-body);
@@ -735,8 +737,14 @@ html.no-intro .cine-intro { display: none; }
 
 /* ---------- Sobre / bio ---------- */
 .about-split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 72px; align-items: center; }
+/* Pedido em 10/09/2026: o nome ("Noberto Junior (NJ)") tava grande demais no celular -
+   esse titulo eh soh um nome de pessoa, nao precisa do tamanho "hero" - tamanho proprio,
+   menor que o h1 generico, direto na versao mobile (abaixo de 720px). */
+@media (max-width: 720px) {
+  .about-split h1 { font-size: clamp(1.6rem, 7.5vw, 2.1rem); }
+}
 @media (min-width: 981px) {
-  .about-split h1 { font-size: 6rem; }
+  .about-split h1 { font-size: 5rem; }
 }
 .about-split img { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(15%); }
 .about-split .quote { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 2.1rem); text-transform: none; color: var(--fg); border-left: 2px solid var(--accent); padding-left: 24px; margin: 24px 0; }
@@ -1641,9 +1649,11 @@ html.no-intro .cine-intro { display: none; }
   /* Pedido em 10/09/2026: mesmo motivo do ajuste acima (fonte Poppins mais "cheia" que a
      Bebas Neue de antes) - reduzido tambem aqui, na versao mobile, que é onde ficava mais
      pesado ainda (a tela é menor, entao os vw% pesam mais). */
-  h1 { font-size: clamp(2rem, 10vw, 2.8rem); letter-spacing: -0.005em; }
-  h2 { font-size: clamp(1.5rem, 6.5vw, 2.15rem); }
-  h3 { font-size: clamp(1.05rem, 4.2vw, 1.5rem); }
+  /* Pedido em seguida (10/09/2026): reduzido de novo - primeira redução ainda ficou grande
+     no celular (reparado no nome "Noberto Junior" da pagina Sobre). */
+  h1 { font-size: clamp(1.7rem, 8.5vw, 2.35rem); letter-spacing: -0.005em; }
+  h2 { font-size: clamp(1.3rem, 5.5vw, 1.85rem); }
+  h3 { font-size: clamp(0.95rem, 3.6vw, 1.3rem); }
 }
 
 @media (max-width: 720px) {
