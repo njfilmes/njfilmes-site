@@ -383,7 +383,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .hero-content h1 .text-accent {
   text-shadow:
     0 1px 0 rgba(255, 240, 200, 0.4),
-    0 2px 3px rgba(0, 0, 0, 0.55);
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    /* Pedido em seguida (10/09/2026): um contorno leve na palavra ("papel") pra ela se
+       destacar melhor de qualquer fundo/brilho atras. Feito com varias sombras bem
+       pertinho (1px em cada direcao) em vez de so -webkit-text-stroke, que existe so
+       no Chrome/Safari - assim funciona em qualquer navegador/celular. */
+    -1px -1px 0 rgba(20, 13, 3, 0.45),
+    1px -1px 0 rgba(20, 13, 3, 0.45),
+    -1px 1px 0 rgba(20, 13, 3, 0.45),
+    1px 1px 0 rgba(20, 13, 3, 0.45);
+  -webkit-text-stroke: 0.4px rgba(20, 13, 3, 0.4);
 }
 
 /* Luz dourada pulsando por trás da última palavra do título (ex: "papel") - pedida pelo usuário.
