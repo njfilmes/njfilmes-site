@@ -188,7 +188,8 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .nav-link-text,
   .js .nav-glow-1,
   .js .nav-glow-2,
-  .js .nav-menu-label {
+  .js .nav-menu-label,
+  .js .work-card .photo-hint {
     animation: none;
   }
 }
@@ -773,32 +774,37 @@ section { padding: 110px 0; position: relative; }
    translúcido + blur) e brilho pulsante, só que em forma de texto - pra não deixar a prévia
    rodando sozinha parecendo que é só um vídeo de fundo sem nada pra clicar. Só existe nos cards
    que têm prévia (ver previewHintHtml() em routes/public.js); os demais continuam só com o selo
-   de play de sempre. */
+   de play de sempre.
+   Reduzido em 10/09/2026 (4 screenshots de "ENSAIO DE VERÃO"): "sinaliza pra pessoa ver o video
+   mais algo menor e mais discreto" - a pílula tava grande demais/chamando atenção demais em cima
+   do próprio vídeo já tocando. Encolhida (padding, fonte e ícone menores, borda mais fina) e o
+   texto encurtado de "Ver projeto completo" pra "Ver vídeo" (ver previewHintHtml() em
+   routes/public.js) - mantém o aviso, só que bem mais discreto. */
 .work-card .preview-hint {
   position: absolute;
   top: 50%; left: 50%;
-  transform: translate(-50%, -50%) translateY(10px);
+  transform: translate(-50%, -50%) translateY(8px);
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 18px;
+  gap: 5px;
+  padding: 6px 12px;
   border-radius: 999px;
   background: rgba(18,16,10,0.55);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
-  border: 1.5px solid var(--accent);
+  border: 1.25px solid var(--accent);
   color: var(--accent);
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.07em;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   z-index: 2;
   transition: opacity 0.45s ease, transform 0.45s ease, background 0.35s ease, color 0.35s ease;
 }
-.work-card .preview-hint svg { flex-shrink: 0; transition: transform 0.35s var(--ease); }
+.work-card .preview-hint svg { flex-shrink: 0; width: 9px; height: 9px; transition: transform 0.35s var(--ease); }
 .work-card.is-previewing .preview-hint {
   opacity: 1;
   transform: translate(-50%, -50%) translateY(0);
@@ -812,7 +818,48 @@ section { padding: 110px 0; position: relative; }
 .work-card:hover .preview-hint svg { transform: translateX(3px); }
 @keyframes previewHintPulse {
   0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(201,162,39,0.45); }
-  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 10px rgba(201,162,39,0); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 8px rgba(201,162,39,0); }
+}
+/* Pedido em seguida (mesma data, mesmos screenshots): "o da foto sinalize tambem com algo mais
+   discreto pra pessoa abrir a imagem" - cards que só têm foto (sem nenhum vídeo) não tinham NENHUM
+   sinal de que dá pra clicar (só a foto + o overlay com o título no fundo). Criado um selo novo
+   (.photo-hint), pequeno e discreto, num cantinho do card (inferior direito, longe do título que
+   já fica no canto inferior esquerdo/centro via .overlay) com um ícone de "expandir" (setinhas pros
+   4 cantos), na cor dourada da marca (--accent) - igual em espírito ao selo de play redondo dos
+   cards com vídeo (mesmo "vidro" translúcido + brilho pulsante), só que bem menor e num canto em
+   vez de centralizado, já que aqui a ação é só "abrir a foto", não "assistir" (não precisa do
+   mesmo destaque). Fica sempre visível (igual o selo de play) em vez de só no hover, pra não
+   desaparecer no celular (que não tem hover) - ver previewHintHtml()/o novo photoHintHtml() em
+   routes/public.js, chamado só quando o projeto não tem nenhum vídeo. */
+.work-card .photo-hint {
+  position: absolute;
+  right: 16px; bottom: 16px;
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18,16,10,0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 1.25px solid var(--accent);
+  color: var(--accent);
+  opacity: 0.9;
+  z-index: 2;
+  transition: transform 0.35s var(--ease), background 0.35s var(--ease), color 0.35s var(--ease), opacity 0.35s ease;
+  animation: photoHintPulse 2.6s ease-in-out infinite;
+}
+.work-card .photo-hint svg { width: 15px; height: 15px; }
+.work-card:hover .photo-hint {
+  opacity: 1;
+  transform: scale(1.12);
+  background: var(--accent);
+  color: #12100a;
+  animation-play-state: paused;
+}
+@keyframes photoHintPulse {
+  0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 0 rgba(201,162,39,0.4); }
+  50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 9px rgba(201,162,39,0); }
 }
 
 .work-cursor {
