@@ -334,6 +334,8 @@ async function router(req, res) {
     if (pathname === '/admin/bio/galeria/upload' && method === 'POST') return Admin.bioGalleryPhotosUpload(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/bio\/galeria\/(\d+)\/excluir$/)) && method === 'POST') return Admin.bioGalleryPhotoDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/bio\/galeria\/(\d+)\/mover$/)) && method === 'POST') return Admin.bioGalleryPhotoMove(req, res, await parseBody(req), Number(m[1]));
+    if (pathname === '/admin/bio/videos/criar' && method === 'POST') return Admin.bioVideoCreate(req, res, await parseBody(req));
+    if ((m = pathname.match(/^\/admin\/bio\/videos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.bioVideoDelete(req, res, Number(m[1]));
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
     // Limite de corpo maior só aqui (rota só acessível já logado, ver o redirecionamento pra

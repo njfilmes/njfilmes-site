@@ -213,8 +213,7 @@ export async function initSchema() {
                                                       profile_photo TEXT DEFAULT '',
                                                             cta_text TEXT DEFAULT 'Vamos criar algo juntos?',
                                                                   gallery_title TEXT DEFAULT 'No set com a NJFILMES',
-                                                                        trajectory_title TEXT DEFAULT 'Uma jornada pela imagem',
-                                                                              bio_video_url TEXT DEFAULT ''
+                                                                        trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'
                                                                 );
                                                                   `);
 
@@ -360,6 +359,21 @@ export async function initSchema() {
                               created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
                                   );
                                     `);
+
+  // Vídeos da página Sobre (YouTube, Vimeo, Mega, Google Drive ou link direto), além das fotos -
+  // pedido do usuário em 10/09/2026 pra poder colocar vários vídeos junto com a foto, mesmo
+  // padrão de project_videos (ver server/routes/admin.js e public.js, aboutPage). Como a bio é
+  // única (id fixo = 1, tabela "bio"), não precisa de coluna de referência tipo project_id.
+  await query(`
+      CREATE TABLE IF NOT EXISTS bio_videos (
+            id SERIAL PRIMARY KEY,
+                  provider TEXT NOT NULL,
+                        video_id TEXT DEFAULT '',
+                              url TEXT NOT NULL,
+                                    title TEXT DEFAULT '',
+                                          sort_order INTEGER NOT NULL DEFAULT 0
+                                              );
+                                                `);
 
   // Fotos de destaque da Home que ficam passando (crossfade) na primeira tela do site, além da
   // foto única de sempre (settings.hero_photo) — pedido do usuário em 03/09/2026 pra poder
@@ -524,12 +538,10 @@ export async function initSchema() {
     if (!bioCols.includes('trajectory_title')) {
           await query("ALTER TABLE bio ADD COLUMN trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'");
     }
-    // 10/09/2026: opção de colocar um vídeo (YouTube ou link parecido) no lugar da foto de
-    // perfil na página Sobre, pra quem quiser não ficar só na foto - pedido do usuário. Vazio
-    // continua mostrando as fotos normalmente (ver server/routes/public.js, aboutPage).
-    if (!bioCols.includes('bio_video_url')) {
-          await query("ALTER TABLE bio ADD COLUMN bio_video_url TEXT DEFAULT ''");
-    }
+    // Observação: uma tentativa anterior (mesma data) tinha adicionado uma coluna bio_video_url
+    // pra um único vídeo. Foi substituída pela tabela bio_videos acima (vários vídeos, mesmo
+    // padrão de project_videos) antes de o usuário chegar a usar o campo - se a coluna
+    // bio_video_url ainda existir num banco antigo, ela fica simplesmente sem uso, sem problema.
 
   // 04/09/2026: guarda a largura/altura real de cada foto enviada (em pixels), capturada no
   // momento do upload pelo sharp. Serve pra galeria rolante do projeto poder reservar o espaço

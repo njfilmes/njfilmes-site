@@ -23,7 +23,7 @@ const SETTINGS_COLUMNS = new Set([
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',
-  'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title', 'bio_video_url',
+  'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title',
 ]);
 
 export async function updateSettings(fields) {
@@ -86,6 +86,21 @@ export async function addBioGalleryPhoto(filename) {
 }
 export async function deleteBioGalleryPhoto(id) {
   await query('DELETE FROM bio_gallery_photos WHERE id = $1', [id]);
+}
+
+// ---------- Vídeos da página Sobre (YouTube/Vimeo/etc, além das fotos - pedido em 10/09/2026) ----------
+export async function listBioVideos() {
+  return queryRows('SELECT * FROM bio_videos ORDER BY sort_order ASC, id ASC');
+}
+export async function addBioVideo({ provider, video_id, url, title, sort_order = 0 }) {
+  const row = await queryOne(
+    'INSERT INTO bio_videos (provider, video_id, url, title, sort_order) VALUES ($1, $2, $3, $4, $5) RETURNING id',
+    [provider, video_id || '', url, title || '', sort_order]
+  );
+  return row.id;
+}
+export async function deleteBioVideo(id) {
+  await query('DELETE FROM bio_videos WHERE id = $1', [id]);
 }
 
 // ---------- Fotos de destaque da Home (crossfade na primeira tela, além da foto única) ----------
