@@ -391,8 +391,19 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    pra 10px (era 6px) só nessa versão com scale, pra o movimento voltar a ficar bem visível mesmo
    com o crescimento acontecendo junto - o respiro de espaço já existe por causa do margin-top
    acima, então não volta a bater na linha de cima. */
-.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroAccentFloat 4s ease-in-out infinite; }
+/* Pedido em seguida (10/09/2026): "bota o nome papel mudando de cor igual a virgula na mesma
+   forma" - a palavra "papel" (.text-accent) ganha a mesma troca de cor branco/dourado que a
+   interrogação (heroPunctSwing) já usa, com os MESMOS valores de cor (branco #fff <-> dourado
+   var(--accent)) - só a cor entra num keyframe novo (heroPapelColorFloat), mantendo o
+   flutuar/escala que já existia (heroAccentFloat) intactos, no mesmo ciclo de 4s. Criado um
+   keyframe separado (em vez de editar heroAccentFloat direto) porque esse keyframe também é
+   usado em outro lugar do site (.stat b, mais abaixo) que não deve ganhar a troca de cor. */
+.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroPapelColorFloat 4s ease-in-out infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
+@keyframes heroPapelColorFloat {
+  0%, 100% { transform: translateY(0) scale(1); color: #fff; }
+  50% { transform: translateY(-10px) scale(1.06); color: var(--accent); }
+}
 
 /* Pedido em 10/09/2026: animação também na parte branca do título do hero ("Vamos tirar sua
    ideia do"), tipo um "zoom" - um pulso bem sutil de escala, pra combinar com a palavra
