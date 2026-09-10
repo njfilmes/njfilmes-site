@@ -257,7 +257,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   gap: 5px;
   background: none; border: none; padding: 8px;
 }
-.nav-toggle span { width: 26px; height: 2px; background: var(--fg); transition: transform 0.3s var(--ease), opacity 0.3s var(--ease); }
+.nav-toggle span { width: 26px; height: 2px; background: var(--fg); transition: transform 0.3s var(--ease), opacity 0.3s var(--ease), background 0.3s var(--ease); }
+/* Pedido em 10/09/2026: o icone (as 3 tracinhos) virava um X ao clicar, mas continuava na mesma
+   cor de sempre - nao dava nenhum sinal visual de "aberto" alem do formato. Agora, quando o menu
+   esta aberto, o X fica dourado (--accent), igual o resto dos destaques do site. */
+.nav-toggle[aria-expanded="true"] span { background: var(--accent); }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
@@ -331,8 +335,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    sempre, sem mudar a marca inteira). */
 .hero-content .eyebrow { color: #f6c445; }
 .hero-content h1 .text-accent { color: #f6c445; }
-.js .hero-content h1 .text-accent { display: inline-block; animation: heroAccentFloat 4s ease-in-out infinite; }
-@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+/* 10/09/2026: a palavra flutuando (+ o brilho atrás dela) tava "batendo"/encostando na linha de
+   texto de cima quando subia - pedido pra dar um respiro. Empurra a palavra um pouco pra baixo
+   (margin-top) e desce o pico da animação (só sobe 6px agora, em vez de 10px) pra sobrar mais
+   espaço entre ela e a linha acima. */
+.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroAccentFloat 4s ease-in-out infinite; }
+@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
 .hero-content h1 {
   font-family: 'Hanken Grotesk', var(--font-body);
   font-weight: 800;
@@ -368,7 +376,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .hero-content h1 .text-accent::before {
   content: '';
   position: absolute;
-  inset: -18% -8%;
+  /* Assimétrico de propósito: bem menos brilho subindo (pra não encostar na linha de cima) e um
+     pouco mais descendo/nas laterais, já que agora a palavra tem margin-top pra separar. */
+  inset: -8% -8% -20% -8%;
   z-index: -1;
   border-radius: 50%;
   background: radial-gradient(ellipse at center, rgba(255, 219, 120, 0.4) 0%, rgba(246, 196, 69, 0.18) 45%, rgba(246, 196, 69, 0) 70%);
@@ -1020,9 +1030,9 @@ html.no-intro .cine-intro { display: none; }
    minimalista, amadeirado", com a mesma cor de fundo do site em vez das cores das marcas.
    Os dois passaram a usar o mesmo fundo (gradiente marrom escuro, tom de madeira) e o mesmo
    dourado (--accent) no ícone.
-   Pedido em 04/09/2026: voltar o ícone do WhatsApp a ser colorido (verde oficial da marca,
-   reconhecível de longe) — o Instagram continua no dourado/amadeirado de antes, só o
-   WhatsApp mudou. */
+   Pedido em 04/09/2026: voltar o ícone do WhatsApp a ser colorido (verde oficial da marca).
+   Pedido em 10/09/2026: voltar atrás de novo - o WhatsApp volta a ficar discreto, igual o
+   Instagram (mesmo fundo amadeirado, mesmo dourado no ícone, sem pulsar). */
 .instagram-float {
   background: linear-gradient(155deg, #3a2a18, #17110a);
   border: 1px solid rgba(201,162,39,0.3);
@@ -1035,19 +1045,17 @@ html.no-intro .cine-intro { display: none; }
 }
 .instagram-float:hover { transform: scale(0.98); }
 .whatsapp-float {
-  background: linear-gradient(155deg, #25D366, #128C7E);
-  border: 1px solid rgba(37,211,102,0.5);
-  color: #fff;
+  background: linear-gradient(155deg, #3a2a18, #17110a);
+  border: 1px solid rgba(201,162,39,0.3);
+  color: var(--accent);
   position: fixed; bottom: 20px; right: 24px; z-index: 600;
   width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  animation: waPulse 2.6s ease-in-out infinite;
   transition: transform 0.3s var(--ease);
 }
 .whatsapp-float svg { width: 24px; height: 24px; }
 .whatsapp-float:hover { transform: scale(0.98); }
-@keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(37,211,102,0.25);} 50% { box-shadow: 0 8px 30px rgba(37,211,102,0.55);} }
 
 /* ---------- Lightbox ---------- */
 .lightbox {
