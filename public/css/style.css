@@ -170,6 +170,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
   .js .hero-content h1 .hero-punct,
+  .js .hero-content h1 .hero-highlight-word,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -418,6 +419,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
   50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
 }
+/* Pedido em seguida (10/09/2026): a palavra "ideia" (dentro da parte branca do título) ganhar
+   esse mesmo balanço em 3D + troca de cor branco/dourado - reaproveita a mesma animação
+   (heroPunctSwing) já usada na interrogação de "papel?", só sem o margin-left (que era só pra
+   colar a pontuação na palavra anterior; aqui "ideia" já é uma palavra normal, separada por
+   espaço no texto). Span (.hero-highlight-word) vem do server (highlightWord() em
+   routes/public.js), que marca a palavra "ideia" onde ela aparecer no título editável. */
+.hero-content h1 .hero-highlight-word { display: inline-block; transform-origin: 50% 85%; }
+.js .hero-content h1 .hero-highlight-word { animation: heroPunctSwing 3.6s ease-in-out infinite; }
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 
 /* 10/09/2026: pedido pra deixar a fonte do titulo do hero com cantos mais arredondados/mais
