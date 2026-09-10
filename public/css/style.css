@@ -483,14 +483,18 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    depois esclarecido: não era pra ser um ÍCONE de raio (o que tinha ficado antes, tipo emoji ⚡),
    e sim um "vestígio" de raio elétrico de verdade - tipo um rasgo/rachadura em zigue-zague azul,
    cruzando por cima de onde estão as letras (não um desenho pequeno num canto).
-   Trocado por 2 "rachaduras" (path em zigue-zague irregular, sem repetir o mesmo ângulo toda hora
-   como um ícone simétrico faria) cruzando a largura do título - uma na altura das duas primeiras
-   linhas, outra na altura de "papel?" - cada uma desenhada 2x no mesmo SVG (um traço azul mais
-   grosso e desfocado por baixo, simulando o brilho elétrico ao redor, e um traço branco fino por
-   cima, o "núcleo" bem quente/claro do raio - é assim que raio de verdade normalmente aparece em
-   fotos: um núcleo branco com uma auréola azulada). Continua atrás das letras (z-index -1,
-   pointer-events: none) e piscando só junto com os clarões (mesmo ciclo de 5s de heroStormFlash,
-   camada própria pra controlar a opacidade separada do brilho). */
+   Ajustado de novo em seguida: mandou uma foto de referência de raio de verdade (bem ramificado,
+   um "tronco" principal com vários galhos saindo em ângulos diferentes, tipo árvore/fractal) e
+   pediu pra ficar "mais realista" - o path anterior (só 2 zigue-zagues simples, sem ramificação)
+   trocado por UM raio só, mas desenhado com um tronco principal (de cima pra baixo, cruzando as
+   3 linhas do título) mais 9 galhos menores saindo dele em pontos e ângulos diferentes (mistura de
+   galhos curtos e longos, pra esquerda e pra direita), bem mais parecido com a referência.
+   Desenhado 2x no mesmo SVG (um traço azul mais grosso e desfocado por baixo, simulando o brilho
+   elétrico ao redor, e um traço branco fino por cima, o "núcleo" bem quente/claro do raio - é
+   assim que raio de verdade normalmente aparece em fotos: núcleo branco com auréola azulada).
+   Continua atrás das letras (z-index -1, pointer-events: none) e piscando só junto com os clarões
+   (mesmo ciclo de 5s de heroStormFlash, camada própria pra controlar a opacidade separada do
+   brilho, mantendo a opacidade bem sutil pedida antes). */
 .js .hero-content h1::after { animation: heroStormBolts 5s ease-in-out infinite; }
 .hero-content h1::after {
   content: '';
@@ -498,7 +502,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   inset: -12% -4%;
   z-index: -1;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10,58 L62,36 L48,70 L118,40 L100,80 L188,46 L166,86 L255,54' stroke='%237fb0ff' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M10,58 L62,36 L48,70 L118,40 L100,80 L188,46 L166,86 L255,54' stroke='%23f2f7ff' stroke-width='1.3' opacity='0.75'/%3E%3Cpath d='M28,230 L88,205 L70,246 L160,210 L136,250 L232,220 L203,256 L296,230' stroke='%237fb0ff' stroke-width='6' opacity='0.35'/%3E%3Cpath d='M28,230 L88,205 L70,246 L160,210 L136,250 L232,220 L203,256 L296,230' stroke='%23f2f7ff' stroke-width='1.3' opacity='0.75'/%3E%3C/g%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M70,10 L95,55 L78,60 L110,100 L90,108 L130,150 L108,158 L150,200 L128,210 L175,255 L155,265 L200,295 M95,55 L140,40 L120,50 L165,30 M78,60 L35,75 L55,80 L15,100 M110,100 L160,90 L140,98 L185,78 M90,108 L50,125 L68,132 L25,150 M130,150 L178,145 L160,152 L205,135 M108,158 L65,178 L82,184 L40,205 M150,200 L195,192 L178,198 L220,180 M128,210 L95,235 L108,240 L70,258 M175,255 L210,270' stroke='%237fb0ff' stroke-width='5' opacity='0.35'/%3E%3Cpath d='M70,10 L95,55 L78,60 L110,100 L90,108 L130,150 L108,158 L150,200 L128,210 L175,255 L155,265 L200,295 M95,55 L140,40 L120,50 L165,30 M78,60 L35,75 L55,80 L15,100 M110,100 L160,90 L140,98 L185,78 M90,108 L50,125 L68,132 L25,150 M130,150 L178,145 L160,152 L205,135 M108,158 L65,178 L82,184 L40,205 M150,200 L195,192 L178,198 L220,180 M128,210 L95,235 L108,240 L70,258 M175,255 L210,270' stroke='%23f2f7ff' stroke-width='1.2' opacity='0.75'/%3E%3C/g%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: center;
   background-size: 100% 100%;
