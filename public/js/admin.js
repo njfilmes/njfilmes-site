@@ -347,7 +347,9 @@
   document.querySelectorAll('[data-single-upload]').forEach((wrapper) => {
     const input = wrapper.querySelector('input[type=file]');
     const hidden = wrapper.querySelector('input[type=hidden][name$="_data"]') || wrapper.querySelector('input[type=hidden]');
-    const preview = wrapper.querySelector('img[data-preview]');
+    // Aceita tanto <img data-preview> (fotos) quanto <video data-preview> (vídeo de fundo da
+    // Home, adicionado em 10/09/2026) — os dois têm .src e funcionam igual aqui.
+    const preview = wrapper.querySelector('[data-preview]');
     if (!input) return;
     input.addEventListener('change', () => {
       const file = input.files[0];
