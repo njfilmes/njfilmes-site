@@ -257,43 +257,102 @@
       if (e.key === 'Escape' && nav.classList.contains('open')) closeNav();
     });
 
-    // Arrastar o menu pra qualquer lado ou pra cima fecha, igual a maioria dos apps.
-    // Pedido em 10/09/2026: além de fechar arrastando, também abrir arrastando - puxando
-    // da borda direita da tela pra esquerda (de onde o menu "mora" quando fechado, ele
-    // desliza de lá pra dentro). Esse gesto de abrir escuta a tela toda (document), não só
-    // o próprio menu, porque quando fechado o menu fica fora da tela e não recebe toques.
-    var touchStartX = 0;
-    var touchStartY = 0;
+    // Pedido em 10/09/2026: nao bastava so detectar um "swipe" e fechar/abrir de repente no
+    // final do gesto - a pessoa precisa ver o menu acompanhando o dedo em tempo real (puxa
+    // pra um lado, o menu vem; solta antes da metade, ele volta; solta depois, ele
+    // completa), do jeito que qualquer app com um "drawer" lateral funciona, sem precisar
+    // apertar o botao (os 3 tracinhos) nenhuma vez. Um unico gesto cobre abrir (arrastando
+    // da borda direita da tela pra esquerda) e fechar (arrastando o menu ja aberto pra
+    // direita) - por isso escuta tanto o documento (pra pegar o toque que comeca fora do
+    // menu, na borda, quando ele ainda esta fora da tela) quanto o proprio menu.
+    var dragging = false;
+    var dragMode = null; // 'open' ou 'close'
+    var dragStartX = 0;
+    var panelWidth = 0;
+    var EDGE_ZONE = 28; // px a partir da borda direita que arma o gesto de abrir
+
+    // Arrastar pra cima fecha (gesto rapido, sem acompanhar o dedo - o menu nao se move
+    // verticalmente, entao nao tem o que "seguir" nesse eixo).
+    var upStartX = 0;
+    var upStartY = 0;
     nav.addEventListener('touchstart', function (e) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
+      if (dragging) return;
+      upStartX = e.touches[0].clientX;
+      upStartY = e.touches[0].clientY;
     }, { passive: true });
     nav.addEventListener('touchend', function (e) {
-      var dx = e.changedTouches[0].clientX - touchStartX;
-      var dy = e.changedTouches[0].clientY - touchStartY;
-      if (Math.abs(dx) > 50 || dy < -50) closeNav();
+      if (dragging) return;
+      var dy = e.changedTouches[0].clientY - upStartY;
+      if (dy < -50) closeNav();
     }, { passive: true });
 
-    var edgeStartX = 0;
-    var edgeStartY = 0;
-    var edgeTracking = false;
+    function dragTo(px) {
+      // 0 = totalmente aberto, panelWidth = totalmente fechado
+      if (!panelWidth) return;
+      px = Math.max(0, Math.min(panelWidth, px));
+      nav.style.transition = 'none';
+      nav.style.transform = 'translateX(' + px + 'px)';
+      if (navBackdrop) {
+        navBackdrop.style.transition = 'none';
+        navBackdrop.style.opacity = String(1 - px / panelWidth);
+      }
+    }
+    function dragEnd(finalPx, e) {
+      dragging = false;
+      nav.style.transition = '';
+      nav.style.transform = '';
+      if (navBackdrop) {
+        navBackdrop.style.transition = '';
+        navBackdrop.style.opacity = '';
+      }
+      var openingEnough = finalPx < panelWidth * 0.65; // passou de ~35% do caminho
+      if (dragMode === 'open') {
+        if (openingEnough) openNav(); else closeNavImmediate();
+      } else if (dragMode === 'close') {
+        if (openingEnough) { /* volta pro estado aberto, nada a fazer (classe 'open' continua) */ }
+        else closeNav();
+      }
+      dragMode = null;
+    }
+
     document.addEventListener('touchstart', function (e) {
-      if (nav.classList.contains('open')) return;
       var x = e.touches[0].clientX;
-      // só arma o gesto se o toque começar bem na borda direita da tela (últimos 24px)
-      if (x >= window.innerWidth - 24) {
-        edgeStartX = x;
-        edgeStartY = e.touches[0].clientY;
-        edgeTracking = true;
+      if (nav.classList.contains('open')) {
+        dragMode = 'close';
+        panelWidth = nav.offsetWidth;
+        dragStartX = x;
+        dragging = true;
+      } else if (x >= window.innerWidth - EDGE_ZONE) {
+        dragMode = 'open';
+        panelWidth = nav.offsetWidth;
+        dragStartX = x;
+        dragging = true;
+        if (navBackdrop) navBackdrop.classList.add('open');
+        dragTo(panelWidth);
       }
     }, { passive: true });
+    document.addEventListener('touchmove', function (e) {
+      if (!dragging) return;
+      var dx = e.touches[0].clientX - dragStartX;
+      if (dragMode === 'open') dragTo(panelWidth + dx);
+      else dragTo(dx);
+    }, { passive: true });
     document.addEventListener('touchend', function (e) {
-      if (!edgeTracking) return;
-      edgeTracking = false;
-      var dx = e.changedTouches[0].clientX - edgeStartX;
-      var dy = e.changedTouches[0].clientY - edgeStartY;
-      // arrastou pra esquerda (dx bem negativo) e não foi principalmente um scroll vertical
-      if (dx < -50 && Math.abs(dy) < Math.abs(dx)) openNav();
+      if (!dragging) return;
+      var dx = e.changedTouches[0].clientX - dragStartX;
+      var finalPx = dragMode === 'open' ? panelWidth + dx : dx;
+      dragEnd(Math.max(0, Math.min(panelWidth, finalPx)), e);
+    }, { passive: true });
+    document.addEventListener('touchcancel', function () {
+      if (!dragging) return;
+      dragging = false;
+      nav.style.transition = '';
+      nav.style.transform = '';
+      if (navBackdrop) {
+        navBackdrop.style.transition = '';
+        navBackdrop.style.opacity = '';
+      }
+      dragMode = null;
     }, { passive: true });
 
     // Em telas pequenas, o submenu de categorias abre/fecha ao tocar no link "Portfólio"
