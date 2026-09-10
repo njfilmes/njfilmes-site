@@ -464,12 +464,18 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    pra cima e pra baixo" do que como um giro. Tirado o rotate(), sobrou só o rotateY() (giro em
    torno do eixo vertical, tipo a palavra virando de leve pro lado, mostrando "menos largura" no
    meio do giro) - mais leve que antes (8deg) e mais claro como um giro em 3D mesmo, sem parecer
-   balanço vertical. */
+   balanço vertical.
+   Ajustado em seguida (mesmo dia): "o nome ideia n ta girando 3d levemente vc tirou, quero 3d bem
+   de leve meio girando" - o giro de 7deg com perspective(300px) ficou sutil demais, quase
+   imperceptível (o usuário achou que o efeito tinha sumido de vez). Aumentado o ângulo pra 16deg
+   e a perspectiva aproximada pra 220px (perspectiva mais perto = giro mais "puxado"/visível no
+   mesmo ângulo), e o ciclo acelerado um pouco (5.5s pra 4,2s) - continua um giro 3D leve, mas
+   agora dá pra perceber de verdade sem precisar prestar atenção. */
 .hero-content h1 .hero-highlight-word { display: inline-block; transform-origin: 50% 50%; }
-.js .hero-content h1 .hero-highlight-word { animation: heroIdeiaSwing 5.5s ease-in-out infinite; }
+.js .hero-content h1 .hero-highlight-word { animation: heroIdeiaSwing 4.2s ease-in-out infinite; }
 @keyframes heroIdeiaSwing {
-  0%, 100% { transform: perspective(300px) rotateY(-7deg); }
-  50% { transform: perspective(300px) rotateY(7deg); }
+  0%, 100% { transform: perspective(220px) rotateY(-16deg); }
+  50% { transform: perspective(220px) rotateY(16deg); }
 }
 .js .hero-content h1::after { animation: heroCameraFlash 0.9s ease-in-out 1.7s 1 both; }
 .hero-content h1::after {
