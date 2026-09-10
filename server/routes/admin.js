@@ -972,6 +972,7 @@ export async function bioPage(req, res, admin) {
   const bio = await Q.getBio();
   const bioPhotos = await Q.listBioPhotos();
   const galleryPhotos = await Q.listBioGalleryPhotos();
+  const bioVideos = await Q.listBioVideos();
   const content = `
   <div class="panel">
     <form method="post" action="/admin/bio/atualizar">
@@ -988,14 +989,6 @@ export async function bioPage(req, res, admin) {
         <input type="file" accept="image/*">
         <input type="hidden" name="profile_photo_data">
         <img data-preview src="${escapeHtml(bio.profile_photo || '')}" style="max-width:160px;border-radius:6px;margin-top:8px;display:${bio.profile_photo ? 'block' : 'none'};">
-      </div>
-      ${field({ label: 'Vídeo no lugar da foto (opcional)', name: 'bio_video_url', value: bio.bio_video_url, placeholder: 'Cole aqui o link do YouTube, Vimeo, Mega, Google Drive ou um link direto de vídeo', help: 'Se preencher, esse vídeo aparece no lugar das fotos ao lado da sua biografia, na página Sobre. Deixe vazio para continuar mostrando as fotos.' })}
-      <div class="form-field" data-single-upload>
-        <label>Ou envie o vídeo direto (sem precisar de link)</label>
-        <input type="file" accept="video/*">
-        <input type="hidden" name="bio_video_data">
-        <video data-preview src="${escapeHtml(bio.bio_video_url || '')}" muted controls playsinline style="max-width:220px;border-radius:6px;margin-top:8px;${bio.bio_video_url ? 'display:block;' : 'display:none;'}"></video>
-        <small>Limite de 25MB — prefira um clipe curto e já comprimido. Enviando um vídeo aqui, ele substitui automaticamente o link do campo acima ao salvar.</small>
       </div>
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
       <div class="form-row">
@@ -1026,6 +1019,22 @@ export async function bioPage(req, res, admin) {
       </div>`
       )
       .join('')}</div>` : '<p class="empty-hint">Nenhuma foto adicionada ainda.</p>'}
+  </div>
+  <div class="panel">
+    <h2>Vídeos da página Sobre</h2>
+    <p class="muted" style="margin-top:-8px;">Além das fotos, você pode colocar vários vídeos (YouTube, Vimeo, Mega, Google Drive ou link direto) — eles aparecem numa seção logo abaixo da sua biografia, um do lado do outro, igual aos vídeos de um projeto.</p>
+    <form method="post" action="/admin/bio/videos/criar">
+      <div class="form-row">
+        ${field({ label: 'URL do vídeo', name: 'url', required: true, placeholder: 'https://www.youtube.com/watch?v=...' })}
+        ${field({ label: 'Título (opcional)', name: 'title', placeholder: 'Ex: Making of' })}
+      </div>
+      <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Adicionar vídeo</button></div>
+    </form>
+    ${bioVideos.length ? bioVideos.map((v) => `
+      <div class="video-item">
+        <div class="vi-info"><b>${escapeHtml(v.title || v.provider)}</b><span>${escapeHtml(v.url)}</span></div>
+        <form method="post" action="/admin/bio/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger">Remover</button></form>
+      </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
   </div>
   <div class="panel">
     <h2>Fotos da galeria "Bastidores" (faixa que rola sozinha)</h2>
@@ -1061,21 +1070,6 @@ export async function bioUpdate(req, res, body) {
   if (body.profile_photo_data) {
     try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch (e) { photoFailed = true; console.error('Erro ao salvar foto de perfil:', e.message); }
   }
-  // Vídeo no lugar da foto na página Sobre: pode vir por link colado (YouTube, Vimeo, Mega,
-  // Drive etc. — ver parseVideoUrl em server/util.js) OU por arquivo enviado direto
-  // (bio_video_data) — pedido do usuário em 10/09/2026. O arquivo enviado tem prioridade sobre
-  // o link; se o upload falhar, mantém o que já estava configurado em vez de apagar.
-  let bio_video_url = body.bio_video_url || '';
-  let videoFailed = false;
-  if (body.bio_video_data) {
-    try {
-      bio_video_url = await saveVideoFile(body.bio_video_data);
-    } catch (e) {
-      videoFailed = true;
-      console.error('Erro ao salvar vídeo da bio:', e.message);
-      bio_video_url = body.bio_video_url || bio.bio_video_url || '';
-    }
-  }
   await Q.updateBio({
     name: body.name || '',
     professional_title: body.professional_title || '',
@@ -1084,16 +1078,26 @@ export async function bioUpdate(req, res, body) {
     specialties: body.specialties || '',
     equipment: body.equipment || '',
     profile_photo,
-    bio_video_url,
     cta_text: body.cta_text || '',
     gallery_title: body.gallery_title || 'No set com a NJFILMES',
     trajectory_title: body.trajectory_title || 'Uma jornada pela imagem',
   });
-  const failMsgs = [];
-  if (photoFailed) failMsgs.push('a nova foto de perfil não pôde ser salva (a antiga foi mantida)');
-  if (videoFailed) failMsgs.push('o novo vídeo enviado não pôde ser salvo (o anterior foi mantido)');
-  const ok = !failMsgs.length;
-  redirect(res, '/admin/bio' + withFlash(res, ok ? 'success' : 'error', ok ? 'Biografia atualizada.' : `Biografia atualizada, mas ${failMsgs.join(' e ')}.`));
+  redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
+}
+
+// Vídeos da página Sobre (além das fotos - pedido em 10/09/2026): mesmo padrão de
+// projectVideoCreate/projectVideoDelete, só que sem project_id (a bio é única).
+export async function bioVideoCreate(req, res, body) {
+  const parsed = parseVideoUrl(body.url);
+  if (!parsed) return redirect(res, '/admin/bio' + withFlash(res, 'error', 'Link de vídeo inválido.'));
+  const maxOrder = await maxSortOrder('bio_videos');
+  await Q.addBioVideo({ provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: body.title, sort_order: maxOrder + 1 });
+  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Vídeo adicionado.'));
+}
+
+export async function bioVideoDelete(req, res, id) {
+  await Q.deleteBioVideo(id);
+  redirect(res, '/admin/bio' + withFlash(res, 'success', 'Vídeo removido.'));
 }
 
 export async function bioPhotosUpload(req, res, body) {

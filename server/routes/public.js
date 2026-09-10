@@ -1,5 +1,5 @@
 import { layout, absoluteUrl } from '../render.js';
-import { escapeHtml, nl2br, videoEmbedHtml, parseVideoUrl, formatDatePtBr, truncate } from '../util.js';
+import { escapeHtml, nl2br, videoEmbedHtml, formatDatePtBr, truncate } from '../util.js';
 import { ASSET_VERSION } from '../assetVersion.js';
 import {
   getSettings,
@@ -16,6 +16,7 @@ import {
   listTestimonials,
   listBioPhotos,
   listBioGalleryPhotos,
+  listBioVideos,
   listHeroPhotos,
   incrementProjectViews,
   incrementProjectLikes,
@@ -767,10 +768,11 @@ export async function aboutPage(req, res) {
     ...(await listBioPhotos()).map((p) => p.filename),
   ].filter((src, idx, arr) => src && arr.indexOf(src) === idx);
 
-  // Pedido em 10/09/2026: opção de colocar um vídeo (YouTube ou parecido) no lugar das fotos,
-  // pra quem não quiser ficar só na foto. Se o link não for reconhecido, cai de volta pras
-  // fotos normalmente (nunca deixa a seção vazia por causa de um link inválido).
-  const aboutVideo = bio.bio_video_url ? parseVideoUrl(bio.bio_video_url) : null;
+  // Pedido em 10/09/2026: além das fotos, poder colocar vários vídeos (YouTube, Vimeo, Mega,
+  // Google Drive ou link direto) na página Sobre - as fotos continuam do jeito de sempre, e os
+  // vídeos aparecem numa seção logo abaixo, um do lado do outro, mesmo padrão de "Mais vídeos"
+  // já usado na página de cada projeto (ver server/util.js: parseVideoUrl/videoEmbedHtml).
+  const bioVideos = await listBioVideos();
 
   // Galeria de bastidores (fotos do NJ trabalhando) que rola sozinha na horizontal,
   // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026. Editável pelo painel
@@ -780,9 +782,7 @@ export async function aboutPage(req, res) {
   const content = `
   <section class="simple-hero">
     <div class="container about-split">
-      <div class="about-photos${aboutVideo ? ' has-video' : ''} reveal">${aboutVideo
-        ? videoEmbedHtml({ ...aboutVideo, title: bio.name || 'NJFILMES' })
-        : aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
+      <div class="about-photos reveal">${aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
       <div class="reveal">
         <span class="eyebrow">Sobre a NJFILMES</span>
         <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>
@@ -802,6 +802,12 @@ export async function aboutPage(req, res) {
       </div>
     </div>
   </section>
+
+  ${bioVideos.length ? `<section><div class="container">
+    <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Vídeos</span>
+    <h2 class="reveal text-center">Conheça um pouco mais</h2>
+    <div class="work-grid">${bioVideos.map((v) => `<div class="reveal">${videoEmbedHtml(v)}</div>`).join('')}</div>
+  </div></section>` : ''}
 
   ${bioGalleryImages.length ? `<section class="alt-bg">
     <div class="container">
