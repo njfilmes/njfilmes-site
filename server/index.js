@@ -318,6 +318,7 @@ async function router(req, res) {
     // regex de republicação do site estático logo acima — comentários não fazem parte do HTML
     // pré-gerado, então moderar/responder um comentário não precisa disparar rebuild nenhum.
     if (pathname === '/admin/comentarios' && method === 'GET') return Admin.commentsPage(req, res, admin);
+    if (pathname === '/admin/comentarios/adicionar' && method === 'POST') return Admin.commentCreate(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/comentarios\/(\d+)\/responder$/)) && method === 'POST') return Admin.commentReply(req, res, await parseBody(req), Number(m[1]));
     if ((m = pathname.match(/^\/admin\/comentarios\/(\d+)\/remover$/)) && method === 'POST') return Admin.commentDelete(req, res, Number(m[1]));
 

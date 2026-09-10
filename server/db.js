@@ -213,7 +213,8 @@ export async function initSchema() {
                                                       profile_photo TEXT DEFAULT '',
                                                             cta_text TEXT DEFAULT 'Vamos criar algo juntos?',
                                                                   gallery_title TEXT DEFAULT 'No set com a NJFILMES',
-                                                                        trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'
+                                                                        trajectory_title TEXT DEFAULT 'Uma jornada pela imagem',
+                                                                              bio_video_url TEXT DEFAULT ''
                                                                 );
                                                                   `);
 
@@ -522,6 +523,12 @@ export async function initSchema() {
     }
     if (!bioCols.includes('trajectory_title')) {
           await query("ALTER TABLE bio ADD COLUMN trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'");
+    }
+    // 10/09/2026: opção de colocar um vídeo (YouTube ou link parecido) no lugar da foto de
+    // perfil na página Sobre, pra quem quiser não ficar só na foto - pedido do usuário. Vazio
+    // continua mostrando as fotos normalmente (ver server/routes/public.js, aboutPage).
+    if (!bioCols.includes('bio_video_url')) {
+          await query("ALTER TABLE bio ADD COLUMN bio_video_url TEXT DEFAULT ''");
     }
 
   // 04/09/2026: guarda a largura/altura real de cada foto enviada (em pixels), capturada no

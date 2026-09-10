@@ -23,7 +23,7 @@ const SETTINGS_COLUMNS = new Set([
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',
-  'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title',
+  'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title', 'bio_video_url',
 ]);
 
 export async function updateSettings(fields) {
