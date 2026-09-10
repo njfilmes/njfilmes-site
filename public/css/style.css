@@ -374,12 +374,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    esse acabamento mais suave/arredondado nas letras mantendo o peso bem forte (800) que o
    titulo já tinha. Fonte importada la no <head> (server/render.js), junto com as outras do site. */
 .hero-content h1 {
-  font-family: 'Outfit', var(--font-body);
-  /* Pedido em seguida (10/09/2026): o titulo tava com peso 800 (bem "bold"/pesado) - pedido
-     pra deixar no peso normal (400). Peso 400 adicionado na importacao da fonte Outfit la
-     no <head> (server/render.js), senao o navegador ia continuar mostrando um dos pesos bold
-     que ja tinha carregado (700/800) mesmo pedindo 400 aqui. */
-  font-weight: 400;
+  /* Pedido em seguida (10/09/2026): trocar a fonte do titulo pra Impact em bold. Impact é
+     fonte do sistema (não existe no Google Fonts) - então ela é usada quando o aparelho já
+     tem ela instalada (comum em Windows/Mac), e "Anton" (importada la no <head>, mesmo
+     "espirito" de fonte super grossa/condensada) entra como alternativa em aparelhos que não
+     tem a Impact (ex: a maioria dos celulares Android). */
+  font-family: 'Impact', 'Anton', var(--font-body);
+  font-weight: bold;
   /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo) */
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.15),
