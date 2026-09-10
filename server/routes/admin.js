@@ -17,7 +17,7 @@ import {
   recoveryGuard,
   getClientIp,
 } from '../auth.js';
-import { saveProjectPhoto, saveMiscImage, deletePhotoFiles } from '../upload.js';
+import { saveProjectPhoto, saveMiscImage, saveVideoFile, deletePhotoFiles } from '../upload.js';
 import * as Q from '../queries.js';
 
 function redirect(res, location) {
@@ -1156,7 +1156,14 @@ export async function settingsPage(req, res, admin) {
       </div>
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
-      ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Link direto para um arquivo de vídeo .mp4 hospedado (ex: no seu storage). Deixe vazio para usar imagem.' })}
+      ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Cole aqui um link direto de vídeo (ex: Cloudinary) OU envie o arquivo direto no campo logo abaixo — os dois fazem a mesma coisa. Deixe vazio para usar imagem.' })}
+      <div class="form-field" data-single-upload>
+        <label>Ou arraste/envie o vídeo direto (sem precisar de link externo)</label>
+        <input type="file" accept="video/*">
+        <input type="hidden" name="hero_video_data">
+        <video data-preview src="${escapeHtml(s.hero_video_url || '')}" muted controls playsinline style="max-width:280px;border-radius:6px;margin-top:8px;${s.hero_video_url ? 'display:block;' : 'display:none;'}"></video>
+        <small>Limite de 25MB — prefira um clipe curto (poucos segundos) e já comprimido, pra carregar rápido. Enviando um vídeo aqui, ele substitui automaticamente o link do campo acima ao salvar.</small>
+      </div>
       <div class="form-field" data-single-upload>
         <label>Foto de destaque da Home (fundo da primeira tela do site)</label>
         <input type="file" accept="image/*">
@@ -1277,12 +1284,28 @@ export async function settingsUpdate(req, res, body) {
   if (body.hero_photo_data) {
     try { hero_photo = await saveMiscImage(body.hero_photo_data); } catch { /* mantém foto anterior */ }
   }
+  // Vídeo de fundo da Home: pode vir por link colado (hero_video_url) OU por arquivo enviado
+  // direto (hero_video_data) — pedido do usuário em 10/09/2026. O arquivo enviado tem prioridade
+  // sobre o link (se os dois vierem preenchidos); se o upload falhar, mantém o que já estava
+  // configurado em vez de apagar o vídeo do ar.
+  let hero_video_url = body.hero_video_url || '';
+  let videoUploadFailed = false;
+  if (body.hero_video_data) {
+    try {
+      hero_video_url = await saveVideoFile(body.hero_video_data);
+    } catch (e) {
+      videoUploadFailed = true;
+      console.error('Erro ao salvar vídeo de fundo da Home:', e.message);
+      const current = await Q.getSettings();
+      hero_video_url = body.hero_video_url || current.hero_video_url || '';
+    }
+  }
   await Q.updateSettings({
     site_name: body.site_name || 'NJFILMES',
     tagline: body.tagline || '',
     hero_headline: body.hero_headline || '',
     hero_subheadline: body.hero_subheadline || '',
-    hero_video_url: body.hero_video_url || '',
+    hero_video_url,
     hero_photo,
     meta_title: body.meta_title || '',
     meta_description: body.meta_description || '',
@@ -1310,7 +1333,11 @@ export async function settingsUpdate(req, res, body) {
     facebook_url: body.facebook_url || '',
     google_review_url: body.google_review_url || '',
   });
-  redirect(res, '/admin/configuracoes' + withFlash(res, 'success', 'Configurações salvas.'));
+  redirect(res, '/admin/configuracoes' + withFlash(
+    res,
+    videoUploadFailed ? 'error' : 'success',
+    videoUploadFailed ? 'Configurações salvas, mas o vídeo enviado não pôde ser salvo (arquivo inválido ou maior que 25MB) — o vídeo/link anterior foi mantido.' : 'Configurações salvas.'
+  ));
 }
 
 // ---------------- Projetos ----------------
