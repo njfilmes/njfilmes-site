@@ -378,7 +378,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo) */
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.15),
-    0 2px 3px rgba(0, 0, 0, 0.55);
+    0 2px 3px rgba(0, 0, 0, 0.55),
+    /* Pedido em seguida (10/09/2026): o mesmo contorno leve/sombreado que foi colocado na
+       palavra dourada, agora tambem no resto do titulo (texto branco) - mesma tecnica
+       (sombras bem pertinho nas 4 diagonais) pra letra branca se destacar melhor de
+       qualquer trecho mais claro da foto de fundo. */
+    -1px -1px 0 rgba(0, 0, 0, 0.5),
+    1px -1px 0 rgba(0, 0, 0, 0.5),
+    -1px 1px 0 rgba(0, 0, 0, 0.5),
+    1px 1px 0 rgba(0, 0, 0, 0.5);
+  -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.35);
 }
 .hero-content h1 .text-accent {
   text-shadow:
