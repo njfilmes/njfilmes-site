@@ -390,10 +390,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      Pedido em seguida: sem bold - peso normal (400) em vez de bold/700.
      Pedido em seguida: Impact achada "muito quadrada" - trocada pra Poppins (ExtraBold/800),
      mais arredondada e parecida com as outras fontes do site (importada la no <head>,
-     server/render.js). Volta a usar peso forte (800) - dessa vez faz sentido porque é o
-     "corte" natural da Poppins ExtraBold, não um contorno/bold artificial como no Impact. */
+     server/render.js).
+     Pedido em seguida: essa fonte (Poppins) também sem bold - volta peso normal (400).
+     Pedido em seguida: normal ficou fino demais - pediu "sem ser extra bold, manda só a
+     bold" - peso 700 (Bold), nem o 400 nem o 800/ExtraBold de antes. */
   font-family: 'Poppins', var(--font-body);
-  font-weight: 800;
+  font-weight: 700;
   /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo).
      Pedido em seguida (10/09/2026): tinha virado um contorno bem marcado (4 sombras 1px
      solidas + text-stroke) - pedido pra tirar o contorno e deixar so uma sombra suave/sutil
@@ -403,10 +405,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
 .hero-content h1 .text-accent {
+  /* Pedido em seguida (10/09/2026): o contorno da palavra "papel" tava saindo acinzentado
+     (a sombra clara rgba(255,240,200,0.4) em cima do dourado lia como cinza) - trocado por
+     um contorno sólido preto de verdade (text-stroke), mais a sombra suave por baixo pra
+     dar profundidade. */
+  -webkit-text-stroke: 1px #000;
   text-shadow:
-    0 1px 0 rgba(255, 240, 200, 0.4),
-    /* Pedido em seguida (10/09/2026): mesma troca do texto branco - contorno duro (sombras
-       1px + text-stroke) trocado por uma sombra suave/sutil só. */
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
 
