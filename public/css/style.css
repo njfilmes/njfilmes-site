@@ -16,7 +16,12 @@
   --border: rgba(255, 255, 255, 0.09);
   --border-strong: rgba(255, 255, 255, 0.18);
   --radius: 4px;
-  --font-display: 'Bebas Neue', 'Arial Narrow', sans-serif;
+  /* Pedido em 10/09/2026: depois de ajustar o titulo do hero da Home (fonte Poppins Bold +
+     contorno preto sutil + sombra), pedido pra deixar o site inteiro com essa mesma cara,
+     "pra ficar padrão" - trocada a fonte de titulo do site inteiro (usada em todo h1/h2/h3/h4,
+     logo, numeros de servico/estatistica etc, via essa variavel) de Bebas Neue pra Poppins.
+     A fonte antiga (Bebas Neue) fica soh comentada aqui embaixo caso precise voltar. */
+  --font-display: 'Poppins', 'Bebas Neue', 'Arial Narrow', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --container: 1280px;
@@ -79,11 +84,19 @@ button { font-family: inherit; cursor: pointer; }
 
 h1, h2, h3, h4 {
   font-family: var(--font-display);
-  font-weight: 400;
+  /* Pedido em 10/09/2026: peso Bold (700, igual ficou o titulo do hero - nem fino/400 nem
+     ExtraBold/800) em vez do 400 que a Bebas Neue (fonte fina por natureza) usava.
+     Sombra suave adicionada tambem (mesma do titulo do hero) pra dar profundidade/legibilidade
+     - efeito "padrao" pedido pra combinar com a Home, sem contorno/brilho animado (isso fica
+     só na palavra de destaque do hero, não faria sentido em todo título do site). */
+  font-weight: 700;
   letter-spacing: 0.02em;
   text-transform: uppercase;
   line-height: 1.05;
   margin: 0 0 0.4em;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 6px rgba(0, 0, 0, 0.55);
 }
 h1 { font-size: clamp(3.4rem, 11vw, 10rem); line-height: 0.92; letter-spacing: -0.01em; }
 h2 { font-size: clamp(2.4rem, 6.5vw, 5.4rem); line-height: 0.96; }
@@ -410,8 +423,10 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      um contorno sólido preto de verdade (text-stroke), mais a sombra suave por baixo pra
      dar profundidade.
      Pedido em seguida: contorno de 1px tava forte demais - pediu "quase nada de contorno",
-     reduzido pra 0.4px (só um fiozinho preto, quase imperceptível). */
-  -webkit-text-stroke: 0.4px #000;
+     reduzido pra 0.4px (só um fiozinho preto, quase imperceptível).
+     Pedido em seguida: 0.4px sumiu demais ("parece que tirou tudo") - subido um pouco pra
+     0.65px, ponto intermediário: sutil mas visível. */
+  -webkit-text-stroke: 0.65px #000;
   text-shadow:
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
