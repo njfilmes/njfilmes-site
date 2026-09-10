@@ -98,9 +98,14 @@ h1, h2, h3, h4 {
     0 1px 0 rgba(255, 255, 255, 0.12),
     0 2px 6px rgba(0, 0, 0, 0.55);
 }
-h1 { font-size: clamp(3.4rem, 11vw, 10rem); line-height: 0.92; letter-spacing: -0.01em; }
-h2 { font-size: clamp(2.4rem, 6.5vw, 5.4rem); line-height: 0.96; }
-h3 { font-size: clamp(1.4rem, 3vw, 2.1rem); }
+/* Pedido em 10/09/2026: depois de trocar a fonte de titulo do site pra Poppins (mais "cheia"
+   que a Bebas Neue de antes, que era condensada), os titulos ficaram grandes/pesados demais
+   pro gosto do usuario - tamanhos reduzidos aqui (e na versao mobile, mais abaixo no arquivo)
+   pra compensar. So os titulos "genericos" (secoes das paginas) - o titulo do hero da Home
+   tem seu proprio tamanho a parte (nao mexido). */
+h1 { font-size: clamp(2.8rem, 9vw, 8rem); line-height: 0.92; letter-spacing: -0.01em; }
+h2 { font-size: clamp(2rem, 5.5vw, 4.4rem); line-height: 0.96; }
+h3 { font-size: clamp(1.25rem, 2.6vw, 1.85rem); }
 p { margin: 0 0 1em; color: var(--fg-muted); }
 .eyebrow {
   font-family: var(--font-body);
@@ -1633,8 +1638,12 @@ html.no-intro .cine-intro { display: none; }
   }
 }
 @media (max-width: 480px) {
-  h1 { font-size: clamp(2.4rem, 12vw, 3.4rem); letter-spacing: -0.005em; }
-  h2 { font-size: clamp(1.9rem, 8vw, 2.6rem); }
+  /* Pedido em 10/09/2026: mesmo motivo do ajuste acima (fonte Poppins mais "cheia" que a
+     Bebas Neue de antes) - reduzido tambem aqui, na versao mobile, que é onde ficava mais
+     pesado ainda (a tela é menor, entao os vw% pesam mais). */
+  h1 { font-size: clamp(2rem, 10vw, 2.8rem); letter-spacing: -0.005em; }
+  h2 { font-size: clamp(1.5rem, 6.5vw, 2.15rem); }
+  h3 { font-size: clamp(1.05rem, 4.2vw, 1.5rem); }
 }
 
 @media (max-width: 720px) {
