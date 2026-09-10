@@ -109,6 +109,17 @@ async function copyStaticAssets() {
     if (!fs.existsSync(src)) continue;
     await fsp.cp(src, path.join(DIST_DIR, name), { recursive: true });
   }
+  // 10/09/2026: /favicon.ico (na raiz, sem pasta) dava 404 — os ícones do site já funcionam
+  // normalmente em qualquer navegador (via <link rel="icon"> apontando pra img/favicon.svg e
+  // img/favicon.png), mas o caminho clássico "/favicon.ico" continua sendo o que buscadores
+  // (como o Google) e navegadores mais antigos checam por padrão, então vale ter o arquivo
+  // também na raiz pra não aparecer nenhum 404 nesse caminho. Arquivo gerado uma vez a partir
+  // do favicon.png já existente (não muda com frequência, por isso fica versionado igual os
+  // outros arquivos de public/, em vez de gerado a cada build).
+  const faviconIco = path.join(PUBLIC_DIR, 'favicon.ico');
+  if (fs.existsSync(faviconIco)) {
+    await fsp.cp(faviconIco, path.join(DIST_DIR, 'favicon.ico'));
+  }
 }
 
 // Formata uma data como AAAA-MM-DD (aceito pelo padrão de sitemaps como <lastmod>) - null se a
