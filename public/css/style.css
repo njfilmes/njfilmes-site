@@ -487,12 +487,26 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    do caminho entre branco e dourado, IGUAL ao heroPapelColorFloat pra manter a sincronia) e timing
    trocado de ease-in-out pra linear, pra o giro correr contínuo em vez de desacelerar/"pausar" no
    meio do balanço. */
-.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
+/* Ajustado em 10/09/2026: "a movimentacao ainda ta engasgando e estranha do nome papel com a
+   interrogacao... ela ta achatando ta esquisito" - o ajuste acima (25%/75% + linear) resolveu a
+   sincronia mas não a causa raiz do "achatando"/engasgado: o .hero-punct ainda misturava rotate()
+   (giro 2D no eixo Z, tipo pêndulo) com rotateY() (giro 3D no eixo Y) AO MESMO TEMPO, com uma
+   perspective(300px) bem próxima. Girar nos dois eixos ao mesmo tempo faz o navegador desenhar uma
+   rotação composta que não é um giro "rígido" simples - o "?" visivelmente distorce/achata (efeito
+   de cisalhamento) no meio do percurso, em vez de só virar de lado. Esse MESMO problema já tinha
+   acontecido com a palavra "ideia" antes (ver comentário mais abaixo, em heroIdeiaSwing) e foi
+   resolvido lá tirando o rotate() e deixando só o rotateY() - aplicado aqui o mesmo tratamento:
+   rotate() removido, sobrou só o giro em torno do eixo vertical (rotateY), que é um giro "de
+   verdade" sem distorcer o formato da letra. transform-origin trocado de 50% 85% (base do "?",
+   só fazia sentido pro rotate() de pêndulo que saiu) pra 50% 50% (centro, mesmo padrão do
+   heroIdeiaSwing) já que só sobrou o giro em Y. Ângulo mantido em 32deg (era o valor pedido antes
+   em "tem espaço") - só o eixo que mudou, não o quanto ela gira. */
+.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 50%; }
 .js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s linear infinite; }
 @keyframes heroPunctSwing {
-  0%, 100% { transform: perspective(300px) rotate(-10deg) rotateY(-32deg); color: #fff; }
-  25%, 75% { transform: perspective(300px) rotate(0deg) rotateY(0deg); color: rgb(228, 209, 147); }
-  50% { transform: perspective(300px) rotate(10deg) rotateY(32deg); color: var(--accent); }
+  0%, 100% { transform: perspective(300px) rotateY(-32deg); color: #fff; }
+  25%, 75% { transform: perspective(300px) rotateY(0deg); color: rgb(228, 209, 147); }
+  50% { transform: perspective(300px) rotateY(32deg); color: var(--accent); }
 }
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
    tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
