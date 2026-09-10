@@ -321,6 +321,13 @@
     }
 
     document.addEventListener('touchstart', function (e) {
+      // Pedido em 10/09/2026 (terceira rodada): aumentar a faixa de 28 pra 70px acabou
+      // cobrindo o proprio botao do menu (os 3 tracinhos), que fica coladinho na borda
+      // direita do cabecalho - tocar nele armava o gesto de arrastar ao mesmo tempo que o
+      // clique dele tentava abrir, e as duas coisas brigavam (o botao parava de abrir o
+      // menu direito). Ignora esse toque aqui e deixa o proprio botao cuidar de abrir/fechar
+      // do jeito que sempre funcionou.
+      if (e.target === toggle || toggle.contains(e.target)) return;
       var x = e.touches[0].clientX;
       if (nav.classList.contains('open')) {
         dragMode = 'close';
