@@ -92,7 +92,11 @@ function heroHeadlineHtml(text) {
   if (lastSpace === -1) return wrapAccent(trimmed);
   const rest = trimmed.slice(0, lastSpace);
   const last = trimmed.slice(lastSpace + 1);
-  return `${escapeHtml(rest)} ${wrapAccent(last)}`;
+  // Pedido em 10/09/2026: animação de "zoom" (pulso sutil de escala) na parte branca do
+  // título, pra combinar com a palavra dourada que já flutua/brilha. Precisa desse span
+  // (.hero-title-white) porque esse texto vem solto (sem tag) direto do painel - sem ele
+  // não dava pra aplicar a animação só nessa parte.
+  return `<span class="hero-title-white">${escapeHtml(rest)}</span> ${wrapAccent(last)}`;
 }
 
 export async function homePage(req, res) {
