@@ -388,12 +388,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     /* Pedido em seguida (10/09/2026): o mesmo contorno leve/sombreado que foi colocado na
        palavra dourada, agora tambem no resto do titulo (texto branco) - mesma tecnica
        (sombras bem pertinho nas 4 diagonais) pra letra branca se destacar melhor de
-       qualquer trecho mais claro da foto de fundo. */
-    -1px -1px 0 rgba(0, 0, 0, 0.5),
-    1px -1px 0 rgba(0, 0, 0, 0.5),
-    -1px 1px 0 rgba(0, 0, 0, 0.5),
-    1px 1px 0 rgba(0, 0, 0, 0.5);
-  -webkit-text-stroke: 0.4px rgba(0, 0, 0, 0.35);
+       qualquer trecho mais claro da foto de fundo.
+       Pedido em seguida: o contorno tava meio transparente (rgba com opacidade baixa),
+       ficando cinza em vez de preto - deixado solido (opacidade 1) agora. */
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  -webkit-text-stroke: 0.4px #000;
 }
 .hero-content h1 .text-accent {
   text-shadow:
@@ -402,12 +404,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     /* Pedido em seguida (10/09/2026): um contorno leve na palavra ("papel") pra ela se
        destacar melhor de qualquer fundo/brilho atras. Feito com varias sombras bem
        pertinho (1px em cada direcao) em vez de so -webkit-text-stroke, que existe so
-       no Chrome/Safari - assim funciona em qualquer navegador/celular. */
-    -1px -1px 0 rgba(20, 13, 3, 0.45),
-    1px -1px 0 rgba(20, 13, 3, 0.45),
-    -1px 1px 0 rgba(20, 13, 3, 0.45),
-    1px 1px 0 rgba(20, 13, 3, 0.45);
-  -webkit-text-stroke: 0.4px rgba(20, 13, 3, 0.4);
+       no Chrome/Safari - assim funciona em qualquer navegador/celular.
+       Pedido em seguida: mesma correcao - contorno solido preto (opacidade 1) em vez de
+       transparente/acinzentado. */
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+  -webkit-text-stroke: 0.4px #000;
 }
 
 /* Luz dourada pulsando por trás da última palavra do título (ex: "papel") - pedida pelo usuário.
