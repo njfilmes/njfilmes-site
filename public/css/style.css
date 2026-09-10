@@ -502,33 +502,32 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    pra cada linha do título (um espalhado na altura de "vamos tirar sua", outro na altura de "ideia
    do", outro na altura de "papel?"), cada um cruzando quase toda a largura (do início quase ao
    fim do viewBox) com seus próprios galhos - assim quando pisca, aparecem vestígios em vários
-   pontos da frase (esquerda, meio e direita, nas 3 alturas), não só num ponto central. */
-.js .hero-content h1::after { animation: heroStormBolts 5s ease-in-out infinite; }
+   pontos da frase (esquerda, meio e direita, nas 3 alturas), não só num ponto central.
+   Pedido em seguida (10/09/2026): "no lugar dos raios coloca um flash de camera tipo paparazzo" -
+   os raios (SVG com os galhos) tirados, substituídos por um clarão branco (radial-gradient, sem
+   nenhum desenho) que estoura forte e rápido bem na hora da piscada, igual um flash de câmera de
+   verdade (sobe rápido pra bem claro e já cai de novo, bem diferente do brilho azul suave que já
+   existia antes - aquele continua do jeito que estava, esse aqui é um efeito novo por cima).
+   Mesmo z-index/pointer-events (atrás das letras) e o mesmo instante do ciclo de 5s (piscando
+   junto com o resto). */
+.js .hero-content h1::after { animation: heroCameraFlash 5s ease-in-out infinite; }
 .hero-content h1::after {
   content: '';
   position: absolute;
   inset: -12% -4%;
   z-index: -1;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Cg fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15,20 L60,50 L45,58 L110,35 L95,45 L160,25 L145,38 L200,55 L185,65 L250,40 L235,50 L300,60 L285,70 L350,45 L335,55 L385,35 M110,35 L130,15 L120,22 L145,8 M250,40 L275,20 L265,28 L295,12 M20,150 L70,120 L55,130 L130,105 L115,115 L190,95 L175,105 L245,120 L230,130 L300,100 L285,112 L360,130 M130,105 L155,80 L145,90 L170,70 M245,120 L220,145 L235,150 L210,170 M25,260 L75,225 L60,235 L135,215 L118,225 L190,245 L175,255 L245,220 L228,230 L300,250 L282,260 L355,225 M135,215 L110,190 L125,198 L95,175 M245,220 L270,195 L258,205 L288,185 M75,225 L45,205 L60,212 L30,190' stroke='%237fb0ff' stroke-width='5' opacity='0.35'/%3E%3Cpath d='M15,20 L60,50 L45,58 L110,35 L95,45 L160,25 L145,38 L200,55 L185,65 L250,40 L235,50 L300,60 L285,70 L350,45 L335,55 L385,35 M110,35 L130,15 L120,22 L145,8 M250,40 L275,20 L265,28 L295,12 M20,150 L70,120 L55,130 L130,105 L115,115 L190,95 L175,105 L245,120 L230,130 L300,100 L285,112 L360,130 M130,105 L155,80 L145,90 L170,70 M245,120 L220,145 L235,150 L210,170 M25,260 L75,225 L60,235 L135,215 L118,225 L190,245 L175,255 L245,220 L228,230 L300,250 L282,260 L355,225 M135,215 L110,190 L125,198 L95,175 M245,220 L270,195 L258,205 L288,185 M75,225 L45,205 L60,212 L30,190' stroke='%23f2f7ff' stroke-width='1.2' opacity='0.75'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
-  filter: drop-shadow(0 0 3px rgba(140, 180, 255, 0.4));
+  background: radial-gradient(ellipse 70% 85% at 50% 45%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.5) 45%, transparent 78%);
   opacity: 0;
 }
-/* Pedido em seguida (10/09/2026): "deixe esses raios bem sutil" - opacidade máxima da animação
-   reduzida bastante (picos bem mais baixos que o brilho de fundo), e o próprio traço/glow do SVG
-   acima também enfraquecido, pra ficar só um vestígio bem discreto, não algo que chama atenção. */
-@keyframes heroStormBolts {
+@keyframes heroCameraFlash {
   0%, 33%, 100% { opacity: 0; }
-  34% { opacity: 0.22; }
-  35.5% { opacity: 0.03; }
-  37% { opacity: 0.16; }
-  39% { opacity: 0; }
+  34% { opacity: 0.85; }
+  35% { opacity: 0.1; }
+  36% { opacity: 0; }
   70% { opacity: 0; }
-  71.5% { opacity: 0.1; }
-  73.5% { opacity: 0; }
+  71.5% { opacity: 0.55; }
+  72.5% { opacity: 0; }
 }
 /* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
    resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
