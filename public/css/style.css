@@ -169,6 +169,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
+  .js .hero-content h1 .hero-punct,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -403,7 +404,20 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   letter-spacing: -0.01em;
 }
 .hero-content h1 { font-size: clamp(3.4rem, 7.29vw, 6.885rem); }
-.hero-content h1 .hero-punct { margin-left: 0.12em; }
+/* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
+   resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
+   (rotateY - o perspective() direto no transform dá a profundidade só nela, sem precisar mexer
+   em nada do elemento pai) e trocando de cor entre branco e dourado ao longo do ciclo (o dourado
+   usado é o --accent, mesmo tom do resto da marca). display:inline-block porque transform não
+   funciona em elemento inline (que é o padrão de um <span> solto no meio do texto);
+   transform-origin quase no pé da letra pra ela balançar pendurada, em vez de girar no próprio
+   centro. */
+.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
+.js .hero-content h1 .hero-punct { animation: heroPunctSwing 3.6s ease-in-out infinite; }
+@keyframes heroPunctSwing {
+  0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
+  50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
+}
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 
 /* 10/09/2026: pedido pra deixar a fonte do titulo do hero com cantos mais arredondados/mais
