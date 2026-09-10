@@ -167,13 +167,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    navegador) nao recebe nenhuma dessas animacoes novas - mesmo padrao ja
    usado no site para as outras animacoes (mais abaixo no arquivo). */
 @media (prefers-reduced-motion: reduce) {
-  .js .hero-content h1,
-  .js .hero-content h1::before,
   .js .hero-content h1::after,
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
-  .js .hero-content h1 .hero-punct,
-  .js .hero-content h1 .hero-highlight-word,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -408,156 +404,58 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   letter-spacing: -0.01em;
 }
 .hero-content h1 { font-size: clamp(3.4rem, 7.29vw, 6.885rem); }
-/* Pedido em seguida (10/09/2026): um efeito de "perdendo sinal" (tipo TV/tempestade, saindo do ar
-   e voltando) na frase inteira do título - de vez em quando, bem rápido, pisca e fica com aquele
-   tom acinzentado/estático por uma fração de segundo, depois volta ao normal. Aplicado no h1
-   inteiro (pai de todas as palavras, que já têm suas próprias animações) - aqui só mexemos em
-   opacity/filter/translateX do h1, então tudo dentro (papel, ideia, a interrogação, cada um com
-   sua própria animação) continua rodando por baixo sem conflito, e apaga/volta junto.
-   Ajustado em seguida (mesmo dia): a primeira versão (corte só perto do fim de um ciclo de 12s,
-   ~9.5s depois de carregar a página) tava passando despercebido - quem dava uma olhada rápida na
-   página não chegava a ver, porque o corte demorava quase o ciclo inteiro pra acontecer pela
-   primeira vez. Trocado pra um ciclo de 6s com o corte logo no começo (~2,4s depois de carregar,
-   já depois da introdução em cortina preta do topo/rodapé terminar) - assim aparece rápido pra
-   quem acabou de abrir a página, e repete a cada 6s. Também deixado mais forte/visível (opacidade
-   cai mais, ~18-22%, e o contraste/dessaturação fica mais marcado) pra ficar claro que é um
-   "corte de sinal" de propósito, não só um flicker fraco.
-   Pedido em seguida (mesma data): 6s ainda tava demorando demais entre um corte e outro - reduzido
-   pra um ciclo de 3,5s (o corte continua acontecendo só depois que a introdução em cortina preta
-   termina, ~1,8s depois de carregar, pra nunca ficar escondido atrás dela) - repete quase o dobro
-   de vezes no mesmo tempo.
-   Pedido em seguida (10/09/2026): "deixa a piscada ainda mais rapida" - reduzido de novo, agora pra
-   um ciclo de 2s (o corte continua caindo em ~1,8s depois de carregar, mesma margem seguindo a
-   cortina preta - só o "resto" do ciclo em volta que ficou mais curto, então repete quase o dobro
-   de vezes de novo).
-   Mesmo mais forte/frequente, continua com o mesmo cuidado de segurança: a opacidade nunca cai a
-   zero (nunca fica preto/branco chapado, sempre dá pra ver a silhueta do texto) e os cortes ficam
-   espaçados dentro do próprio "soluço" (não vira um estroboscópio) - o corte inteiro dura bem
-   menos de meio segundo, e o resto do ciclo fica tudo normal. filter: grayscale+contrast simula
-   "estática" de TV sem sinal; um dos cortes usa hue-rotate pra dar uma variação de cor, tipo
-   interferência mesmo. */
-.js .hero-content h1 { animation: heroSignalGlitch 2s ease-in-out infinite; }
-@keyframes heroSignalGlitch {
-  0%, 89%, 100% { opacity: 1; filter: none; transform: translateX(0); }
-  90% { opacity: 0.2; filter: grayscale(1) contrast(1.6) brightness(1.35); transform: translateX(-5px); }
-  92% { opacity: 0.85; filter: none; transform: translateX(2px); }
-  94.5% { opacity: 0.18; filter: grayscale(1) hue-rotate(180deg) brightness(0.6) contrast(1.3); transform: translateX(4px); }
-  96.5% { opacity: 1; filter: none; transform: translateX(0); }
-}
-/* Pedido em seguida (10/09/2026): "bota algum efeito por tras das letras tipo de tempestade pra
-   ver se melhora" - um brilho de raio (relâmpago) piscando por TRÁS do texto do título (::before
-   com z-index negativo, então fica atrás das letras e não atrapalha a leitura nem os cliques -
-   pointer-events: none). Precisa do position:relative lá em cima (.hero-content h1 { max-width...})
-   pra esse ::before absoluto usar o h1 como referência.
-   Cor azul-esbranquiçada (tom de raio/relâmpago, diferente do dourado da marca) pra reforçar a
-   ideia de tempestade que já existe no efeito de "perdendo sinal" acima, mas sem repetir a mesma
-   cor. Ciclo próprio (5s, mais lento que a piscada do texto) com dois "clarões" curtos e
-   espaçados de forma irregular dentro do ciclo - imita melhor um raio de verdade (nunca é só um
-   clarão único e constante) e evita ficar sincronizado igual ao outro efeito, pra parecer mais
-   natural/orgânico.
-   Pedido em seguida (10/09/2026): a parte branca do clarão tava forte demais - suavizada (opacidade
-   do centro do gradiente reduzida, e os picos de opacidade da animação também baixados um pouco),
-   pra ficar um brilho mais discreto por trás, sem "estourar" branco. */
-.js .hero-content h1::before { animation: heroStormFlash 5s ease-in-out infinite; }
-.hero-content h1::before {
-  content: '';
-  position: absolute;
-  inset: -12% -4%;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 55% 70% at 50% 45%, rgba(200, 220, 255, 0.5), rgba(140, 170, 255, 0.2) 45%, transparent 75%);
-  filter: blur(6px);
-  opacity: 0;
-}
-@keyframes heroStormFlash {
-  0%, 33%, 100% { opacity: 0; }
-  34% { opacity: 0.4; }
-  35.5% { opacity: 0.06; }
-  37% { opacity: 0.3; }
-  39% { opacity: 0; }
-  70% { opacity: 0; }
-  71.5% { opacity: 0.22; }
-  73.5% { opacity: 0; }
-}
-/* Pedido em seguida (10/09/2026): "tem como botar raios bem discretos junto com os relampagos" -
-   depois esclarecido: não era pra ser um ÍCONE de raio (o que tinha ficado antes, tipo emoji ⚡),
-   e sim um "vestígio" de raio elétrico de verdade - tipo um rasgo/rachadura em zigue-zague azul,
-   cruzando por cima de onde estão as letras (não um desenho pequeno num canto).
-   Ajustado de novo em seguida: mandou uma foto de referência de raio de verdade (bem ramificado,
-   um "tronco" principal com vários galhos saindo em ângulos diferentes, tipo árvore/fractal) e
-   pediu pra ficar "mais realista" - o path anterior (só 2 zigue-zagues simples, sem ramificação)
-   trocado por UM raio só, mas desenhado com um tronco principal (de cima pra baixo, cruzando as
-   3 linhas do título) mais 9 galhos menores saindo dele em pontos e ângulos diferentes (mistura de
-   galhos curtos e longos, pra esquerda e pra direita), bem mais parecido com a referência.
-   Desenhado 2x no mesmo SVG (um traço azul mais grosso e desfocado por baixo, simulando o brilho
-   elétrico ao redor, e um traço branco fino por cima, o "núcleo" bem quente/claro do raio - é
-   assim que raio de verdade normalmente aparece em fotos: núcleo branco com auréola azulada).
-   Continua atrás das letras (z-index -1, pointer-events: none) e piscando só junto com os clarões
-   (mesmo ciclo de 5s de heroStormFlash, camada própria pra controlar a opacidade separada do
-   brilho, mantendo a opacidade bem sutil pedida antes).
-   Pedido em seguida (10/09/2026): "o raio ta concentrado so numa parte do meio, queria em varias
-   partes da frase" - o desenho anterior era 1 raio só, com todos os galhos espremidos do lado
-   esquerdo do viewBox (só cobria mais ou menos 1/3 da largura do título quando esticado no h1
-   inteiro, por isso ficava concentrado no meio/esquerda). Trocado por 3 raios independentes, um
-   pra cada linha do título (um espalhado na altura de "vamos tirar sua", outro na altura de "ideia
-   do", outro na altura de "papel?"), cada um cruzando quase toda a largura (do início quase ao
-   fim do viewBox) com seus próprios galhos - assim quando pisca, aparecem vestígios em vários
-   pontos da frase (esquerda, meio e direita, nas 3 alturas), não só num ponto central.
+/* Pedido em 10/09/2026: análise crítica dos efeitos do hero (do ponto de vista de cliente/
+   produtor/marca) - conclusão foi que tinha efeito demais rodando ao mesmo tempo no título,
+   competindo entre si e passando impressão de "poluído" em vez de profissional. Pedido em
+   seguida: "faz e me joga no ar pra eu ver se melhorou" - cortados os efeitos abaixo:
+   - "perdendo sinal" (heroSignalGlitch, no h1 inteiro) - cortado inteiro.
+   - brilho azul de tempestade atrás do título (heroStormFlash, ::before) - cortado inteiro
+     (cor fria destoava da paleta quente da marca, e ficava difícil de perceber por trás do
+     próprio clarão de câmera que ficou).
+   - balanço em 3D da interrogação de "papel?" e da palavra "ideia" (heroPunctSwing, usada em
+     .hero-punct e .hero-highlight-word) - cortado inteiro, as duas voltam a ficar paradas.
+   Mantidos: a palavra "papel" com seu flutuar/brilho (heroAccentFloat) e o pulso sutil de escala
+   no título branco (heroTitleZoom) - únicos movimentos que sobram no título, mais discretos e
+   sem concorrer entre si. O clarão de câmera (::after, logo abaixo) foi mantido mas reformulado:
+   de infinito pra um único disparo (só na entrada da página, some e não volta mais) e de branco
+   pra um tom dourado/quente, combinando com a cor da marca em vez de destoar. */
+/* Pedido em 10/09/2026 (histórico, efeito já removido): "bota algum efeito por tras das letras
+   tipo de tempestade pra ver se melhora" deu origem ao clarão azul (heroStormFlash) e ao raio
+   ramificado que vieram depois - ambos removidos na limpeza acima; o clarão de câmera abaixo é
+   o único que sobrou dessa linha de pedidos, agora em dourado e de disparo único.
    Pedido em seguida (10/09/2026): "no lugar dos raios coloca um flash de camera tipo paparazzo" -
-   os raios (SVG com os galhos) tirados, substituídos por um clarão branco (radial-gradient, sem
-   nenhum desenho) que estoura forte e rápido bem na hora da piscada, igual um flash de câmera de
-   verdade (sobe rápido pra bem claro e já cai de novo, bem diferente do brilho azul suave que já
-   existia antes - aquele continua do jeito que estava, esse aqui é um efeito novo por cima).
-   Mesmo z-index/pointer-events (atrás das letras) e o mesmo instante do ciclo de 5s (piscando
-   junto com o resto).
+   os raios (SVG com galhos ramificados, que chegaram a ser redesenhados 3x seguindo uma foto de
+   referência e depois pra se espalhar pelas 3 linhas do título) foram tirados e substituídos por
+   um clarão simples (radial-gradient, sem desenho) que estoura rápido bem na hora da piscada.
    Pedido em seguida (10/09/2026): "gostei mais tira bastante a intensidade e deixe mais direto sem
-   ser espalhado, ta exagerado" - o clarão era grande demais (ellipse de 70%/85% cobrindo quase o
-   h1 inteiro, com queda bem lenta até 78%) e forte demais (pico de opacidade 0.85). Encolhido bem
-   (ellipse de 32%/38%, cai pra transparente já em 55%) pra ficar um ponto de luz mais concentrado/
-   direto, tipo o estouro pontual de um flash de verdade, e não mais um brilho espalhado cobrindo
-   o título inteiro - e a opacidade máxima da animação caiu bastante também (bem mais fraco que
-   antes). */
-.js .hero-content h1::after { animation: heroCameraFlash 5s ease-in-out infinite; }
+   ser espalhado, ta exagerado" - o clarão era grande demais (ellipse de 70%/85%) e forte demais
+   (pico de opacidade 0.85). Encolhido (ellipse de 32%/38%) e enfraquecido bastante.
+   Pedido em 10/09/2026 (análise crítica + "faz e me joga no ar"): convertido de loop infinito
+   (a cada 5s, pra sempre) pra um disparo único (só uma vez, logo na entrada da página, ~1,8s
+   depois de carregar - mesma janela usada pelos outros efeitos, já depois da cortina preta
+   terminar) - um flash repetindo sem parar o tempo todo cansa e chama atenção demais pro efeito
+   em vez do título; uma vez só na entrada dá um toque de "boas-vindas" sem virar irritante.
+   Cor trocada de branco puro pra um dourado/creme suave (mesma família de tom do --accent/
+   dourado da marca), pra reforçar a identidade em vez de introduzir uma cor nova (branco/azul)
+   que não tinha nada a ver com o resto. */
+/* Espaçamento da interrogação de "papel?" (mantido mesmo depois de cortar o balanço/
+   heroPunctSwing acima - sem isso a "?" colaria direto na palavra anterior). */
+.hero-content h1 .hero-punct { margin-left: 0.12em; }
+.js .hero-content h1::after { animation: heroCameraFlash 0.9s ease-in-out 1.7s 1 both; }
 .hero-content h1::after {
   content: '';
   position: absolute;
   inset: -12% -4%;
   z-index: -1;
   pointer-events: none;
-  background: radial-gradient(ellipse 32% 38% at 50% 45%, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.25) 35%, transparent 55%);
+  background: radial-gradient(ellipse 32% 38% at 50% 45%, rgba(255, 224, 160, 0.85), rgba(255, 205, 120, 0.22) 35%, transparent 55%);
   opacity: 0;
 }
 @keyframes heroCameraFlash {
-  0%, 33%, 100% { opacity: 0; }
-  34% { opacity: 0.32; }
-  35% { opacity: 0.04; }
-  36% { opacity: 0; }
-  70% { opacity: 0; }
-  71.5% { opacity: 0.2; }
-  72.5% { opacity: 0; }
+  0%, 100% { opacity: 0; }
+  45% { opacity: 0.28; }
+  65% { opacity: 0; }
 }
-/* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
-   resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
-   (rotateY - o perspective() direto no transform dá a profundidade só nela, sem precisar mexer
-   em nada do elemento pai) e trocando de cor entre branco e dourado ao longo do ciclo (o dourado
-   usado é o --accent, mesmo tom do resto da marca). display:inline-block porque transform não
-   funciona em elemento inline (que é o padrão de um <span> solto no meio do texto);
-   transform-origin quase no pé da letra pra ela balançar pendurada, em vez de girar no próprio
-   centro. */
-.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
-.js .hero-content h1 .hero-punct { animation: heroPunctSwing 3.6s ease-in-out infinite; }
-@keyframes heroPunctSwing {
-  0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
-  50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
-}
-/* Pedido em seguida (10/09/2026): a palavra "ideia" (dentro da parte branca do título) ganhar
-   esse mesmo balanço em 3D + troca de cor branco/dourado - reaproveita a mesma animação
-   (heroPunctSwing) já usada na interrogação de "papel?", só sem o margin-left (que era só pra
-   colar a pontuação na palavra anterior; aqui "ideia" já é uma palavra normal, separada por
-   espaço no texto). Span (.hero-highlight-word) vem do server (highlightWord() em
-   routes/public.js), que marca a palavra "ideia" onde ela aparecer no título editável. */
-.hero-content h1 .hero-highlight-word { display: inline-block; transform-origin: 50% 85%; }
-.js .hero-content h1 .hero-highlight-word { animation: heroPunctSwing 3.6s ease-in-out infinite; }
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 
 /* 10/09/2026: pedido pra deixar a fonte do titulo do hero com cantos mais arredondados/mais
