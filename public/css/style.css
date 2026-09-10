@@ -257,11 +257,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   gap: 5px;
   background: none; border: none; padding: 8px;
 }
-.nav-toggle span { width: 26px; height: 2px; background: var(--fg); transition: transform 0.3s var(--ease), opacity 0.3s var(--ease), background 0.3s var(--ease); }
 /* Pedido em 10/09/2026: o icone (as 3 tracinhos) virava um X ao clicar, mas continuava na mesma
-   cor de sempre - nao dava nenhum sinal visual de "aberto" alem do formato. Agora, quando o menu
-   esta aberto, o X fica dourado (--accent), igual o resto dos destaques do site. */
-.nav-toggle[aria-expanded="true"] span { background: var(--accent); }
+   cor de sempre - nao dava nenhum sinal visual de "aberto" alem do formato. Primeiro tentamos
+   dourado só quando aberto; o usuário pediu o oposto e mais forte: dourado (--accent) sempre que
+   fechado - igual o resto dos destaques do site - e branco (--fg) quando a pessoa clica/abre. */
+.nav-toggle span { width: 26px; height: 2px; background: var(--accent); transition: transform 0.3s var(--ease), opacity 0.3s var(--ease), background 0.3s var(--ease); }
+.nav-toggle[aria-expanded="true"] span { background: var(--fg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
