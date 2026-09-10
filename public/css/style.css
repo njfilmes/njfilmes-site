@@ -1526,8 +1526,11 @@ html.no-intro .cine-intro { display: none; }
   .hero-media::after {
     /* Pedido do usuario em 03/09/2026: a foto do hero tava escura demais so no cel
        (aqui era mais escuro que no PC de proposito p/ legibilidade do texto) - clareado
-       um pouco, mantendo o texto ainda legivel por cima. */
-    background: linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.62) 35%, rgba(2,2,3,0.93) 100%);
+       um pouco, mantendo o texto ainda legivel por cima.
+       Pedido em seguida (10/09/2026): ainda tava escura so no celular - clareado de novo,
+       chegando bem mais perto do nivel de brilho da versao PC (que o usuario disse que
+       estava normal e pra nao mexer). PC continua com o gradiente original la em cima. */
+    background: linear-gradient(180deg, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.42) 35%, rgba(2,2,3,0.85) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
