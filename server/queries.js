@@ -18,6 +18,8 @@ const SETTINGS_COLUMNS = new Set([
   'contact_email', 'whatsapp_number', 'whatsapp_message', 'contact_budget_title',
   'contact_budget_text', 'contact_whatsapp_button_text', 'contact_channels_title',
   'instagram_url', 'youtube_url', 'vimeo_url', 'tiktok_url', 'facebook_url', 'google_review_url',
+  'services_eyebrow', 'services_title', 'services_subtitle', 'clients_eyebrow', 'clients_title',
+  'cta_eyebrow', 'cta_title',
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',

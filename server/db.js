@@ -460,6 +460,32 @@ export async function initSchema() {
           await query("ALTER TABLE settings ADD COLUMN google_review_url TEXT DEFAULT ''");
     }
 
+    // 10/09/2026: títulos/textos de algumas seções da Home e da página Serviços (que
+    // "Serviços", "Clientes", "Solicite um orçamento sem compromisso", etc) eram fixos no
+    // código — deixados editáveis pelo painel numa rodada de "quero tudo editável" pedida
+    // pelo usuário. Cada um cai pro texto de sempre se ficar vazio.
+    if (!settingsCols.includes('services_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN services_eyebrow TEXT DEFAULT 'O que fazemos'");
+    }
+    if (!settingsCols.includes('services_title')) {
+          await query("ALTER TABLE settings ADD COLUMN services_title TEXT DEFAULT 'Serviços'");
+    }
+    if (!settingsCols.includes('services_subtitle')) {
+          await query("ALTER TABLE settings ADD COLUMN services_subtitle TEXT DEFAULT 'Soluções completas em audiovisual, do planejamento à entrega final.'");
+    }
+    if (!settingsCols.includes('clients_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN clients_eyebrow TEXT DEFAULT 'Conheça alguns'");
+    }
+    if (!settingsCols.includes('clients_title')) {
+          await query("ALTER TABLE settings ADD COLUMN clients_title TEXT DEFAULT 'Clientes'");
+    }
+    if (!settingsCols.includes('cta_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN cta_eyebrow TEXT DEFAULT 'Vamos gravar sua história?'");
+    }
+    if (!settingsCols.includes('cta_title')) {
+          await query("ALTER TABLE settings ADD COLUMN cta_title TEXT DEFAULT 'Solicite um orçamento sem compromisso'");
+    }
+
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
       );
