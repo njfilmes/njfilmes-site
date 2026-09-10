@@ -1195,6 +1195,7 @@ export async function settingsPage(req, res, admin) {
         ${field({ label: 'TikTok', name: 'tiktok_url', value: s.tiktok_url, type: 'url' })}
       </div>
       ${field({ label: 'Facebook', name: 'facebook_url', value: s.facebook_url, type: 'url' })}
+      ${field({ label: 'Link de avaliação do Google (Perfil da Empresa)', name: 'google_review_url', value: s.google_review_url, type: 'url', help: 'No seu Perfil da Empresa no Google, clique em "Solicitar avaliações" pra pegar o link (formato g.page/r/.../review). Preenchendo aqui, aparece um botão "Avalie-nos no Google" no rodapé e na página Contato.' })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar configurações</button></div>
     </form>
   </div>
@@ -1291,6 +1292,7 @@ export async function settingsUpdate(req, res, body) {
     vimeo_url: body.vimeo_url || '',
     tiktok_url: body.tiktok_url || '',
     facebook_url: body.facebook_url || '',
+    google_review_url: body.google_review_url || '',
   });
   redirect(res, '/admin/configuracoes' + withFlash(res, 'success', 'Configurações salvas.'));
 }
