@@ -1426,9 +1426,8 @@ html.no-intro .cine-intro { display: none; }
      escondido no canto - pediu pra chamar mais atencao com algo animado/com movimento.
      Dois efeitos juntos, os dois discretos: o botao da uma leve "respirada" (sobe e cresce
      um pouquinho) de tempos em tempos, e um anel dourado pulsa saindo de dentro dele feito
-     onda de radar. Some sozinho (JS adiciona .attention-done, ver hideToggleAttention em
-     site.js) assim que a pessoa abre o menu pela primeira vez - clicando ou arrastando,
-     tanto faz - pra nao ficar chamando atencao de quem ja sabe que ali abre o menu. */
+     onda de radar. Pedido em seguida (nona rodada): pra ficar ligado sempre, sem parar depois
+     do primeiro uso - por isso nao existe mais nenhuma classe que desliga essa animacao. */
   .nav-toggle::before {
     content: '';
     position: absolute;
@@ -1442,11 +1441,6 @@ html.no-intro .cine-intro { display: none; }
   .nav-toggle {
     animation: navToggleNudge 2.8s ease-in-out infinite;
   }
-  .nav-toggle.attention-done,
-  .nav-toggle.attention-done::before {
-    animation: none;
-  }
-  .nav-toggle.attention-done::before { opacity: 0; }
   @keyframes navToggleRing {
     0% { transform: scale(0.82); opacity: 0.85; }
     65% { transform: scale(1.3); opacity: 0; }
