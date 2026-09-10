@@ -377,14 +377,19 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .hero-content h1 .text-accent { color: #d4af37; }
 /* 10/09/2026: a palavra flutuando (+ o brilho atrás dela) tava "batendo"/encostando na linha de
    texto de cima quando subia - pedido pra dar um respiro. Empurra a palavra um pouco pra baixo
-   (margin-top) e desce o pico da animação (só sobe 6px agora, em vez de 10px) pra sobrar mais
-   espaço entre ela e a linha acima. Pedido em seguida (mesma data): um terceiro efeito, a palavra
-   "vindo pra frente" e crescendo um pouco ao mesmo tempo que sobe - junta um scale() no mesmo
-   transform do sobe/desce (já que os dois têm que acontecer juntos, no mesmo keyframe). O brilho
-   (::before) é filho de .text-accent, então cresce junto automaticamente, sem precisar de nada
-   a mais. */
+   (margin-top) pra sobrar espaço entre ela e a linha acima. Pedido em seguida (mesma data): um
+   terceiro efeito, a palavra "vindo pra frente" e crescendo um pouco ao mesmo tempo que sobe -
+   junta um scale() no mesmo transform do sobe/desce (já que os dois têm que acontecer juntos, no
+   mesmo keyframe). O brilho (::before) é filho de .text-accent, então cresce junto
+   automaticamente, sem precisar de nada a mais.
+   Pedido em seguida (mesma data): com o scale() junto, o sobe/desce quase não dava pra notar mais
+   (as duas pontas da palavra "crescem" pro lado de fora ao mesmo tempo que ela sobe, então o
+   olho lê mais como "aumentando de tamanho" do que "subindo e descendo"). Subido o curso de volta
+   pra 10px (era 6px) só nessa versão com scale, pra o movimento voltar a ficar bem visível mesmo
+   com o crescimento acontecendo junto - o respiro de espaço já existe por causa do margin-top
+   acima, então não volta a bater na linha de cima. */
 .js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroAccentFloat 4s ease-in-out infinite; }
-@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.06); } }
+@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
 
 /* Pedido em 10/09/2026: animação também na parte branca do título do hero ("Vamos tirar sua
    ideia do"), tipo um "zoom" - um pulso bem sutil de escala, pra combinar com a palavra
@@ -436,9 +441,15 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      Pedido em seguida: contorno de 1px tava forte demais - pediu "quase nada de contorno",
      reduzido pra 0.4px (só um fiozinho preto, quase imperceptível).
      Pedido em seguida: 0.4px sumiu demais ("parece que tirou tudo") - subido um pouco pra
-     0.65px, ponto intermediário: sutil mas visível. */
-  -webkit-text-stroke: 0.65px #000;
+     0.65px, ponto intermediário: sutil mas visível.
+     Pedido em seguida (mesma data): tirar só mais um pouquinho ("quase nada") - reduzido pra
+     0.5px. Junto, pedida uma sombra preta leve (quase imperceptível) no nome "papel" - somada
+     uma segunda camada de text-shadow bem colada e pouco espalhada (0 1px 1px, opacidade
+     baixa), separada da sombra suave/espalhada que já existia (que dá profundidade geral) -
+     essa nova é só um toque de "chão" embaixo da letra, sem ficar pesada. */
+  -webkit-text-stroke: 0.5px #000;
   text-shadow:
+    0 1px 1px rgba(0, 0, 0, 0.4),
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
 
