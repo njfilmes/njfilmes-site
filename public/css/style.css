@@ -412,19 +412,27 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    inteiro (pai de todas as palavras, que já têm suas próprias animações) - aqui só mexemos em
    opacity/filter/translateX do h1, então tudo dentro (papel, ideia, a interrogação, cada um com
    sua própria animação) continua rodando por baixo sem conflito, e apaga/volta junto.
-   De propósito: o "corte" acontece só uma vez a cada ciclo (12s) e dura bem menos de 1 segundo -
-   o resto do tempo (mais de 11s) fica tudo normal, então parece um "soluço" ocasional, não um
-   piscar constante. Também de propósito, a opacidade nunca cai abaixo de ~40% (nunca fica
-   preto/branco chapado) e os cortes ficam espaçados (não vira um estroboscópio) - mais seguro pra
-   quem tem sensibilidade a luz piscando. filter: grayscale+contrast simula "estática" de TV sem
-   sinal; um dos cortes usa hue-rotate pra dar uma variação de cor, tipo interferência mesmo. */
-.js .hero-content h1 { animation: heroSignalGlitch 12s ease-in-out infinite; }
+   Ajustado em seguida (mesmo dia): a primeira versão (corte só perto do fim de um ciclo de 12s,
+   ~9.5s depois de carregar a página) tava passando despercebido - quem dava uma olhada rápida na
+   página não chegava a ver, porque o corte demorava quase o ciclo inteiro pra acontecer pela
+   primeira vez. Trocado pra um ciclo de 6s com o corte logo no começo (~2,4s depois de carregar,
+   já depois da introdução em cortina preta do topo/rodapé terminar) - assim aparece rápido pra
+   quem acabou de abrir a página, e repete a cada 6s. Também deixado mais forte/visível (opacidade
+   cai mais, ~18-22%, e o contraste/dessaturação fica mais marcado) pra ficar claro que é um
+   "corte de sinal" de propósito, não só um flicker fraco.
+   Mesmo mais forte, continua com o mesmo cuidado de segurança: a opacidade nunca cai a zero
+   (nunca fica preto/branco chapado, sempre dá pra ver a silhueta do texto) e os cortes ficam
+   espaçados dentro do próprio "soluço" (não vira um estroboscópio) - o corte inteiro dura bem
+   menos de meio segundo, e o resto do ciclo (mais de 5s) fica tudo normal. filter:
+   grayscale+contrast simula "estática" de TV sem sinal; um dos cortes usa hue-rotate pra dar uma
+   variação de cor, tipo interferência mesmo. */
+.js .hero-content h1 { animation: heroSignalGlitch 6s ease-in-out infinite; }
 @keyframes heroSignalGlitch {
-  0%, 79%, 100% { opacity: 1; filter: none; transform: translateX(0); }
-  79.5% { opacity: 0.45; filter: grayscale(1) contrast(1.4) brightness(1.25); transform: translateX(-3px); }
-  80.5% { opacity: 0.92; filter: none; transform: translateX(1px); }
-  82% { opacity: 0.4; filter: grayscale(1) hue-rotate(180deg) brightness(0.75); transform: translateX(3px); }
-  83% { opacity: 1; filter: none; transform: translateX(0); }
+  0%, 40%, 100% { opacity: 1; filter: none; transform: translateX(0); }
+  40.5% { opacity: 0.2; filter: grayscale(1) contrast(1.6) brightness(1.35); transform: translateX(-5px); }
+  41.5% { opacity: 0.85; filter: none; transform: translateX(2px); }
+  42.5% { opacity: 0.18; filter: grayscale(1) hue-rotate(180deg) brightness(0.6) contrast(1.3); transform: translateX(4px); }
+  43.5% { opacity: 1; filter: none; transform: translateX(0); }
 }
 /* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
    resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
