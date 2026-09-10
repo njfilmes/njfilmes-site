@@ -1,5 +1,5 @@
 import { layout, absoluteUrl } from '../render.js';
-import { escapeHtml, nl2br, videoEmbedHtml, formatDatePtBr, truncate } from '../util.js';
+import { escapeHtml, nl2br, videoEmbedHtml, parseVideoUrl, formatDatePtBr, truncate } from '../util.js';
 import { ASSET_VERSION } from '../assetVersion.js';
 import {
   getSettings,
@@ -767,6 +767,11 @@ export async function aboutPage(req, res) {
     ...(await listBioPhotos()).map((p) => p.filename),
   ].filter((src, idx, arr) => src && arr.indexOf(src) === idx);
 
+  // Pedido em 10/09/2026: opção de colocar um vídeo (YouTube ou parecido) no lugar das fotos,
+  // pra quem não quiser ficar só na foto. Se o link não for reconhecido, cai de volta pras
+  // fotos normalmente (nunca deixa a seção vazia por causa de um link inválido).
+  const aboutVideo = bio.bio_video_url ? parseVideoUrl(bio.bio_video_url) : null;
+
   // Galeria de bastidores (fotos do NJ trabalhando) que rola sozinha na horizontal,
   // igual a faixa de clientes/marcas — pedido do usuario em 29/08/2026. Editável pelo painel
   // (menu Biografia / Sobre) desde 02/09/2026 — antes eram 11 arquivos fixos no código.
@@ -775,7 +780,9 @@ export async function aboutPage(req, res) {
   const content = `
   <section class="simple-hero">
     <div class="container about-split">
-      <div class="about-photos reveal">${aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
+      <div class="about-photos${aboutVideo ? ' has-video' : ''} reveal">${aboutVideo
+        ? videoEmbedHtml({ ...aboutVideo, title: bio.name || 'NJFILMES' })
+        : aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
       <div class="reveal">
         <span class="eyebrow">Sobre a NJFILMES</span>
         <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>

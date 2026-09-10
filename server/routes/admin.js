@@ -724,6 +724,8 @@ export async function testimonialMove(req, res, body, id) {
 export async function commentsPage(req, res, admin) {
   const flash = readFlash(req);
   const comments = await Q.listAllComments();
+  const projects = await Q.listProjects();
+  const projectOptions = projects.map((p) => ({ value: p.id, label: p.title }));
   const rows = comments
     .map(
       (c) => `<div class="panel comment-admin-item">
@@ -749,10 +751,40 @@ export async function commentsPage(req, res, admin) {
   const content = `
   <div class="panel">
     <h2>Comentários (${comments.length})</h2>
-    <p class="muted" style="margin-top:-8px;">Comentários deixados por visitantes nas páginas dos projetos (fotos e vídeos). Você pode responder publicamente ou excluir comentários indesejados.</p>
+    <p class="muted" style="margin-top:-8px;">Comentários deixados por visitantes nas páginas dos projetos (fotos e vídeos). Você pode responder publicamente, excluir comentários indesejados ou escrever um comentário você mesmo.</p>
+  </div>
+  <div class="panel">
+    <h3>Escrever um novo comentário</h3>
+    <p class="muted" style="margin-top:-8px;">Aparece na página do projeto igual a um comentário de visitante — use pra destacar um feedback de cliente que você recebeu por fora (WhatsApp, etc.) ou pra puxar a conversa num projeto novo.</p>
+    ${projects.length ? `<form method="post" action="/admin/comentarios/adicionar">
+      ${selectField({ label: 'Projeto', name: 'project_id', options: projectOptions, help: 'Em qual trabalho esse comentário vai aparecer.' })}
+      ${field({ label: 'Nome (quem está comentando)', name: 'author_name', value: 'NJFILMES', placeholder: 'Ex: NJFILMES, ou o nome do cliente' })}
+      ${field({ label: 'Comentário', name: 'content', textarea: true, rows: 3, placeholder: 'Escreva o comentário...' })}
+      <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Publicar comentário</button></div>
+    </form>` : '<p class="empty-hint">Crie um projeto primeiro para poder comentar nele.</p>'}
   </div>
   ${comments.length ? rows : '<div class="panel"><p class="empty-hint">Nenhum comentário ainda.</p></div>'}`;
   res.end(adminLayout({ title: 'Comentários', activePath: '/admin/comentarios', admin, content, flash }));
+}
+
+// Rota usa "/adicionar" (não "/criar") de propósito: comentários são carregados dinamicamente
+// pelo site (fetch no navegador, ver public/js/site.js) e não ficam gravados no HTML publicado,
+// então escrever um aqui não precisa disparar a republicação do site estático - ver o regex em
+// server/index.js que decide quando chamar triggerStaticRebuild (mesmo motivo de "responder" e
+// "remover" já usarem nomes fora desse regex).
+export async function commentCreate(req, res, body) {
+  const projectId = Number(body.project_id);
+  const authorName = (body.author_name || '').trim();
+  const content = (body.content || '').trim();
+  if (!projectId || !authorName || !content) {
+    return redirect(res, '/admin/comentarios' + withFlash(res, 'error', 'Preencha o projeto, o nome e o comentário.'));
+  }
+  const project = await Q.getProject(projectId);
+  if (!project) {
+    return redirect(res, '/admin/comentarios' + withFlash(res, 'error', 'Projeto não encontrado.'));
+  }
+  await Q.createComment({ project_id: projectId, author_name: authorName, content });
+  redirect(res, '/admin/comentarios' + withFlash(res, 'success', 'Comentário publicado.'));
 }
 
 export async function commentReply(req, res, body, id) {
@@ -957,6 +989,14 @@ export async function bioPage(req, res, admin) {
         <input type="hidden" name="profile_photo_data">
         <img data-preview src="${escapeHtml(bio.profile_photo || '')}" style="max-width:160px;border-radius:6px;margin-top:8px;display:${bio.profile_photo ? 'block' : 'none'};">
       </div>
+      ${field({ label: 'Vídeo no lugar da foto (opcional)', name: 'bio_video_url', value: bio.bio_video_url, placeholder: 'Cole aqui o link do YouTube, Vimeo, Mega, Google Drive ou um link direto de vídeo', help: 'Se preencher, esse vídeo aparece no lugar das fotos ao lado da sua biografia, na página Sobre. Deixe vazio para continuar mostrando as fotos.' })}
+      <div class="form-field" data-single-upload>
+        <label>Ou envie o vídeo direto (sem precisar de link)</label>
+        <input type="file" accept="video/*">
+        <input type="hidden" name="bio_video_data">
+        <video data-preview src="${escapeHtml(bio.bio_video_url || '')}" muted controls playsinline style="max-width:220px;border-radius:6px;margin-top:8px;${bio.bio_video_url ? 'display:block;' : 'display:none;'}"></video>
+        <small>Limite de 25MB — prefira um clipe curto e já comprimido. Enviando um vídeo aqui, ele substitui automaticamente o link do campo acima ao salvar.</small>
+      </div>
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
       <div class="form-row">
         ${field({ label: 'Título da galeria de bastidores', name: 'gallery_title', value: bio.gallery_title, placeholder: 'Ex: No set com a NJFILMES', help: 'Aparece acima da faixa de fotos "Bastidores", na página Sobre.' })}
@@ -1021,6 +1061,21 @@ export async function bioUpdate(req, res, body) {
   if (body.profile_photo_data) {
     try { profile_photo = await saveMiscImage(body.profile_photo_data); } catch (e) { photoFailed = true; console.error('Erro ao salvar foto de perfil:', e.message); }
   }
+  // Vídeo no lugar da foto na página Sobre: pode vir por link colado (YouTube, Vimeo, Mega,
+  // Drive etc. — ver parseVideoUrl em server/util.js) OU por arquivo enviado direto
+  // (bio_video_data) — pedido do usuário em 10/09/2026. O arquivo enviado tem prioridade sobre
+  // o link; se o upload falhar, mantém o que já estava configurado em vez de apagar.
+  let bio_video_url = body.bio_video_url || '';
+  let videoFailed = false;
+  if (body.bio_video_data) {
+    try {
+      bio_video_url = await saveVideoFile(body.bio_video_data);
+    } catch (e) {
+      videoFailed = true;
+      console.error('Erro ao salvar vídeo da bio:', e.message);
+      bio_video_url = body.bio_video_url || bio.bio_video_url || '';
+    }
+  }
   await Q.updateBio({
     name: body.name || '',
     professional_title: body.professional_title || '',
@@ -1029,11 +1084,16 @@ export async function bioUpdate(req, res, body) {
     specialties: body.specialties || '',
     equipment: body.equipment || '',
     profile_photo,
+    bio_video_url,
     cta_text: body.cta_text || '',
     gallery_title: body.gallery_title || 'No set com a NJFILMES',
     trajectory_title: body.trajectory_title || 'Uma jornada pela imagem',
   });
-  redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
+  const failMsgs = [];
+  if (photoFailed) failMsgs.push('a nova foto de perfil não pôde ser salva (a antiga foi mantida)');
+  if (videoFailed) failMsgs.push('o novo vídeo enviado não pôde ser salvo (o anterior foi mantido)');
+  const ok = !failMsgs.length;
+  redirect(res, '/admin/bio' + withFlash(res, ok ? 'success' : 'error', ok ? 'Biografia atualizada.' : `Biografia atualizada, mas ${failMsgs.join(' e ')}.`));
 }
 
 export async function bioPhotosUpload(req, res, body) {
