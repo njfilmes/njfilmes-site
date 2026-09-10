@@ -501,12 +501,27 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    só fazia sentido pro rotate() de pêndulo que saiu) pra 50% 50% (centro, mesmo padrão do
    heroIdeiaSwing) já que só sobrou o giro em Y. Ângulo mantido em 32deg (era o valor pedido antes
    em "tem espaço") - só o eixo que mudou, não o quanto ela gira. */
-.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 50%; }
+/* Ajustado em 10/09/2026 (mesmo dia, segunda rodada): "ainda continua e a virgula vc tirou a
+   animacao q tava" - o ajuste acima (só rotateY, sem rotate) não resolveu: o navegador SEMPRE
+   distorce um pouco um glifo 2D (a fonte é desenhada plana) quando gira ele em 3D com
+   perspective() - reduz a "espessura" aparente do "?" de um jeito que lê como achatado, MESMO sem
+   nenhum rotate() misturado junto (o rotateY() sozinho já causa isso, por conta própria). E pra
+   piorar, sem o rotate() (que era o que dava a impressão clara de "balançando de lado a lado"), o
+   giro em Y sozinho ficou sutil demais no "?" (glifo fino, pouca "área" pra mostrar o giro 3D) -
+   leu como se a animação tivesse sumido, igual já tinha acontecido com "ideia" lá atrás.
+   Solução: tirado TODO o giro 3D (perspective() e rotateY() removidos) - sobrou só rotate() puro
+   (giro 2D no eixo Z). Rotação 2D pura NUNCA distorce o formato de nada (é uma transformação
+   rígida - só gira, não estica nem achata, matematicamente), então resolve o achatamento de vez;
+   e como é um pêndulo balançando de lado a lado (bem mais perceptível que o giro 3D sutil que
+   tinha ficado), aumentado um pouco o ângulo (de 10deg pra 14deg) pra compensar a "profundidade" do
+   3D que saiu e manter o movimento bem visível. transform-origin voltou pra 50% 85% (perto da base
+   do "?", pra girar feito um pêndulo pendurado, igual era antes de entrar o rotateY). */
+.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
 .js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s linear infinite; }
 @keyframes heroPunctSwing {
-  0%, 100% { transform: perspective(300px) rotateY(-32deg); color: #fff; }
-  25%, 75% { transform: perspective(300px) rotateY(0deg); color: rgb(228, 209, 147); }
-  50% { transform: perspective(300px) rotateY(32deg); color: var(--accent); }
+  0%, 100% { transform: rotate(-14deg); color: #fff; }
+  25%, 75% { transform: rotate(0deg); color: rgb(228, 209, 147); }
+  50% { transform: rotate(14deg); color: var(--accent); }
 }
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
    tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
