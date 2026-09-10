@@ -457,11 +457,22 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    pêndulo com perspective()/rotateY, trocando de cor branco/dourado ao longo do ciclo). A palavra
    "ideia" (.hero-highlight-word), que usava essa mesma animação, continua parada por enquanto -
    só a interrogação foi pedida de volta aqui. */
+/* Ajustado em seguida (10/09/2026): "tenta deixar o branco da virgula ciclonizado com o branco do
+   nome papel no momento q vai pra frente" - a interrogação girava num ciclo de 3.6s e "papel"
+   (heroPapelColorFloat) num ciclo de 4s, então as duas trocavam de cor fora de sincronia (iam
+   ficando branco/dourado em momentos diferentes, derivando uma da outra com o tempo). Igualado o
+   ciclo da interrogação pra 4s também (igual ao de "papel"), sem delay em nenhum dos dois - assim
+   as duas ficam brancas e douradas exatamente juntas, sempre.
+   Pedido em seguida (mesma data): "analise esse movimento parece que n ta fluido, pode chegar mais
+   pra frente tem espaco" - o giro em 3D da interrogação (rotate/rotateY) tava com ângulo meio
+   curto pertinho do "papel" (sobra espaço em branco ao lado dela no título) - aumentado o ângulo
+   (rotate de 7deg pra 10deg, rotateY de 22deg pra 32deg) pra ela girar mais pra frente/aproveitar
+   melhor esse espaço, ficando um movimento mais evidente e fluido em vez de um balanço curtinho. */
 .hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
-.js .hero-content h1 .hero-punct { animation: heroPunctSwing 3.6s ease-in-out infinite; }
+.js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s ease-in-out infinite; }
 @keyframes heroPunctSwing {
-  0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
-  50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
+  0%, 100% { transform: perspective(300px) rotate(-10deg) rotateY(-32deg); color: #fff; }
+  50% { transform: perspective(300px) rotate(10deg) rotateY(32deg); color: var(--accent); }
 }
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
    tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
