@@ -420,16 +420,20 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   inset: -8% -8% -20% -8%;
   z-index: -1;
   border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(255, 219, 120, 0.4) 0%, rgba(246, 196, 69, 0.18) 45%, rgba(246, 196, 69, 0) 70%);
-  filter: blur(6px);
+  /* Pedido em 10/09/2026: luz mais forte/brilhante pra destacar mais a palavra - cores mais
+     opacas e o brilho se espalhando um pouco mais (45%->52%, 70%->78%) antes de sumir. */
+  background: radial-gradient(ellipse at center, rgba(255, 224, 140, 0.7) 0%, rgba(246, 196, 69, 0.32) 52%, rgba(246, 196, 69, 0) 78%);
+  filter: blur(7px);
   pointer-events: none;
 }
 .js .hero-content h1 .text-accent::before {
   animation: heroGlowPulse 3.2s ease-in-out infinite;
 }
 @keyframes heroGlowPulse {
-  0%, 100% { opacity: 0.65; transform: scale(0.94); }
-  50% { opacity: 1; transform: scale(1.08); }
+  /* Pedido em 10/09/2026: pulso mais intenso (opacidade e escala mínimas mais altas) pra luz
+     ficar mais brilhante o tempo todo, não só no pico. */
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent::before { animation: none; opacity: 0.85; }
