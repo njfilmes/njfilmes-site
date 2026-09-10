@@ -387,9 +387,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      tem ela instalada (comum em Windows/Mac), e "Anton" (importada la no <head>, mesmo
      "espirito" de fonte super grossa/condensada) entra como alternativa em aparelhos que não
      tem a Impact (ex: a maioria dos celulares Android).
-     Pedido em seguida: sem bold - peso normal (400) em vez de bold/700. */
-  font-family: 'Impact', 'Anton', var(--font-body);
-  font-weight: 400;
+     Pedido em seguida: sem bold - peso normal (400) em vez de bold/700.
+     Pedido em seguida: Impact achada "muito quadrada" - trocada pra Poppins (ExtraBold/800),
+     mais arredondada e parecida com as outras fontes do site (importada la no <head>,
+     server/render.js). Volta a usar peso forte (800) - dessa vez faz sentido porque é o
+     "corte" natural da Poppins ExtraBold, não um contorno/bold artificial como no Impact. */
+  font-family: 'Poppins', var(--font-body);
+  font-weight: 800;
   /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo).
      Pedido em seguida (10/09/2026): tinha virado um contorno bem marcado (4 sombras 1px
      solidas + text-stroke) - pedido pra tirar o contorno e deixar so uma sombra suave/sutil
