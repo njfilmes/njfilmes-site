@@ -148,6 +148,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    usado no site para as outras animacoes (mais abaixo no arquivo). */
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent,
+  .js .hero-content h1 .hero-title-white,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -360,6 +361,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    espaço entre ela e a linha acima. */
 .js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroAccentFloat 4s ease-in-out infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+
+/* Pedido em 10/09/2026: animação também na parte branca do título do hero ("Vamos tirar sua
+   ideia do"), tipo um "zoom" - um pulso bem sutil de escala, pra combinar com a palavra
+   dourada que já flutua/brilha ao lado. Span (.hero-title-white) vem do server
+   (server/routes/public.js, heroHeadlineHtml) já que esse texto é editável pelo painel. */
+.js .hero-content h1 .hero-title-white { display: inline-block; animation: heroTitleZoom 5s ease-in-out infinite; }
+@keyframes heroTitleZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
 .hero-content h1 {
   font-family: 'Hanken Grotesk', var(--font-body);
   font-weight: 800;
