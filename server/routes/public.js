@@ -54,6 +54,18 @@ function previewVideoData(project) {
   return null;
 }
 
+// Aviso "Ver projeto completo" que aparece POR CIMA da prévia em vídeo enquanto ela toca sozinha
+// (hover no PC / rolagem no celular - ver playPreview() em public/js/site.js). Pedido em
+// 10/09/2026: sem isso, o card com a prévia rodando ficava parecendo "só um vídeo de fundo", sem
+// deixar claro que dá pra clicar ali e ver o projeto completo (o selo de play redondo de sempre
+// já some nesse momento, pra não parecer que o vídeo ainda não começou - ver CSS .is-previewing
+// .play). Fica escondido (opacity:0) o tempo todo e só aparece quando o JS soma a classe
+// is-previewing no card (mesmo mecanismo do vídeo/selo de play), então nunca atrapalha a foto de
+// capa normal. Só é chamado para cards que têm prévia (ver uso abaixo).
+function previewHintHtml() {
+  return `<span class="preview-hint" aria-hidden="true">Ver projeto completo<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+}
+
 function workCard(project, opts = {}) {
   const cat = project.category_name || '';
   const hasVideo = Number(project.video_count) > 0;
@@ -65,6 +77,7 @@ function workCard(project, opts = {}) {
     <img class="work-card-cover" src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
     ${preview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(preview.provider)}" data-preview-src="${escapeHtml(preview.src)}"></div>` : ''}
     ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+    ${preview ? previewHintHtml() : ''}
     <span class="overlay">
       ${cat ? `<span class="cat">${escapeHtml(cat)}</span>` : ''}
       <h3>${escapeHtml(project.title)}</h3>
@@ -200,6 +213,7 @@ export async function homePage(req, res) {
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
         ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
         ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+        ${featuredPreview ? previewHintHtml() : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
       </a>
     </div>
