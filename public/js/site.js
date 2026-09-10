@@ -232,18 +232,11 @@
         if (localStorage.getItem('nj_menuHintSeen') === '1') edgeHint.classList.add('is-hidden');
       } catch (e) {}
     }
-    // Pedido em 10/09/2026 (oitava rodada): o proprio botao do menu (os 3 tracinhos) tambem
-    // ganhou uma animacao chamando atencao (anel pulsando + uma leve "respirada" - ver CSS),
-    // porque ele fica meio escondido no canto. Mesma logica do hint da borda acima: para
-    // sozinha assim que a pessoa abre o menu pela primeira vez (por qualquer caminho - clique
-    // ou arrasto, todos passam por openNav), e fica assim pra sempre nesse aparelho.
-    var hideToggleAttention = function () {
-      toggle.classList.add('attention-done');
-      try { localStorage.setItem('nj_toggleAttentionSeen', '1'); } catch (e) {}
-    };
-    try {
-      if (localStorage.getItem('nj_toggleAttentionSeen') === '1') toggle.classList.add('attention-done');
-    } catch (e) {}
+    // Pedido em 10/09/2026 (oitava rodada, depois nona): o proprio botao do menu (os 3
+    // tracinhos) ganhou uma animacao chamando atencao (anel pulsando + uma leve "respirada" -
+    // ver CSS), porque ele fica meio escondido no canto. Primeiro essa animacao sumia sozinha
+    // depois do primeiro uso, mas o usuario pediu pra ficar sempre ligada, o tempo todo -
+    // entao ela nao para mais (nao existe mais nenhuma funcao que a desliga).
     var closeNavImmediate = function () {
       nav.classList.remove('open');
       if (navBackdrop) navBackdrop.classList.remove('open');
@@ -256,7 +249,6 @@
       toggle.setAttribute('aria-expanded', 'true');
       document.body.style.overflow = 'hidden';
       hideEdgeHintForever();
-      hideToggleAttention();
       try {
         history.pushState({ njNav: true }, '', location.pathname + location.search + '#menu');
         navPushed = true;
