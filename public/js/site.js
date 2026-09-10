@@ -360,6 +360,12 @@
       // arrastar ao mesmo tempo que o clique dele tentava abrir, e as duas coisas brigavam.
       // Ignora esse toque aqui e deixa o proprio botao cuidar de abrir/fechar como sempre.
       if (e.target === toggle || toggle.contains(e.target)) return;
+      // Rede de seguranca: se por qualquer motivo o fundo escurecido ficou "preso" aberto
+      // sem o painel do menu (o bug do touchcancel corrigido acima, ou qualquer outro caso
+      // nao previsto), o proximo toque na tela desfaz isso sozinho antes de continuar.
+      if (navBackdrop && navBackdrop.classList.contains('open') && !nav.classList.contains('open')) {
+        closeNavImmediate();
+      }
       var x = e.touches[0].clientX;
       if (nav.classList.contains('open')) {
         dragMode = 'close';
@@ -424,6 +430,20 @@
       dragEnd(Math.max(0, Math.min(panelWidth, finalPx)), e);
     }, { passive: true });
     document.addEventListener('touchcancel', function () {
+      // Pedido em 10/09/2026 (setima rodada): achado o motivo do fundo escurecido ficar
+      // "preso" na tela sem o menu aparecer (print do usuario mostrando a pagina toda
+      // esmaecida/borrada mas sem o painel do menu em lugar nenhum). O Android pode cancelar
+      // um toque no meio do gesto a qualquer momento (touchcancel em vez de touchend - ele
+      // faz isso, por exemplo, quando decide que aquele toque "pertence" a outra coisa, tipo
+      // o proprio gesto de voltar do sistema). Ate aqui, essa limpeza so desfazia os estilos
+      // inline (transform/opacity) usados durante o arrasto ao vivo, mas esquecia de tirar a
+      // classe "open" que o fundo escurecido ja tinha ganho assim que o arrasto de abrir
+      // comecou (ver mais acima, onde o modo 'open' e engatado) - o painel do menu em si
+      // nunca chega a ganhar essa classe antes do gesto terminar de verdade, entao ele
+      // sumia (sem estilo inline, volta a ficar fora da tela) enquanto o fundo escurecido
+      // continuava visivel pra sempre (com a classe "open" ainda grudada nele). Agora,
+      // cancelar um arrasto de ABRIR desfaz tudo direitinho, igual soltar o dedo antes da
+      // metade do caminho.
       pendingOpen = false;
       if (!dragging) return;
       dragging = false;
@@ -433,6 +453,7 @@
         navBackdrop.style.transition = '';
         navBackdrop.style.opacity = '';
       }
+      if (dragMode === 'open') closeNavImmediate();
       dragMode = null;
     }, { passive: true });
 
