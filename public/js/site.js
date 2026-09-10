@@ -216,6 +216,22 @@
     // alguns celulares podem não disparar o popstate de forma confiável quando a URL empilhada
     // é exatamente igual à de antes.
     var navPushed = false;
+    // Pedido em 10/09/2026 (quinta rodada): a "aba" na borda direita (ver render.js/CSS) que
+    // indica "puxe pra cá" só faz sentido pra quem ainda não sabe que dá pra arrastar. Assim
+    // que a pessoa abre o menu pela primeira vez (clicando ou arrastando, tanto faz - as duas
+    // formas passam por openNav), guardamos isso no localStorage e a aba nunca mais aparece
+    // nesse aparelho. Também some enquanto o menu está aberto, independente do localStorage.
+    var edgeHint = document.querySelector('[data-edge-hint]');
+    var hideEdgeHintForever = function () {
+      if (!edgeHint) return;
+      edgeHint.classList.add('is-hidden');
+      try { localStorage.setItem('nj_menuHintSeen', '1'); } catch (e) {}
+    };
+    if (edgeHint) {
+      try {
+        if (localStorage.getItem('nj_menuHintSeen') === '1') edgeHint.classList.add('is-hidden');
+      } catch (e) {}
+    }
     var closeNavImmediate = function () {
       nav.classList.remove('open');
       if (navBackdrop) navBackdrop.classList.remove('open');
@@ -227,6 +243,7 @@
       if (navBackdrop) navBackdrop.classList.add('open');
       toggle.setAttribute('aria-expanded', 'true');
       document.body.style.overflow = 'hidden';
+      hideEdgeHintForever();
       try {
         history.pushState({ njNav: true }, '', location.pathname + location.search + '#menu');
         navPushed = true;
@@ -269,12 +286,19 @@
     var dragMode = null; // 'open' ou 'close'
     var dragStartX = 0;
     var panelWidth = 0;
-    // Pedido em 10/09/2026 (segunda rodada): 28px nao funcionava no celular de verdade -
-    // o motivo mais provavel e que o Android reserva uma faixa bem colada na borda da tela
-    // (uns 24dp) pro proprio gesto do sistema (voltar/avancar de pagina), entao o toque
-    // nem chega a ser entregue pro site quando comeca exatamente na borda. Aumentado bem
-    // pra sobrar uma faixa "segura" mais pra dentro, fora do que o sistema costuma reservar.
-    var EDGE_ZONE = 70; // px a partir da borda direita que arma o gesto de abrir
+    // Pedido em 10/09/2026 (quarta rodada): nem 28px nem 70px coladinhos na borda direita
+    // funcionaram no celular de verdade - o Android (e o proprio Chrome) reservam uma faixa
+    // bem na borda da tela pro gesto de voltar/avancar de pagina, e o toque nem chega a ser
+    // entregue pro site quando comeca exatamente ali, nao importa o quao larga a faixa seja.
+    // Solucao definitiva: parar de depender de ONDE o toque comeca (perto da borda) e passar
+    // a reagir a COMO ele se move - o toque pode comecar em qualquer lugar da tela (bem longe
+    // da borda, onde o sistema nunca intercepta nada); so quando o dedo realmente arrasta pra
+    // esquerda de forma clara (mais horizontal que vertical) e que o menu comeca a abrir,
+    // acompanhando o arrasto a partir dali. Variaveis abaixo controlam esse "toque candidato".
+    var pendingOpenX = 0;
+    var pendingOpenY = 0;
+    var pendingOpen = false;
+    var OPEN_DRAG_THRESHOLD = 40; // px arrastados pra esquerda antes do menu comecar a seguir o dedo
 
     // Arrastar pra cima fecha (gesto rapido, sem acompanhar o dedo - o menu nao se move
     // verticalmente, entao nao tem o que "seguir" nesse eixo).
@@ -321,12 +345,10 @@
     }
 
     document.addEventListener('touchstart', function (e) {
-      // Pedido em 10/09/2026 (terceira rodada): aumentar a faixa de 28 pra 70px acabou
-      // cobrindo o proprio botao do menu (os 3 tracinhos), que fica coladinho na borda
-      // direita do cabecalho - tocar nele armava o gesto de arrastar ao mesmo tempo que o
-      // clique dele tentava abrir, e as duas coisas brigavam (o botao parava de abrir o
-      // menu direito). Ignora esse toque aqui e deixa o proprio botao cuidar de abrir/fechar
-      // do jeito que sempre funcionou.
+      // Pedido em 10/09/2026 (terceira rodada): a faixa colada na borda direita acabou
+      // cobrindo o proprio botao do menu (os 3 tracinhos) - tocar nele armava o gesto de
+      // arrastar ao mesmo tempo que o clique dele tentava abrir, e as duas coisas brigavam.
+      // Ignora esse toque aqui e deixa o proprio botao cuidar de abrir/fechar como sempre.
       if (e.target === toggle || toggle.contains(e.target)) return;
       var x = e.touches[0].clientX;
       if (nav.classList.contains('open')) {
@@ -334,28 +356,50 @@
         panelWidth = nav.offsetWidth;
         dragStartX = x;
         dragging = true;
-      } else if (x >= window.innerWidth - EDGE_ZONE) {
-        dragMode = 'open';
-        panelWidth = nav.offsetWidth;
-        dragStartX = x;
-        dragging = true;
-        if (navBackdrop) navBackdrop.classList.add('open');
-        dragTo(panelWidth);
+      } else {
+        // Menu fechado: so guarda esse toque como "candidato" a abrir - o gesto so vira
+        // arrasto de verdade (e o menu so comeca a se mexer) no touchmove, quando o dedo
+        // ja arrastou o suficiente pra esquerda (ver OPEN_DRAG_THRESHOLD acima).
+        pendingOpen = true;
+        pendingOpenX = x;
+        pendingOpenY = e.touches[0].clientY;
       }
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
-      if (!dragging) return;
-      var dx = e.touches[0].clientX - dragStartX;
-      if (dragMode === 'open') dragTo(panelWidth + dx);
-      else dragTo(dx);
+      if (dragging) {
+        var dx = e.touches[0].clientX - dragStartX;
+        if (dragMode === 'open') dragTo(panelWidth + dx);
+        else dragTo(dx);
+        return;
+      }
+      if (!pendingOpen) return;
+      var mx = e.touches[0].clientX - pendingOpenX;
+      var my = e.touches[0].clientY - pendingOpenY;
+      if (mx <= -OPEN_DRAG_THRESHOLD && Math.abs(mx) > Math.abs(my)) {
+        // Confirmado: arrasto horizontal pra esquerda, mais forte que qualquer scroll
+        // vertical - comeca a abrir o menu a partir daqui, acompanhando o dedo.
+        pendingOpen = false;
+        dragMode = 'open';
+        panelWidth = nav.offsetWidth;
+        dragStartX = pendingOpenX;
+        dragging = true;
+        hideEdgeHintForever();
+        if (navBackdrop) navBackdrop.classList.add('open');
+        dragTo(panelWidth + mx);
+      } else if (Math.abs(my) > Math.abs(mx) && Math.abs(my) > 15) {
+        // Scroll vertical claro - desarma o candidato pra nao ficar checando a toa.
+        pendingOpen = false;
+      }
     }, { passive: true });
     document.addEventListener('touchend', function (e) {
+      pendingOpen = false;
       if (!dragging) return;
       var dx = e.changedTouches[0].clientX - dragStartX;
       var finalPx = dragMode === 'open' ? panelWidth + dx : dx;
       dragEnd(Math.max(0, Math.min(panelWidth, finalPx)), e);
     }, { passive: true });
     document.addEventListener('touchcancel', function () {
+      pendingOpen = false;
       if (!dragging) return;
       dragging = false;
       nav.style.transition = '';
