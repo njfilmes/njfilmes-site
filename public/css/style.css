@@ -346,7 +346,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    só aqui (o resto do site - botões, links, outros títulos - continua com o dourado padrão de
    sempre, sem mudar a marca inteira). */
 .hero-content .eyebrow { color: #f6c445; }
-.hero-content h1 .text-accent { color: #f6c445; }
+/* Pedido em seguida (10/09/2026): a palavra de destaque ("papel") tava mais clara que o
+   brilho atras dela (::before mais abaixo), entao o brilho nao aparecia como luz vindo de
+   tras - so ficava uma cor lisa. Escurecida um pouco (só a palavra do título, o texto
+   pequeno acima continua igual) pra o brilho, que é mais claro, dar esse efeito de luz de
+   fundo por contraste. */
+.hero-content h1 .text-accent { color: #ddb03e; }
 /* 10/09/2026: a palavra flutuando (+ o brilho atrás dela) tava "batendo"/encostando na linha de
    texto de cima quando subia - pedido pra dar um respiro. Empurra a palavra um pouco pra baixo
    (margin-top) e desce o pico da animação (só sobe 6px agora, em vez de 10px) pra sobrar mais
