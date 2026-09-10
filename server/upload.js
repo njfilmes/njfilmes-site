@@ -20,18 +20,27 @@ export const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
 export const PHOTOS_DIR = path.join(UPLOADS_DIR, 'photos');
 export const THUMBS_DIR = path.join(UPLOADS_DIR, 'thumbs');
 export const MISC_DIR = path.join(UPLOADS_DIR, 'misc');
+export const VIDEOS_DIR = path.join(UPLOADS_DIR, 'videos');
 
 function useBlob() {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
 }
 
 if (!useBlob()) {
-  for (const dir of [UPLOADS_DIR, PHOTOS_DIR, THUMBS_DIR, MISC_DIR]) {
+  for (const dir of [UPLOADS_DIR, PHOTOS_DIR, THUMBS_DIR, MISC_DIR, VIDEOS_DIR]) {
     await fs.mkdir(dir, { recursive: true });
   }
 }
 
 const MAX_UPLOAD_BYTES = 20 * 1024 * 1024; // 20MB por foto (antes da otimização)
+// Vídeo não passa pelo sharp (não dá pra comprimir/redimensionar aqui), então o limite é mais
+// enxuto — pensado pro vídeo de fundo da Home (curto, em loop), não pra um vídeo completo (esse
+// continua melhor no YouTube/Vimeo, na seção "Vídeos do projeto"). Pedido do usuário em 10/09/2026
+// pra poder arrastar um vídeo direto no painel, sem precisar de link externo (Cloudinary, Mega...).
+// 25MB (não 30) pra deixar folga no limite total do corpo da requisição (ver server/body.js) —
+// a página de Configurações pode enviar foto de destaque + imagem de compartilhamento + vídeo
+// no mesmo envio, e os três juntos, em base64, precisam caber dentro desse limite.
+const MAX_VIDEO_BYTES = 25 * 1024 * 1024; // 25MB por vídeo
 
 function decodeDataUrl(dataUrl) {
   const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || '');
@@ -116,6 +125,40 @@ export async function saveMiscImage(dataUrl) {
     .webp({ quality: 84 })
     .toBuffer();
   return storeBuffer(outBuffer, `misc/${filename}`);
+}
+
+function decodeVideoDataUrl(dataUrl) {
+  const match = /^data:(video\/[a-zA-Z0-9.+-]+);base64,(.*)$/.exec(dataUrl || '');
+  if (!match) return null;
+  return { mime: match[1], buffer: Buffer.from(match[2], 'base64') };
+}
+
+// Salva um vídeo enviado direto do navegador (sem transcodificação — ao contrário das fotos,
+// o vídeo é salvo do jeito que veio). Por isso o limite de tamanho é mais apertado que o de foto:
+// vale recomendar um clipe curto e já comprimido.
+export async function saveVideoFile(dataUrl) {
+  const decoded = decodeVideoDataUrl(dataUrl);
+  if (!decoded) throw new Error('Formato de vídeo inválido. Envie um arquivo .mp4, .webm ou .mov.');
+  if (decoded.buffer.length > MAX_VIDEO_BYTES) {
+    throw new Error('Vídeo muito grande. O limite é 25MB — prefira um clipe curto e comprimido.');
+  }
+  const ext = (decoded.mime.split('/')[1] || 'mp4').replace(/[^a-z0-9]/gi, '') || 'mp4';
+  const id = crypto.randomBytes(8).toString('hex');
+  const relPath = `videos/${id}.${ext}`;
+  if (useBlob()) {
+    const { put } = await import('@vercel/blob');
+    const { url } = await put(`uploads/${relPath}`, decoded.buffer, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType: decoded.mime,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    return url;
+  }
+  const abs = path.join(UPLOADS_DIR, relPath);
+  await fs.mkdir(path.dirname(abs), { recursive: true });
+  await fs.writeFile(abs, decoded.buffer);
+  return `/uploads/${relPath}`;
 }
 
 export async function deletePhotoFiles(filename, thumbFilename) {

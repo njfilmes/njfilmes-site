@@ -4,7 +4,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { parseBody } from './body.js';
+import { parseBody, ADMIN_MEDIA_MAX_BODY_BYTES } from './body.js';
 import { getSessionIdFromReq, getSessionAdmin, findAdminByEmail, createAdminUser, hashPassword } from './auth.js';
 import { query, initSchema } from './db.js';
 import * as Pub from './routes/public.js';
@@ -335,7 +335,10 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/bio\/galeria\/(\d+)\/mover$/)) && method === 'POST') return Admin.bioGalleryPhotoMove(req, res, await parseBody(req), Number(m[1]));
 
     if (pathname === '/admin/configuracoes' && method === 'GET') return Admin.settingsPage(req, res, admin);
-    if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req));
+    // Limite de corpo maior só aqui (rota só acessível já logado, ver o redirecionamento pra
+    // /admin/login lá em cima): essa página pode enviar foto + imagem de compartilhamento +
+    // vídeo de fundo no mesmo envio (ver server/body.js).
+    if (pathname === '/admin/configuracoes/atualizar' && method === 'POST') return Admin.settingsUpdate(req, res, await parseBody(req, ADMIN_MEDIA_MAX_BODY_BYTES));
     if (pathname === '/admin/hero/fotos/upload' && method === 'POST') return Admin.heroPhotosUpload(req, res, await parseBody(req));
     if ((m = pathname.match(/^\/admin\/hero\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.heroPhotoDelete(req, res, Number(m[1]));
     if ((m = pathname.match(/^\/admin\/hero\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.heroPhotoMove(req, res, await parseBody(req), Number(m[1]));

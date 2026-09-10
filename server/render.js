@@ -180,7 +180,9 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
 <link rel="icon" href="/img/favicon.png" type="image/png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet">
+<!-- 10/09/2026: Outfit adicionada só pro título do hero (cantos mais arredondados/mais bonita,
+     pedido do usuário) - as outras fontes do site continuam as mesmas de sempre. -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
