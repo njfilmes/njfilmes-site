@@ -266,6 +266,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .nav-toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
 .nav-toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
 .nav-toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+/* Pedido em 10/09/2026 (quinta rodada): "aba" na borda direita indicando que dá pra puxar o
+   menu (ver comentário no render.js). Escondida fora do mobile - só ganha display no media
+   query max-width:720px, junto do resto do menu mobile. pointer-events:none pra nunca roubar
+   nenhum toque de quem está arrastando/rolando a página por baixo dela. */
+.edge-swipe-hint { display: none; }
+.edge-swipe-hint.is-hidden { opacity: 0 !important; }
+@keyframes edgeHintNudge {
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(-6px); }
+}
 
 /* Corrigido em 30/08/2026: faltava esconder o botao X e o fundo escurecido
    do menu mobile fora do media query de celular (igual ja era feito com o
@@ -1411,6 +1421,29 @@ html.no-intro .cine-intro { display: none; }
   .has-sub.open .sub-nav { display: block; }
   .sub-nav li a { font-family: var(--font-body); font-size: 0.76rem; font-weight: 600; padding: 8px 2px; color: rgba(245,242,235,0.62); }
   .nav-toggle { display: flex; }
+  .edge-swipe-hint {
+    display: flex;
+    position: fixed;
+    top: 50%;
+    right: 0;
+    z-index: 350;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 52px;
+    border-radius: 12px 0 0 12px;
+    background: linear-gradient(90deg, rgba(201,162,39,0.04), rgba(201,162,39,0.26));
+    border: 1px solid rgba(201,162,39,0.34);
+    border-right: none;
+    color: var(--accent);
+    pointer-events: none;
+    opacity: 0.8;
+    transition: opacity 0.4s var(--ease);
+    animation: edgeHintNudge 2.4s ease-in-out infinite;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .edge-swipe-hint { animation: none; }
+  }
   /* Pedido em 03/09/2026: o X de fechar o menu tava discreto demais (pequeno, parado) — deixar
      maior e mais animado, igual foi pedido pro X da foto ampliada (mesmo truque de rotate/scale
      como propriedades separadas de transform, ver .lightbox-close mais abaixo). */
