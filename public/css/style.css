@@ -762,12 +762,6 @@ html.no-intro .cine-intro { display: none; }
 @media (prefers-reduced-motion: reduce) {
   .about-photo-slide { transition: none; }
 }
-/* Pedido em 10/09/2026: opção de vídeo (YouTube ou parecido) no lugar das fotos da página Sobre
-   - ver server/routes/public.js (aboutPage) e server/routes/admin.js (bioPage/bioUpdate). Troca
-   a proporção pra 16/9 (formato de vídeo) e tira o preto-e-branco só nesse caso, pra não deixar
-   o vídeo esmaecido; o .video-embed interno é esticado pra preencher o mesmo espaço da foto. */
-.about-photos.has-video { aspect-ratio: 16/9; filter: none; }
-.about-photos.has-video .video-embed { position: absolute; inset: 0; width: 100%; height: 100%; aspect-ratio: auto; margin-bottom: 0; }
 .stats-row { display: flex; gap: 48px; margin-top: 36px; flex-wrap: wrap; }
 .stat b { font-family: var(--font-display); font-size: 2.4rem; display: block; color: var(--accent); }
 .stat span { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-muted); }
