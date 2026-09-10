@@ -171,6 +171,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
   .js .hero-content h1 .hero-punct,
+  .js .hero-content h1 .hero-highlight-word,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -443,13 +444,25 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    "a interrogacao balancando e mudando de cor bote deixar como tava" - heroPunctSwing restaurado
    na interrogação de "papel?" (.hero-punct), do jeito que era antes do corte (balanço tipo
    pêndulo com perspective()/rotateY, trocando de cor branco/dourado ao longo do ciclo). A palavra
-   "ideia" (.hero-highlight-word), que usava essa mesma animação, continua parada - só a
-   interrogação foi pedida de volta. */
+   "ideia" (.hero-highlight-word), que usava essa mesma animação, continua parada por enquanto -
+   só a interrogação foi pedida de volta aqui. */
 .hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
 .js .hero-content h1 .hero-punct { animation: heroPunctSwing 3.6s ease-in-out infinite; }
 @keyframes heroPunctSwing {
   0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
   50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
+}
+/* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
+   tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
+   (.hero-highlight-word) ganha de volta um balanço, mas BEM mais discreto que o heroPunctSwing da
+   interrogação: ângulos bem menores (rotate/rotateY reduzidos a menos da metade), ciclo mais lento
+   (5.5s em vez de 3.6s) e SEM troca de cor - fica branca o tempo todo (cor não entra no keyframe),
+   já que foi pedido explicitamente pra manter a mesma cor branca. */
+.hero-content h1 .hero-highlight-word { display: inline-block; transform-origin: 50% 85%; }
+.js .hero-content h1 .hero-highlight-word { animation: heroIdeiaSwing 5.5s ease-in-out infinite; }
+@keyframes heroIdeiaSwing {
+  0%, 100% { transform: perspective(300px) rotate(-3deg) rotateY(-8deg); }
+  50% { transform: perspective(300px) rotate(3deg) rotateY(8deg); }
 }
 .js .hero-content h1::after { animation: heroCameraFlash 0.9s ease-in-out 1.7s 1 both; }
 .hero-content h1::after {
