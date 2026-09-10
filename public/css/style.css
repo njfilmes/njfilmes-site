@@ -170,6 +170,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .hero-content h1::after,
   .js .hero-content h1 .text-accent,
   .js .hero-content h1 .hero-title-white,
+  .js .hero-content h1 .hero-punct,
   .js .eyebrow,
   .js .work-card .cat,
   .js .service-card .num,
@@ -438,9 +439,18 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    Cor trocada de branco puro pra um dourado/creme suave (mesma família de tom do --accent/
    dourado da marca), pra reforçar a identidade em vez de introduzir uma cor nova (branco/azul)
    que não tinha nada a ver com o resto. */
-/* Espaçamento da interrogação de "papel?" (mantido mesmo depois de cortar o balanço/
-   heroPunctSwing acima - sem isso a "?" colaria direto na palavra anterior). */
-.hero-content h1 .hero-punct { margin-left: 0.12em; }
+/* Pedido em seguida (10/09/2026): depois do corte geral acima, pediu pra voltar SO essa parte -
+   "a interrogacao balancando e mudando de cor bote deixar como tava" - heroPunctSwing restaurado
+   na interrogação de "papel?" (.hero-punct), do jeito que era antes do corte (balanço tipo
+   pêndulo com perspective()/rotateY, trocando de cor branco/dourado ao longo do ciclo). A palavra
+   "ideia" (.hero-highlight-word), que usava essa mesma animação, continua parada - só a
+   interrogação foi pedida de volta. */
+.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
+.js .hero-content h1 .hero-punct { animation: heroPunctSwing 3.6s ease-in-out infinite; }
+@keyframes heroPunctSwing {
+  0%, 100% { transform: perspective(300px) rotate(-7deg) rotateY(-22deg); color: #fff; }
+  50% { transform: perspective(300px) rotate(7deg) rotateY(22deg); color: var(--accent); }
+}
 .js .hero-content h1::after { animation: heroCameraFlash 0.9s ease-in-out 1.7s 1 both; }
 .hero-content h1::after {
   content: '';
