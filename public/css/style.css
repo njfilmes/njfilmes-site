@@ -381,37 +381,20 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      tem a Impact (ex: a maioria dos celulares Android). */
   font-family: 'Impact', 'Anton', var(--font-body);
   font-weight: bold;
-  /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo) */
+  /* Sombra colada só na letra (bem pertinho, sem "espalhar" pra imagem de fundo).
+     Pedido em seguida (10/09/2026): tinha virado um contorno bem marcado (4 sombras 1px
+     solidas + text-stroke) - pedido pra tirar o contorno e deixar so uma sombra suave/sutil
+     por baixo da letra, sem essa linha dura ao redor. */
   text-shadow:
     0 1px 0 rgba(255, 255, 255, 0.15),
-    0 2px 3px rgba(0, 0, 0, 0.55),
-    /* Pedido em seguida (10/09/2026): o mesmo contorno leve/sombreado que foi colocado na
-       palavra dourada, agora tambem no resto do titulo (texto branco) - mesma tecnica
-       (sombras bem pertinho nas 4 diagonais) pra letra branca se destacar melhor de
-       qualquer trecho mais claro da foto de fundo.
-       Pedido em seguida: o contorno tava meio transparente (rgba com opacidade baixa),
-       ficando cinza em vez de preto - deixado solido (opacidade 1) agora. */
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-  -webkit-text-stroke: 0.4px #000;
+    0 2px 6px rgba(0, 0, 0, 0.65);
 }
 .hero-content h1 .text-accent {
   text-shadow:
     0 1px 0 rgba(255, 240, 200, 0.4),
-    0 2px 3px rgba(0, 0, 0, 0.55),
-    /* Pedido em seguida (10/09/2026): um contorno leve na palavra ("papel") pra ela se
-       destacar melhor de qualquer fundo/brilho atras. Feito com varias sombras bem
-       pertinho (1px em cada direcao) em vez de so -webkit-text-stroke, que existe so
-       no Chrome/Safari - assim funciona em qualquer navegador/celular.
-       Pedido em seguida: mesma correcao - contorno solido preto (opacidade 1) em vez de
-       transparente/acinzentado. */
-    -1px -1px 0 #000,
-    1px -1px 0 #000,
-    -1px 1px 0 #000,
-    1px 1px 0 #000;
-  -webkit-text-stroke: 0.4px #000;
+    /* Pedido em seguida (10/09/2026): mesma troca do texto branco - contorno duro (sombras
+       1px + text-stroke) trocado por uma sombra suave/sutil só. */
+    0 2px 6px rgba(0, 0, 0, 0.65);
 }
 
 /* Luz dourada pulsando por trás da última palavra do título (ex: "papel") - pedida pelo usuário.
