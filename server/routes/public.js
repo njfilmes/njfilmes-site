@@ -54,7 +54,7 @@ function previewVideoData(project) {
   return null;
 }
 
-// Aviso "Ver projeto completo" que aparece POR CIMA da prévia em vídeo enquanto ela toca sozinha
+// Aviso "Ver vídeo" que aparece POR CIMA da prévia em vídeo enquanto ela toca sozinha
 // (hover no PC / rolagem no celular - ver playPreview() em public/js/site.js). Pedido em
 // 10/09/2026: sem isso, o card com a prévia rodando ficava parecendo "só um vídeo de fundo", sem
 // deixar claro que dá pra clicar ali e ver o projeto completo (o selo de play redondo de sempre
@@ -62,8 +62,20 @@ function previewVideoData(project) {
 // .play). Fica escondido (opacity:0) o tempo todo e só aparece quando o JS soma a classe
 // is-previewing no card (mesmo mecanismo do vídeo/selo de play), então nunca atrapalha a foto de
 // capa normal. Só é chamado para cards que têm prévia (ver uso abaixo).
+// Texto encurtado em 10/09/2026 (de "Ver projeto completo" pra "Ver vídeo") como parte de deixar
+// esse aviso menor/mais discreto (ver CSS .preview-hint, reduzido no mesmo pedido).
 function previewHintHtml() {
-  return `<span class="preview-hint" aria-hidden="true">Ver projeto completo<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+  return `<span class="preview-hint" aria-hidden="true">Ver vídeo<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
+}
+
+// Selo discreto de "dá pra clicar" pros cards que só têm foto (sem nenhum vídeo) - pedido em
+// 10/09/2026 junto com o encolhimento do previewHintHtml() acima: "o da foto sinalize tambem com
+// algo mais discreto pra pessoa abrir a imagem". Ícone de "expandir" (setinhas pros 4 cantos) num
+// selo redondo pequeno no canto do card (ver CSS .photo-hint) - só é chamado quando o projeto não
+// tem NENHUM vídeo (nem prévia, nem só o selo de play), pra não duplicar sinal com .play/
+// .preview-hint.
+function photoHintHtml() {
+  return `<span class="photo-hint" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>`;
 }
 
 function workCard(project, opts = {}) {
@@ -78,6 +90,7 @@ function workCard(project, opts = {}) {
     ${preview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(preview.provider)}" data-preview-src="${escapeHtml(preview.src)}"></div>` : ''}
     ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
     ${preview ? previewHintHtml() : ''}
+    ${!hasVideo ? photoHintHtml() : ''}
     <span class="overlay">
       ${cat ? `<span class="cat">${escapeHtml(cat)}</span>` : ''}
       <h3>${escapeHtml(project.title)}</h3>
@@ -225,6 +238,7 @@ export async function homePage(req, res) {
         ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
         ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
         ${featuredPreview ? previewHintHtml() : ''}
+        ${Number(featured.video_count) === 0 ? photoHintHtml() : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
       </a>
     </div>
