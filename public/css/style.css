@@ -955,15 +955,26 @@ html.no-intro .cine-intro { display: none; }
 /* Pedido em 03/09/2026: os dois ícones flutuantes (WhatsApp verde vivo, Instagram com o
    gradiente colorido oficial da marca) destoavam da paleta do site — pediu pra ficar "mais
    minimalista, amadeirado", com a mesma cor de fundo do site em vez das cores das marcas.
-   Os dois passam a usar o mesmo fundo (gradiente marrom escuro, tom de madeira, igual o resto
-   da paleta quente do site) e o mesmo dourado (--accent) no ícone — só o desenho do SVG
-   continua diferenciando WhatsApp de Instagram, a cor de fundo virou neutra/consistente. */
-.whatsapp-float, .instagram-float {
+   Os dois passaram a usar o mesmo fundo (gradiente marrom escuro, tom de madeira) e o mesmo
+   dourado (--accent) no ícone.
+   Pedido em 04/09/2026: voltar o ícone do WhatsApp a ser colorido (verde oficial da marca,
+   reconhecível de longe) — o Instagram continua no dourado/amadeirado de antes, só o
+   WhatsApp mudou. */
+.instagram-float {
   background: linear-gradient(155deg, #3a2a18, #17110a);
   border: 1px solid rgba(201,162,39,0.3);
   color: var(--accent);
+  position: fixed; bottom: 82px; right: 24px; z-index: 600;
+  width: 50px; height: 50px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  transition: transform 0.3s var(--ease);
 }
+.instagram-float:hover { transform: scale(0.98); }
 .whatsapp-float {
+  background: linear-gradient(155deg, #25D366, #128C7E);
+  border: 1px solid rgba(37,211,102,0.5);
+  color: #fff;
   position: fixed; bottom: 20px; right: 24px; z-index: 600;
   width: 50px; height: 50px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
@@ -973,15 +984,7 @@ html.no-intro .cine-intro { display: none; }
 }
 .whatsapp-float svg { width: 24px; height: 24px; }
 .whatsapp-float:hover { transform: scale(0.98); }
-.instagram-float {
-  position: fixed; bottom: 82px; right: 24px; z-index: 600;
-  width: 50px; height: 50px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-  transition: transform 0.3s var(--ease);
-}
-.instagram-float:hover { transform: scale(0.98); }
-@keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(201,162,39,0.18);} 50% { box-shadow: 0 8px 30px rgba(201,162,39,0.4);} }
+@keyframes waPulse { 0%,100% { box-shadow: 0 8px 24px rgba(37,211,102,0.25);} 50% { box-shadow: 0 8px 30px rgba(37,211,102,0.55);} }
 
 /* ---------- Lightbox ---------- */
 .lightbox {
