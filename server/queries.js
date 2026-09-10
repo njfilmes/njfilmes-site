@@ -17,7 +17,7 @@ const SETTINGS_COLUMNS = new Set([
   'meta_title', 'meta_description', 'og_image', 'footer_text', 'contact_headline',
   'contact_email', 'whatsapp_number', 'whatsapp_message', 'contact_budget_title',
   'contact_budget_text', 'contact_whatsapp_button_text', 'contact_channels_title',
-  'instagram_url', 'youtube_url', 'vimeo_url', 'tiktok_url', 'facebook_url',
+  'instagram_url', 'youtube_url', 'vimeo_url', 'tiktok_url', 'facebook_url', 'google_review_url',
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',

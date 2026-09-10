@@ -452,6 +452,13 @@ export async function initSchema() {
     if (!settingsCols.includes('hero_photo')) {
           await query("ALTER TABLE settings ADD COLUMN hero_photo TEXT DEFAULT ''");
     }
+    // 04/09/2026: link de avaliação do Perfil da Empresa no Google (Google Meu Negócio/Google
+    // Business Profile), tipo https://g.page/r/XXXXXXXXXXXX/review. Usado pra mostrar um botão
+    // "Avalie-nos no Google" no rodapé e na página Contato — some sozinho enquanto o campo
+    // estiver vazio, igual os outros links de rede social.
+    if (!settingsCols.includes('google_review_url')) {
+          await query("ALTER TABLE settings ADD COLUMN google_review_url TEXT DEFAULT ''");
+    }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
