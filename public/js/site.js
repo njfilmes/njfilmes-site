@@ -269,7 +269,12 @@
     var dragMode = null; // 'open' ou 'close'
     var dragStartX = 0;
     var panelWidth = 0;
-    var EDGE_ZONE = 28; // px a partir da borda direita que arma o gesto de abrir
+    // Pedido em 10/09/2026 (segunda rodada): 28px nao funcionava no celular de verdade -
+    // o motivo mais provavel e que o Android reserva uma faixa bem colada na borda da tela
+    // (uns 24dp) pro proprio gesto do sistema (voltar/avancar de pagina), entao o toque
+    // nem chega a ser entregue pro site quando comeca exatamente na borda. Aumentado bem
+    // pra sobrar uma faixa "segura" mais pra dentro, fora do que o sistema costuma reservar.
+    var EDGE_ZONE = 70; // px a partir da borda direita que arma o gesto de abrir
 
     // Arrastar pra cima fecha (gesto rapido, sem acompanhar o dedo - o menu nao se move
     // verticalmente, entao nao tem o que "seguir" nesse eixo).
