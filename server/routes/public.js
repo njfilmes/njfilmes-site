@@ -93,6 +93,17 @@ function workCard(project, opts = {}) {
 // palavra. Se a última palavra terminar em pontuação, ela agora vem separada
 // num span próprio (.hero-punct) só pra poder dar esse espacinho via CSS,
 // sem precisar mexer no resto da palavra.
+// Pedido em 10/09/2026: a palavra "ideia" (dentro da parte branca do título) ganhar o mesmo
+// balanço em 3D + troca de cor branco/dourado que a interrogação de "papel?" já tem (mesma
+// animação CSS, heroPunctSwing - ver .hero-highlight-word no CSS). Feito com um replace por
+// palavra inteira (\b), sem acento/maiúscula fixos, pra funcionar tanto em "ideia" quanto
+// "Ideia"/"IDEIA" (o texto vem editável pelo painel, então não dá pra garantir a grafia exata).
+// Se o texto editado não tiver a palavra "ideia", simplesmente não destaca nada - sem quebrar.
+function highlightWord(escapedText, word) {
+  const re = new RegExp(`\\b(${word})\\b`, 'gi');
+  return escapedText.replace(re, '<span class="hero-highlight-word">$1</span>');
+}
+
 function heroHeadlineHtml(text) {
   const trimmed = String(text || '').trim();
   if (!trimmed) return '';
@@ -110,7 +121,7 @@ function heroHeadlineHtml(text) {
   // título, pra combinar com a palavra dourada que já flutua/brilha. Precisa desse span
   // (.hero-title-white) porque esse texto vem solto (sem tag) direto do painel - sem ele
   // não dava pra aplicar a animação só nessa parte.
-  return `<span class="hero-title-white">${escapeHtml(rest)}</span> ${wrapAccent(last)}`;
+  return `<span class="hero-title-white">${highlightWord(escapeHtml(rest), 'ideia')}</span> ${wrapAccent(last)}`;
 }
 
 export async function homePage(req, res) {
