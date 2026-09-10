@@ -244,7 +244,7 @@ export async function homePage(req, res) {
   ${services.length ? `
   <section>
     <div class="container">
-      <div class="section-head reveal"><div><span class="eyebrow">O que fazemos</span><h2>Serviços</h2></div><a href="/servicos" class="btn btn-outline">Ver todos</a></div>
+      <div class="section-head reveal"><div><span class="eyebrow">${escapeHtml(settings.services_eyebrow || 'O que fazemos')}</span><h2>${escapeHtml(settings.services_title || 'Serviços')}</h2></div><a href="/servicos" class="btn btn-outline">Ver todos</a></div>
       <div class="services-grid">
         ${services.map((s, i) => `<div class="service-card reveal">
           <span class="num">0${i + 1}</span>
@@ -258,8 +258,8 @@ export async function homePage(req, res) {
   ${marqueeChips.length ? `
   <section class="alt-bg">
     <div class="container">
-      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Conheça alguns</span>
-      <h2 class="reveal text-center">Clientes</h2>
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">${escapeHtml(settings.clients_eyebrow || 'Conheça alguns')}</span>
+      <h2 class="reveal text-center">${escapeHtml(settings.clients_title || 'Clientes')}</h2>
       <div class="marquee reveal" data-drag-scroll>
         <div class="marquee-track" data-drag-scroll-track>
           ${[...marqueeChips, ...marqueeChips].join('')}
@@ -281,8 +281,8 @@ export async function homePage(req, res) {
 
   <section class="cta-section alt-bg">
     <div class="container">
-      <span class="eyebrow reveal">Vamos gravar sua história?</span>
-      <h2 class="reveal">Solicite um orçamento sem compromisso</h2>
+      <span class="eyebrow reveal">${escapeHtml(settings.cta_eyebrow || 'Vamos gravar sua história?')}</span>
+      <h2 class="reveal">${escapeHtml(settings.cta_title || 'Solicite um orçamento sem compromisso')}</h2>
       <div class="btn-row reveal">
         <a href="/contato" class="btn btn-solid">Pedir orçamento</a>
       </div>
@@ -884,9 +884,9 @@ export async function servicesPage(req, res) {
   const content = `
   <section class="simple-hero">
     <div class="container">
-      <span class="eyebrow reveal">O que fazemos</span>
-      <h1 class="reveal">Serviços</h1>
-      <p class="lead reveal">Soluções completas em audiovisual, do planejamento à entrega final.</p>
+      <span class="eyebrow reveal">${escapeHtml(settings.services_eyebrow || 'O que fazemos')}</span>
+      <h1 class="reveal">${escapeHtml(settings.services_title || 'Serviços')}</h1>
+      <p class="lead reveal">${escapeHtml(settings.services_subtitle || 'Soluções completas em audiovisual, do planejamento à entrega final.')}</p>
     </div>
   </section>
   <section style="padding-top:0;">

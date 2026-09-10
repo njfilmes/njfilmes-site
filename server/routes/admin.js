@@ -1176,6 +1176,15 @@ export async function settingsPage(req, res, admin) {
         <small>Tamanho ideal: 1200x630px. Se não enviar nenhuma, o site usa a imagem padrão (logo NJFILMES).</small>
       </div>
       ${field({ label: 'Texto do rodapé', name: 'footer_text', value: s.footer_text })}
+      <h2 style="margin-top:32px;">Textos das seções da Home</h2>
+      <p class="muted" style="margin-top:-8px;">Títulos que apareciam fixos no código — pedido do usuário em 10/09/2026 pra deixar tudo editável por aqui. Deixando em branco, volta pro texto padrão.</p>
+      ${field({ label: 'Legenda da seção Serviços', name: 'services_eyebrow', value: s.services_eyebrow, placeholder: 'O que fazemos' })}
+      ${field({ label: 'Título da seção Serviços', name: 'services_title', value: s.services_title, placeholder: 'Serviços' })}
+      ${field({ label: 'Subtítulo da página Serviços', name: 'services_subtitle', value: s.services_subtitle, textarea: true, rows: 2, help: 'Aparece só no topo da página /servicos, embaixo do título.' })}
+      ${field({ label: 'Legenda da seção Clientes', name: 'clients_eyebrow', value: s.clients_eyebrow, placeholder: 'Conheça alguns' })}
+      ${field({ label: 'Título da seção Clientes', name: 'clients_title', value: s.clients_title, placeholder: 'Clientes' })}
+      ${field({ label: 'Legenda da seção de orçamento', name: 'cta_eyebrow', value: s.cta_eyebrow, placeholder: 'Vamos gravar sua história?' })}
+      ${field({ label: 'Título da seção de orçamento', name: 'cta_title', value: s.cta_title, placeholder: 'Solicite um orçamento sem compromisso' })}
       <h2 style="margin-top:32px;">Contato</h2>
       ${field({ label: 'Título da página de Contato', name: 'contact_headline', value: s.contact_headline, help: 'Aparece grande no topo da página de Contato.' })}
       ${field({ label: 'E-mail de contato', name: 'contact_email', value: s.contact_email, type: 'email', placeholder: 'contato@njfilmes.com.br', help: 'Aparece na página de Contato do site.' })}
@@ -1279,6 +1288,13 @@ export async function settingsUpdate(req, res, body) {
     meta_description: body.meta_description || '',
     og_image,
     footer_text: body.footer_text || '',
+    services_eyebrow: body.services_eyebrow || '',
+    services_title: body.services_title || '',
+    services_subtitle: body.services_subtitle || '',
+    clients_eyebrow: body.clients_eyebrow || '',
+    clients_title: body.clients_title || '',
+    cta_eyebrow: body.cta_eyebrow || '',
+    cta_title: body.cta_title || '',
     contact_headline: body.contact_headline || '',
     contact_email: body.contact_email || '',
     whatsapp_number: body.whatsapp_number || '',
