@@ -420,19 +420,23 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    quem acabou de abrir a página, e repete a cada 6s. Também deixado mais forte/visível (opacidade
    cai mais, ~18-22%, e o contraste/dessaturação fica mais marcado) pra ficar claro que é um
    "corte de sinal" de propósito, não só um flicker fraco.
-   Mesmo mais forte, continua com o mesmo cuidado de segurança: a opacidade nunca cai a zero
-   (nunca fica preto/branco chapado, sempre dá pra ver a silhueta do texto) e os cortes ficam
+   Pedido em seguida (mesma data): 6s ainda tava demorando demais entre um corte e outro - reduzido
+   pra um ciclo de 3,5s (o corte continua acontecendo só depois que a introdução em cortina preta
+   termina, ~1,8s depois de carregar, pra nunca ficar escondido atrás dela) - repete quase o dobro
+   de vezes no mesmo tempo.
+   Mesmo mais forte/frequente, continua com o mesmo cuidado de segurança: a opacidade nunca cai a
+   zero (nunca fica preto/branco chapado, sempre dá pra ver a silhueta do texto) e os cortes ficam
    espaçados dentro do próprio "soluço" (não vira um estroboscópio) - o corte inteiro dura bem
-   menos de meio segundo, e o resto do ciclo (mais de 5s) fica tudo normal. filter:
-   grayscale+contrast simula "estática" de TV sem sinal; um dos cortes usa hue-rotate pra dar uma
-   variação de cor, tipo interferência mesmo. */
-.js .hero-content h1 { animation: heroSignalGlitch 6s ease-in-out infinite; }
+   menos de meio segundo, e o resto do ciclo fica tudo normal. filter: grayscale+contrast simula
+   "estática" de TV sem sinal; um dos cortes usa hue-rotate pra dar uma variação de cor, tipo
+   interferência mesmo. */
+.js .hero-content h1 { animation: heroSignalGlitch 3.5s ease-in-out infinite; }
 @keyframes heroSignalGlitch {
-  0%, 40%, 100% { opacity: 1; filter: none; transform: translateX(0); }
-  40.5% { opacity: 0.2; filter: grayscale(1) contrast(1.6) brightness(1.35); transform: translateX(-5px); }
-  41.5% { opacity: 0.85; filter: none; transform: translateX(2px); }
-  42.5% { opacity: 0.18; filter: grayscale(1) hue-rotate(180deg) brightness(0.6) contrast(1.3); transform: translateX(4px); }
-  43.5% { opacity: 1; filter: none; transform: translateX(0); }
+  0%, 51%, 100% { opacity: 1; filter: none; transform: translateX(0); }
+  52% { opacity: 0.2; filter: grayscale(1) contrast(1.6) brightness(1.35); transform: translateX(-5px); }
+  53.5% { opacity: 0.85; filter: none; transform: translateX(2px); }
+  55% { opacity: 0.18; filter: grayscale(1) hue-rotate(180deg) brightness(0.6) contrast(1.3); transform: translateX(4px); }
+  56.5% { opacity: 1; filter: none; transform: translateX(0); }
 }
 /* Pedido em seguida (10/09/2026): a interrogação de "papel?" ganhar uma animação diferente do
    resto da palavra - "balançando" tipo um pêndulo (rotate) somado a uma inclinação em 3D
@@ -498,8 +502,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      0.5px. Junto, pedida uma sombra preta leve (quase imperceptível) no nome "papel" - somada
      uma segunda camada de text-shadow bem colada e pouco espalhada (0 1px 1px, opacidade
      baixa), separada da sombra suave/espalhada que já existia (que dá profundidade geral) -
-     essa nova é só um toque de "chão" embaixo da letra, sem ficar pesada. */
-  -webkit-text-stroke: 0.5px #000;
+     essa nova é só um toque de "chão" embaixo da letra, sem ficar pesada.
+     Pedido em seguida (10/09/2026): tirar mais um pouquinho ainda - reduzido pra 0.35px. A
+     sombra colada (text-shadow acima) já segura a legibilidade da letra, então dá pra afinar
+     mais o contorno sem a palavra "sumir". */
+  -webkit-text-stroke: 0.35px #000;
   text-shadow:
     0 1px 1px rgba(0, 0, 0, 0.4),
     0 2px 6px rgba(0, 0, 0, 0.65);
