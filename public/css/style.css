@@ -378,9 +378,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 /* 10/09/2026: a palavra flutuando (+ o brilho atrás dela) tava "batendo"/encostando na linha de
    texto de cima quando subia - pedido pra dar um respiro. Empurra a palavra um pouco pra baixo
    (margin-top) e desce o pico da animação (só sobe 6px agora, em vez de 10px) pra sobrar mais
-   espaço entre ela e a linha acima. */
+   espaço entre ela e a linha acima. Pedido em seguida (mesma data): um terceiro efeito, a palavra
+   "vindo pra frente" e crescendo um pouco ao mesmo tempo que sobe - junta um scale() no mesmo
+   transform do sobe/desce (já que os dois têm que acontecer juntos, no mesmo keyframe). O brilho
+   (::before) é filho de .text-accent, então cresce junto automaticamente, sem precisar de nada
+   a mais. */
 .js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroAccentFloat 4s ease-in-out infinite; }
-@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.06); } }
 
 /* Pedido em 10/09/2026: animação também na parte branca do título do hero ("Vamos tirar sua
    ideia do"), tipo um "zoom" - um pulso bem sutil de escala, pra combinar com a palavra
@@ -617,6 +621,55 @@ section { padding: 110px 0; position: relative; }
 @keyframes playPulse {
   0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(255,255,255,0.32); }
   50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 12px rgba(255,255,255,0); }
+}
+/* Pedido em 10/09/2026: enquanto a prévia em vídeo toca sozinha (hover no PC / rolagem no
+   celular - ver .work-card.is-previewing acima), o selo de play redondo some (regra
+   .is-previewing .play já existente, pra não parecer que o vídeo ainda não começou) e no lugar
+   dele aparece esse aviso em formato de pílula, avisando que dá pra clicar pra ver o projeto
+   completo. Fica no mesmo centro onde o selo de play ficava, com o mesmo "vidro" (fundo
+   translúcido + blur) e brilho pulsante, só que em forma de texto - pra não deixar a prévia
+   rodando sozinha parecendo que é só um vídeo de fundo sem nada pra clicar. Só existe nos cards
+   que têm prévia (ver previewHintHtml() em routes/public.js); os demais continuam só com o selo
+   de play de sempre. */
+.work-card .preview-hint {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%) translateY(10px);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(18,16,10,0.55);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 2;
+  transition: opacity 0.45s ease, transform 0.45s ease, background 0.35s ease, color 0.35s ease;
+}
+.work-card .preview-hint svg { flex-shrink: 0; transition: transform 0.35s var(--ease); }
+.work-card.is-previewing .preview-hint {
+  opacity: 1;
+  transform: translate(-50%, -50%) translateY(0);
+  animation: previewHintPulse 2.4s ease-in-out infinite;
+}
+.work-card:hover .preview-hint {
+  background: var(--accent);
+  color: #12100a;
+  animation-play-state: paused;
+}
+.work-card:hover .preview-hint svg { transform: translateX(3px); }
+@keyframes previewHintPulse {
+  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(201,162,39,0.45); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 10px rgba(201,162,39,0); }
 }
 
 .work-cursor {
