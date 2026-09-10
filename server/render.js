@@ -187,8 +187,12 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
      Pedido em seguida: trocar pra fonte "Impact" em bold. Impact é uma fonte do sistema
      (vem instalada no Windows/Mac), não existe no Google Fonts - então adicionamos "Anton",
      que é a fonte mais parecida com Impact disponível no Google Fonts, como alternativa pra
-     quando o aparelho da pessoa (ex: celular Android) não tiver a Impact instalada. -->
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&display=swap" rel="stylesheet">
+     quando o aparelho da pessoa (ex: celular Android) não tiver a Impact instalada.
+     Pedido em seguida: Impact ficou "muito quadrada" - trocada pra "Poppins" (peso 800,
+     ExtraBold), bem mais arredondada e combinando com o estilo das outras fontes do site.
+     Anton e Bebas Neue continuam importadas mas não usadas mais no título (deixadas caso
+     sirvam de novo depois). -->
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
