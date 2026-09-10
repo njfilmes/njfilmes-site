@@ -224,6 +224,16 @@ ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structur
     <button class="nav-toggle" data-nav-toggle aria-label="Abrir menu" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
+    <!-- Pedido em 10/09/2026 (quinta rodada): depois do gesto de arrastar virar "por movimento"
+         (ver site.js), ficou menos obvio pra quem nunca usou o site que dá pra puxar o menu -
+         antes existia so o botao. Essa "aba" fixa na borda direita da tela (só no celular, ver
+         CSS) mostra uma setinha pulsando discretamente pra indicar "puxe pra cá". Ela some assim
+         que a pessoa abre o menu pela primeira vez (JS marca no localStorage) e também some
+         enquanto o menu está aberto - depois disso não aparece mais, pra não incomodar quem já
+         sabe. pointer-events:none pra nunca atrapalhar nenhum toque por baixo dela. -->
+    <div class="edge-swipe-hint" data-edge-hint aria-hidden="true">
+      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"></polyline></svg>
+    </div>
   </div>
 </header>
 
