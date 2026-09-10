@@ -29,7 +29,9 @@ export function adminLayout({ title, activePath, admin, content, flash = null })
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} · Admin NJFILMES</title>
 <meta name="robots" content="noindex, nofollow">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Pedido em 10/09/2026: painel admin tambem com a fonte Poppins (mesma do site publico),
+     usada no logo e nos numeros dos cards de estatistica (server/routes/admin.js, admin.css). -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@700&display=swap" rel="stylesheet">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/admin.css">
 </head>
@@ -66,7 +68,9 @@ export function loginLayout({ title, content }) {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)} · NJFILMES</title>
 <meta name="robots" content="noindex, nofollow">
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<!-- Pedido em 10/09/2026: Bebas Neue trocada por Poppins aqui tambem (login), pra combinar
+     com o resto do site/painel - ver admin.css (.admin-logo). -->
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/style.css">
 <link rel="stylesheet" href="/css/admin.css">
