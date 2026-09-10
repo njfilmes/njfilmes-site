@@ -256,6 +256,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   flex-direction: column;
   gap: 5px;
   background: none; border: none; padding: 8px;
+  position: relative;
 }
 /* Pedido em 10/09/2026: o icone (as 3 tracinhos) virava um X ao clicar, mas continuava na mesma
    cor de sempre - nao dava nenhum sinal visual de "aberto" alem do formato. Primeiro tentamos
@@ -1421,6 +1422,45 @@ html.no-intro .cine-intro { display: none; }
   .has-sub.open .sub-nav { display: block; }
   .sub-nav li a { font-family: var(--font-body); font-size: 0.76rem; font-weight: 600; padding: 8px 2px; color: rgba(245,242,235,0.62); }
   .nav-toggle { display: flex; }
+  /* Pedido em 10/09/2026 (oitava rodada): o botao do menu (as 3 tracinhos) fica meio
+     escondido no canto - pediu pra chamar mais atencao com algo animado/com movimento.
+     Dois efeitos juntos, os dois discretos: o botao da uma leve "respirada" (sobe e cresce
+     um pouquinho) de tempos em tempos, e um anel dourado pulsa saindo de dentro dele feito
+     onda de radar. Some sozinho (JS adiciona .attention-done, ver hideToggleAttention em
+     site.js) assim que a pessoa abre o menu pela primeira vez - clicando ou arrastando,
+     tanto faz - pra nao ficar chamando atencao de quem ja sabe que ali abre o menu. */
+  .nav-toggle::before {
+    content: '';
+    position: absolute;
+    inset: -7px;
+    border-radius: 12px;
+    border: 2px solid var(--accent);
+    opacity: 0;
+    pointer-events: none;
+    animation: navToggleRing 2.8s ease-out infinite;
+  }
+  .nav-toggle {
+    animation: navToggleNudge 2.8s ease-in-out infinite;
+  }
+  .nav-toggle.attention-done,
+  .nav-toggle.attention-done::before {
+    animation: none;
+  }
+  .nav-toggle.attention-done::before { opacity: 0; }
+  @keyframes navToggleRing {
+    0% { transform: scale(0.82); opacity: 0.85; }
+    65% { transform: scale(1.3); opacity: 0; }
+    100% { transform: scale(1.3); opacity: 0; }
+  }
+  @keyframes navToggleNudge {
+    0%, 60%, 100% { transform: translateY(0) scale(1); }
+    68% { transform: translateY(-3px) scale(1.1); }
+    76% { transform: translateY(0) scale(0.97); }
+    84% { transform: translateY(-1px) scale(1.02); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .nav-toggle, .nav-toggle::before { animation: none; }
+  }
   .edge-swipe-hint {
     display: flex;
     position: fixed;
