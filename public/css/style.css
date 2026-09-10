@@ -581,11 +581,23 @@ html.no-intro .cine-intro { display: none; }
 
 /* ---------- Servicos ---------- */
 .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--border); }
-.service-card { background: var(--bg); padding: 44px 32px; transition: background 0.4s var(--ease); position: relative; }
-.service-card:hover { background: var(--bg-card); }
+/* Pedido em 10/09/2026: os cards ficavam "chapados" (só a cor de fundo lisa) — adicionado um
+   relevo sutil (gradiente radial dourado no canto + sombras internas simulando luz vindo de
+   cima) pra dar mais profundidade, sem mudar o layout/hairline entre os cards que já existia. */
+.service-card {
+  background: radial-gradient(circle at 25% 15%, rgba(201,162,39,0.07), transparent 60%), var(--bg);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.45);
+  padding: 44px 32px;
+  transition: background 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  position: relative;
+}
+.service-card:hover {
+  background: radial-gradient(circle at 25% 15%, rgba(201,162,39,0.12), transparent 60%), var(--bg-card);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -1px 0 rgba(0,0,0,0.5), 0 24px 48px rgba(0,0,0,0.35);
+}
 .service-card .num { font-family: var(--font-display); font-size: 0.85rem; color: var(--accent); }
 .service-card h3 { margin: 14px 0 12px; }
-.service-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; margin-bottom: 20px; filter: grayscale(20%); }
+.service-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; margin-bottom: 20px; filter: grayscale(20%); box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
 
 /* ---------- Sobre / bio ---------- */
 .about-split { display: grid; grid-template-columns: 0.9fr 1.1fr; gap: 72px; align-items: center; }
