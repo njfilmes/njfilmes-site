@@ -298,7 +298,17 @@
     var pendingOpenX = 0;
     var pendingOpenY = 0;
     var pendingOpen = false;
-    var OPEN_DRAG_THRESHOLD = 40; // px arrastados pra esquerda antes do menu comecar a seguir o dedo
+    var OPEN_DRAG_THRESHOLD = 26; // px arrastados pra esquerda antes do menu comecar a seguir o dedo
+    // Pedido em 10/09/2026 (sexta rodada): "puxar pra abrir" ainda nao funcionava bem - o
+    // motivo era que um toque RAPIDO (um "flick" com o dedo, comum em quem ja usa celular
+    // no dia a dia) sai da tela antes mesmo do dedo ter arrastado os px do OPEN_DRAG_THRESHOLD
+    // acima, entao o menu nunca chegava a "engatar" e seguir o dedo - do ponto de vista de
+    // quem tentou, simplesmente nao acontecia nada. Alem de abaixar um pouco esse limiar,
+    // agora o touchend (ver mais abaixo) tambem checa por conta propria: mesmo que o arrasto
+    // ao vivo nunca tenha comecado, se o toque terminou com um deslocamento horizontal claro
+    // pra esquerda (maior que QUICK_SWIPE_THRESHOLD e nitidamente mais horizontal que
+    // vertical), abre o menu direto - sem precisar ter "seguido o dedo" durante o gesto.
+    var QUICK_SWIPE_THRESHOLD = 46;
 
     // Arrastar pra cima fecha (gesto rapido, sem acompanhar o dedo - o menu nao se move
     // verticalmente, entao nao tem o que "seguir" nesse eixo).
@@ -392,8 +402,23 @@
       }
     }, { passive: true });
     document.addEventListener('touchend', function (e) {
+      if (!dragging) {
+        // Cai aqui quando o dedo saiu da tela sem o arrasto ao vivo ter chegado a "engatar"
+        // (ver comentario no OPEN_DRAG_THRESHOLD acima) - normalmente um toque rapido (flick).
+        // Mesmo assim, se o deslocamento total do toque foi um puxao horizontal bem claro pra
+        // esquerda, abre o menu direto (sem ter acompanhado o dedo em tempo real).
+        if (pendingOpen) {
+          pendingOpen = false;
+          var fx = e.changedTouches[0].clientX - pendingOpenX;
+          var fy = e.changedTouches[0].clientY - pendingOpenY;
+          if (fx <= -QUICK_SWIPE_THRESHOLD && Math.abs(fx) > Math.abs(fy) * 1.2) {
+            hideEdgeHintForever();
+            openNav();
+          }
+        }
+        return;
+      }
       pendingOpen = false;
-      if (!dragging) return;
       var dx = e.changedTouches[0].clientX - dragStartX;
       var finalPx = dragMode === 'open' ? panelWidth + dx : dx;
       dragEnd(Math.max(0, Math.min(panelWidth, finalPx)), e);
