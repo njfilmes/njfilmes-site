@@ -573,8 +573,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    Pedido em seguida: "deixa com a mesma fonte e em bold" - a fonte/peso (Poppins 700) ja
    era herdado do h1 e igual ao resto, mas forcado aqui tambem, explicito, pra garantir 100%
    de certeza que nao tem nada sobrepondo com peso diferente. */
+/* Pedido do usuario (11/09/2026): "coloca o nome filmes dourado" - troca de volta a cor de
+   "filmes" pra dourado (mesmo tom da marca, var(--accent)), mantendo tudo mais igual (fonte,
+   peso, sombra) - so a cor muda. A piscada (heroOffAirFlicker, mais abaixo) continua funcionando
+   normal por cima (ela mexe só na opacidade, não na cor). */
 .hero-content h1 .text-accent {
-  color: #fff;
+  color: var(--accent);
   font-family: 'Poppins', var(--font-body);
   font-weight: 700;
   -webkit-text-stroke: 0;
@@ -2127,10 +2131,13 @@ html.no-intro .cine-intro { display: none; }
   .hero .btn-row { align-items: center; gap: 22px; margin-top: 26px; }
   /* Pedido do usuario (11/09/2026): "em ver portfolio e entre em contato coloca menor o
      tamanho pra versao de cel tambem" - reduzido mais um pouco tambem so no celular (o
-     desktop, mais acima no arquivo, continua do jeito que estava). */
+     desktop, mais acima no arquivo, continua do jeito que estava).
+     Pedido em seguida (mesma data): "diminua mais o tamanho do portfolio e contato, apenas
+     do cel" - reduzido de novo, só nesse mesmo bloco (max-width: 720px), sem encostar no
+     desktop. */
   .hero .btn-row .btn {
-    padding: 9px 16px;
-    font-size: 0.64rem;
+    padding: 6px 12px;
+    font-size: 0.54rem;
   }
   .hero .btn-row .btn-outline {
     border-color: transparent;
@@ -2138,7 +2145,7 @@ html.no-intro .cine-intro { display: none; }
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--fg-muted);
-    font-size: 0.58rem;
+    font-size: 0.48rem;
   }
   .hero .btn-row .btn-outline:hover { background: none; color: var(--fg); transform: none; }
   /* Pedido do usuario (11/09/2026): as duas regras abaixo foram removidas daqui -
