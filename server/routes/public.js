@@ -68,14 +68,33 @@ function previewHintHtml() {
   return `<span class="preview-hint" aria-hidden="true">Ver vídeo<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>`;
 }
 
-// Selo discreto de "dá pra clicar" pros cards que só têm foto (sem nenhum vídeo) - pedido em
-// 10/09/2026 junto com o encolhimento do previewHintHtml() acima: "o da foto sinalize tambem com
-// algo mais discreto pra pessoa abrir a imagem". Ícone de "expandir" (setinhas pros 4 cantos) num
-// selo redondo pequeno no canto do card (ver CSS .photo-hint) - só é chamado quando o projeto não
-// tem NENHUM vídeo (nem prévia, nem só o selo de play), pra não duplicar sinal com .play/
-// .preview-hint.
+// Selo de "dá pra clicar" pros cards que só têm foto (sem nenhum vídeo) - criado em 10/09/2026
+// (pequeno, num cantinho, ícone parado de setinhas). Redesenhado em 11/09/2026: "o q ta e muito
+// simples e n passa a impressao de abrir, poe uma animacao tipo mao pincelando ou algo do tipo,
+// dourada, no centro" - trocado de cantinho estático pra CENTRALIZADO no card (mesmo lugar de
+// destaque do selo de play dos cards com vídeo, ver .play), bem maior, e o ícone virou uma
+// "moldura" de 4 cantos (estilo visor de câmera/tela cheia, o mesmo tipo de ícone universal de
+// "abrir/expandir" que apps de foto usam) em vez de setinhas simples. Cada cantinho "se desenha"
+// sozinho (efeito de traço sendo pincelado, via stroke-dasharray) em sequência (um cantinho começa
+// um pouco depois do outro, dando a sensação de estar sendo "pintado" ao redor do quadro) e depois
+// os 4 cantos se abrem um pouco pra fora ao mesmo tempo (ver CSS phDraw) - a moldura literalmente
+// "abre" na animação, resolvendo a reclamação de não passar a impressão de abrir.
 function photoHintHtml() {
-  return `<span class="photo-hint" aria-hidden="true"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>`;
+  return `<span class="photo-hint" aria-hidden="true"><svg class="photo-hint-frame" viewBox="0 0 24 24" fill="none">
+      <path class="ph-c ph-tl" d="M2 8V4.5C2 3.11929 3.11929 2 4.5 2H8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="ph-c ph-tr" d="M16 2H19.5C20.8807 2 22 3.11929 22 4.5V8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="ph-c ph-br" d="M22 16V19.5C22 20.8807 20.8807 22 19.5 22H16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+      <path class="ph-c ph-bl" d="M8 22H4.5C3.11929 22 2 20.8807 2 19.5V16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg></span>`;
+}
+
+// Anel dourado decorativo em volta do selo de play dos cards COM vídeo - pedido em 11/09/2026
+// junto com o redesign do photoHintHtml() acima: "a do video a mesma coisa, ver o que pode fazer
+// de forma incrivel". Um círculo que se desenha sozinho (mesmo efeito de traço/stroke-dasharray da
+// moldura da foto) e fica girando devagar em loop (ver CSS .play-ring), dando o mesmo tratamento
+// "pincelado em dourado" pro selo de play, pra ficar consistente com o selo novo dos cards só-foto.
+function playRingHtml() {
+  return `<svg class="play-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/></svg>`;
 }
 
 function workCard(project, opts = {}) {
@@ -88,7 +107,7 @@ function workCard(project, opts = {}) {
   return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''} ${preview ? 'has-preview-video' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
     <img class="work-card-cover" src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
     ${preview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(preview.provider)}" data-preview-src="${escapeHtml(preview.src)}"></div>` : ''}
-    ${hasVideo ? `<span class="play"><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+    ${hasVideo ? `<span class="play">${playRingHtml()}<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
     ${preview ? previewHintHtml() : ''}
     ${!hasVideo ? photoHintHtml() : ''}
     <span class="overlay">
@@ -236,7 +255,7 @@ export async function homePage(req, res) {
       <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featuredPreview ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
         ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
-        ${Number(featured.video_count) > 0 ? `<span class="play"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+        ${Number(featured.video_count) > 0 ? `<span class="play">${playRingHtml()}<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
         ${featuredPreview ? previewHintHtml() : ''}
         ${Number(featured.video_count) === 0 ? photoHintHtml() : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
