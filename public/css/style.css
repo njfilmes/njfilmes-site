@@ -1927,6 +1927,15 @@ html.no-intro .cine-intro { display: none; }
     grid-column: span 1; grid-row: auto; aspect-ratio: 4/5;
   }
   .work-card img { object-fit: cover; }
+  /* Pedido em 11/09/2026: "o circulo ta muito grande no celular, diminua um pouco" - os selos
+     centrais do card (play com anel dourado + cursor, e o de foto com a seta) ficavam grandes
+     demais nas telas pequenas (cards em coluna única, ver .work-grid acima). Reduzidos só no
+     mobile; no desktop continuam do tamanho de sempre (.play 62px / .photo-hint 74px, mais acima
+     no CSS). */
+  .work-card .play { width: 50px; height: 50px; }
+  .work-card .play svg:not(.play-ring) { width: 18px; height: 18px; }
+  .work-card .photo-hint { width: 58px; height: 58px; }
+  .work-card .photo-hint svg { width: 24px; height: 24px; }
   .services-grid { grid-template-columns: 1fr; }
   .service-card { padding: 32px 4px; }
   .service-card img { display: none; }
