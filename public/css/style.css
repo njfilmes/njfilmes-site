@@ -189,7 +189,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .nav-glow-1,
   .js .nav-glow-2,
   .js .nav-menu-label,
-  .js .work-card .photo-hint {
+  .js .work-card .photo-hint,
+  .js .work-card .photo-hint-frame .ph-c,
+  .js .work-card .play-ring circle {
     animation: none;
   }
 }
@@ -820,7 +822,30 @@ section { padding: 110px 0; position: relative; }
   color: #fff;
   z-index: 2;
 }
-.work-card .play svg { width: 22px; height: 22px; margin-left: 3px; }
+.work-card .play svg:not(.play-ring) { width: 22px; height: 22px; margin-left: 3px; position: relative; z-index: 1; }
+/* Pedido em 11/09/2026 junto com o redesign do .photo-hint (mais abaixo): "a do video a mesma
+   coisa, ver o que pode fazer de forma incrivel" - anel dourado decorativo (playRingHtml() em
+   routes/public.js) que se desenha sozinho (stroke-dasharray) e fica girando devagar em loop por
+   trás do triângulo de play, pra dar o mesmo tratamento "pincelado em dourado" do selo novo dos
+   cards só-foto e deixar o selo de play tambem mais vivo/premium. Brilho pulsante do selo (abaixo)
+   trocado de branco pra dourado no mesmo pedido, pra reforçar essa cor em todo o selo. */
+.work-card .play-ring { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.work-card .play-ring circle {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 176;
+  transform-origin: 50% 50%;
+  animation: playRingDraw 3.2s ease-in-out infinite, playRingSpin 7s linear infinite;
+}
+@keyframes playRingDraw {
+  0%, 100% { stroke-dashoffset: 176; opacity: 0.4; }
+  50% { stroke-dashoffset: 0; opacity: 1; }
+}
+@keyframes playRingSpin {
+  to { transform: rotate(360deg); }
+}
 .work-card:hover .play {
   transform: translate(-50%, -50%) scale(1.15);
   background: var(--accent);
@@ -829,9 +854,10 @@ section { padding: 110px 0; position: relative; }
   box-shadow: 0 10px 28px rgba(0,0,0,0.45);
   animation-play-state: paused;
 }
+.work-card:hover .play-ring circle { animation-play-state: paused; opacity: 0; }
 @keyframes playPulse {
-  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(255,255,255,0.32); }
-  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 12px rgba(255,255,255,0); }
+  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(201,162,39,0.4); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 12px rgba(201,162,39,0); }
 }
 /* Pedido em 10/09/2026: enquanto a prévia em vídeo toca sozinha (hover no PC / rolagem no
    celular - ver .work-card.is-previewing acima), o selo de play redondo some (regra
@@ -887,21 +913,18 @@ section { padding: 110px 0; position: relative; }
   0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 0 rgba(201,162,39,0.45); }
   50% { box-shadow: 0 6px 20px rgba(0,0,0,0.35), 0 0 0 8px rgba(201,162,39,0); }
 }
-/* Pedido em seguida (mesma data, mesmos screenshots): "o da foto sinalize tambem com algo mais
-   discreto pra pessoa abrir a imagem" - cards que só têm foto (sem nenhum vídeo) não tinham NENHUM
-   sinal de que dá pra clicar (só a foto + o overlay com o título no fundo). Criado um selo novo
-   (.photo-hint), pequeno e discreto, num cantinho do card (inferior direito, longe do título que
-   já fica no canto inferior esquerdo/centro via .overlay) com um ícone de "expandir" (setinhas pros
-   4 cantos), na cor dourada da marca (--accent) - igual em espírito ao selo de play redondo dos
-   cards com vídeo (mesmo "vidro" translúcido + brilho pulsante), só que bem menor e num canto em
-   vez de centralizado, já que aqui a ação é só "abrir a foto", não "assistir" (não precisa do
-   mesmo destaque). Fica sempre visível (igual o selo de play) em vez de só no hover, pra não
-   desaparecer no celular (que não tem hover) - ver previewHintHtml()/o novo photoHintHtml() em
-   routes/public.js, chamado só quando o projeto não tem nenhum vídeo. */
+/* Selo de "dá pra clicar" pros cards que só têm foto - criado em 10/09/2026 pequeno, num cantinho,
+   com setinhas paradas. Redesenhado em 11/09/2026: "esse q ta e muito simples e n passa a
+   impressao de abrir, poe uma animacao tipo mao pincelando ou algo do tipo, dourada, no centro" -
+   movido do cantinho pro CENTRO do card (mesmo lugar de destaque do selo de play dos cards com
+   vídeo, ver .play acima) e aumentado, com um ícone novo de "moldura" de 4 cantos (estilo visor de
+   câmera/tela cheia) em vez das setinhas simples. Continua sempre visível (nunca só no hover),
+   igual antes, pra não sumir no celular. */
 .work-card .photo-hint {
   position: absolute;
-  right: 16px; bottom: 16px;
-  width: 34px; height: 34px;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 74px; height: 74px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -909,24 +932,47 @@ section { padding: 110px 0; position: relative; }
   background: rgba(18,16,10,0.45);
   backdrop-filter: blur(3px);
   -webkit-backdrop-filter: blur(3px);
-  border: 1.25px solid var(--accent);
+  border: 1.5px solid var(--accent);
   color: var(--accent);
-  opacity: 0.9;
+  opacity: 0.95;
   z-index: 2;
   transition: transform 0.35s var(--ease), background 0.35s var(--ease), color 0.35s var(--ease), opacity 0.35s ease;
   animation: photoHintPulse 2.6s ease-in-out infinite;
 }
-.work-card .photo-hint svg { width: 15px; height: 15px; }
+.work-card .photo-hint-frame { width: 34px; height: 34px; overflow: visible; }
+/* Cada cantinho da moldura "se pinta" sozinho (o traço nasce escondido via stroke-dasharray e vai
+   se desenhando, dando a sensação de estar sendo pincelado) e no meio do ciclo os 4 cantos se
+   afastam um pouco pra fora ao mesmo tempo (--ph-open, diferente por cantinho pra abrir na
+   diagonal certa) antes de fechar e apagar de novo - a moldura literalmente "abre e fecha" em
+   loop, resolvendo a reclamação de que o ícone antigo não passava impressão de abrir. Delay
+   crescente por cantinho (tl/tr/br/bl) faz o desenho correr em cascata ao redor do quadro em vez
+   de nascer tudo de uma vez. */
+.work-card .photo-hint-frame .ph-c {
+  stroke-dasharray: 20;
+  animation: phDraw 3.2s ease-in-out infinite;
+}
+.work-card .photo-hint-frame .ph-tl { --ph-open: translate(-2.5px, -2.5px); animation-delay: 0s; }
+.work-card .photo-hint-frame .ph-tr { --ph-open: translate(2.5px, -2.5px); animation-delay: 0.12s; }
+.work-card .photo-hint-frame .ph-br { --ph-open: translate(2.5px, 2.5px); animation-delay: 0.24s; }
+.work-card .photo-hint-frame .ph-bl { --ph-open: translate(-2.5px, 2.5px); animation-delay: 0.36s; }
+@keyframes phDraw {
+  0% { stroke-dashoffset: 20; opacity: 0.3; transform: translate(0, 0); }
+  30% { stroke-dashoffset: 0; opacity: 1; transform: translate(0, 0); }
+  55% { stroke-dashoffset: 0; opacity: 1; transform: var(--ph-open); }
+  80% { stroke-dashoffset: 0; opacity: 1; transform: translate(0, 0); }
+  100% { stroke-dashoffset: 20; opacity: 0.3; transform: translate(0, 0); }
+}
 .work-card:hover .photo-hint {
   opacity: 1;
-  transform: scale(1.12);
+  transform: translate(-50%, -50%) scale(1.12);
   background: var(--accent);
   color: #12100a;
   animation-play-state: paused;
 }
+.work-card:hover .photo-hint-frame .ph-c { animation-play-state: paused; }
 @keyframes photoHintPulse {
-  0%, 100% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 0 rgba(201,162,39,0.4); }
-  50% { box-shadow: 0 4px 14px rgba(0,0,0,0.3), 0 0 0 9px rgba(201,162,39,0); }
+  0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 0 0 rgba(201,162,39,0.4); }
+  50% { box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 0 12px rgba(201,162,39,0); }
 }
 
 .work-cursor {
