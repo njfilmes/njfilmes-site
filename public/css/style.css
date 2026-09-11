@@ -476,6 +476,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   word-break: break-word;
 }
 .hero .btn-row { justify-content: center; }
+/* Pedido do usuario (11/09/2026): "a parte ver portifolio e entrar em contato abaixa mais
+   um pouco" - os botoes ficavam bem colados no titulo (o h1 so tem 0.4em de margem embaixo,
+   que agora e pouco por causa da fonte bem menor do titulo). Empurrado mais espaco entre o
+   titulo e os botoes, so no desktop. */
+.hero .btn-row { margin-top: 28px; }
 /* Pedido do usuario (11/09/2026): "deixa o texto da frase transformamos momentos reais em
    filmes todo branco sem efeitos ta" - tira a cor dourada da palavra "filmes" e desliga
    todas as animacoes do titulo (zoom sutil da parte branca, flutuar/trocar de cor de
