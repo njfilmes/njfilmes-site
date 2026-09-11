@@ -479,31 +479,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    todas as animacoes do titulo (zoom sutil da parte branca, flutuar/trocar de cor de
    "filmes", brilho dourado atras dela, clarao de camera) - frase toda branca e parada.
    Pedido em seguida: "o nome filme vc pode deixar piscando tipo fora de ar com variacao
-   bem rapida" - so a palavra "filmes" ganha de volta uma animacao, mas dessa vez uma
-   piscada rapida e irregular (opacidade variando sem ritmo fixo, tipo sinal de TV
-   perdendo sinal/"fora do ar"), continuando branca (sem a cor dourada de antes). */
-.js .hero-content h1 .hero-title-white { animation: none; }
+   bem rapida" - piscada rapida testada e publicada, mas revertida no pedido seguinte.
+   Pedido em seguida (o que fica valendo agora): "deixa o Filmes branco com o fundo com a
+   luz dourada mais so dar o efeito de zoom igual o restante apenas isso" - tira a piscada,
+   "filmes" continua branca mas agora com o MESMO efeito de zoom/escala que a parte branca
+   do titulo (heroTitleZoom) em vez de flutuar/trocar de cor, e o brilho dourado atras dela
+   (::before) volta a aparecer, do jeito que era antes. */
 .hero-content h1 .text-accent { color: #fff; }
-.js .hero-content h1 .text-accent { animation: heroOffAirFlicker 1.6s steps(1) infinite; }
-.js .hero-content h1 .text-accent::before { animation: none; opacity: 0; }
-.js .hero-content h1::after { animation: none; }
-@keyframes heroOffAirFlicker {
-  0%, 100% { opacity: 1; }
-  4% { opacity: 0.25; }
-  6% { opacity: 1; }
-  9% { opacity: 0.15; }
-  11% { opacity: 1; }
-  30% { opacity: 1; }
-  32% { opacity: 0.2; }
-  34% { opacity: 1; }
-  55% { opacity: 1; }
-  57% { opacity: 0.3; }
-  58% { opacity: 0.1; }
-  60% { opacity: 1; }
-  80% { opacity: 1; }
-  82% { opacity: 0.2; }
-  84% { opacity: 1; }
-}
+.js .hero-content h1 .text-accent { animation: heroTitleZoom 5s ease-in-out infinite; }
 /* Pedido em 10/09/2026: análise crítica dos efeitos do hero (do ponto de vista de cliente/
    produtor/marca) - conclusão foi que tinha efeito demais rodando ao mesmo tempo no título,
    competindo entre si e passando impressão de "poluído" em vez de profissional. Pedido em
