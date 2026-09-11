@@ -384,8 +384,10 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    align-items:flex-end la no .hero; subido com translateY pra ficar mais alto na tela,
    mais perto da altura do pescoco/ombros da pessoa na foto/video de fundo. So no desktop -
    o celular ja tem seu proprio ajuste de altura aqui embaixo, dentro do
-   @media (max-width:720px). */
-.hero-content { transform: translateY(-18vh); }
+   @media (max-width:720px).
+   Pedido em seguida: "aproveita e coloca as coisas pra cima achei muito em baixo" - ainda
+   estava baixo demais, subido mais um pouco (de -18vh pra -28vh). */
+.hero-content { transform: translateY(-28vh); }
 /* Desce um pouco o texto pequeno acima do título, a pedido. */
 .hero-eyebrow-lower { margin-top: 0.5em; }
 /* 10/09/2026: o dourado padrão do site (--accent) ficava meio "mostarda" nesses dois textos do
