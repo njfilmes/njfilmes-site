@@ -142,16 +142,32 @@ function highlightWord(escapedText, word) {
 function heroHeadlineHtml(text) {
   const trimmed = String(text || '').trim();
   if (!trimmed) return '';
-  const lastSpace = trimmed.lastIndexOf(' ');
   const wrapAccent = (word) => {
     const match = word.match(/^(.*?)([?!.,;:]+)$/);
     if (!match) return `<span class="text-accent">${escapeHtml(word)}</span>`;
     const [, core, punct] = match;
     return `<span class="text-accent">${escapeHtml(core)}<span class="hero-punct">${escapeHtml(punct)}</span></span>`;
   };
-  if (lastSpace === -1) return wrapAccent(trimmed);
-  const beforeLast = trimmed.slice(0, lastSpace);
-  const last = trimmed.slice(lastSpace + 1);
+  // Pedido em 11/09/2026: "configura de uma forma pra eu mesmo poder fazer essa separação via
+  // barra de espaço, fica melhor" - o usuário quer poder ajustar o respiro entre duas palavras
+  // ESPECÍFICAS do título direto no campo "Título de destaque" do painel (digitando espaços a
+  // mais ali), em vez de precisar pedir ajuste de CSS toda vez. Por padrão o navegador "engole"
+  // espaços repetidos (várias barras de espaço viram só 1 na tela) - pra isso NÃO acontecer,
+  // cada espaço digitado A MAIS (além do primeiro) entre duas palavras vira um espaço fixo
+  // (&nbsp;), que o navegador não engole e que a regra "word-spacing" do CSS (mais abaixo, no
+  // style.css) alarga igual um espaço comum. O primeiro espaço de cada par continua um espaço
+  // normal (pra manter a quebra de linha responsiva funcionando do mesmo jeito de sempre).
+  const manualSpacing = (sep) => (sep.length <= 1 ? (sep || ' ') : ' ' + '&nbsp;'.repeat(sep.length - 1));
+
+  const words = [...trimmed.matchAll(/\S+/g)];
+  if (words.length <= 1) return wrapAccent(trimmed);
+  const n = words.length;
+  const secondLastMatch = words[n - 2];
+  const lastMatch = words[n - 1];
+  const secondLastWord = secondLastMatch[0];
+  const last = lastMatch[0];
+  const sepBetweenLastTwo = trimmed.slice(secondLastMatch.index + secondLastWord.length, lastMatch.index);
+
   // Pedido em 10/09/2026: animação de "zoom" (pulso sutil de escala) na parte branca do
   // título, pra combinar com a palavra dourada que já flutua/brilha. Precisa desse span
   // (.hero-title-white) porque esse texto vem solto (sem tag) direto do painel - sem ele
@@ -169,16 +185,23 @@ function heroHeadlineHtml(text) {
   // um span extra (.hero-title-join) com "white-space: nowrap" - esse span extra vira um único
   // bloco atômico pro navegador, que só pode ir inteiro pra própria linha (nunca quebrando "em"
   // de um lado e "filmes" do outro). O resto da frase antes disso continua quebrando normal.
-  const secondLastSpace = beforeLast.lastIndexOf(' ');
-  const rest = secondLastSpace === -1 ? '' : beforeLast.slice(0, secondLastSpace);
-  const secondLastWord = secondLastSpace === -1 ? beforeLast : beforeLast.slice(secondLastSpace + 1);
-  const restHtml = rest
-    ? `<span class="hero-title-white">${highlightWord(escapeHtml(rest), 'ideia')}</span> `
-    : '';
+  let restHtml = '';
+  if (n > 2) {
+    const lastRestMatch = words[n - 3];
+    const restRaw = trimmed.slice(0, lastRestMatch.index + lastRestMatch[0].length);
+    const sepBeforeSecondLast = trimmed.slice(restRaw.length, secondLastMatch.index);
+    const restEscaped = escapeHtml(restRaw).replace(/ {2,}/g, (m) => ' ' + '&nbsp;'.repeat(m.length - 1));
+    restHtml = `<span class="hero-title-white">${highlightWord(restEscaped, 'ideia')}</span>${manualSpacing(sepBeforeSecondLast)}`;
+  }
+  // Entre a palavra branca e a dourada o espaço já era fixo (&nbsp;) por causa do bloco
+  // "nowrap" acima - aqui só somamos &nbsp; extra se o usuário tiver digitado espaços a mais
+  // entre essas duas palavras no painel, seguindo a mesma lógica de "mais espaço digitado =
+  // mais respiro visual" do resto do título.
+  const joinSpacing = '&nbsp;'.repeat(Math.max(1, sepBetweenLastTwo.length));
   const joinHtml = `<span class="hero-title-join"><span class="hero-title-white">${highlightWord(
     escapeHtml(secondLastWord),
     'ideia',
-  )}</span>&nbsp;${wrapAccent(last)}</span>`;
+  )}</span>${joinSpacing}${wrapAccent(last)}</span>`;
   return `${restHtml}${joinHtml}`;
 }
 

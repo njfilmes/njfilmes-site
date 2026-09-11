@@ -1218,7 +1218,7 @@ export async function settingsPage(req, res, admin) {
         ${field({ label: 'Nome do site', name: 'site_name', value: s.site_name })}
         ${field({ label: 'Slogan curto', name: 'tagline', value: s.tagline })}
       </div>
-      ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline })}
+      ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
       ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Cole aqui um link direto de vídeo (ex: Cloudinary) OU envie o arquivo direto no campo logo abaixo — os dois fazem a mesma coisa. Deixe vazio para usar imagem.' })}
       <div class="form-field" data-single-upload>
