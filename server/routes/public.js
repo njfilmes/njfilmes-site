@@ -150,13 +150,36 @@ function heroHeadlineHtml(text) {
     return `<span class="text-accent">${escapeHtml(core)}<span class="hero-punct">${escapeHtml(punct)}</span></span>`;
   };
   if (lastSpace === -1) return wrapAccent(trimmed);
-  const rest = trimmed.slice(0, lastSpace);
+  const beforeLast = trimmed.slice(0, lastSpace);
   const last = trimmed.slice(lastSpace + 1);
   // Pedido em 10/09/2026: animação de "zoom" (pulso sutil de escala) na parte branca do
   // título, pra combinar com a palavra dourada que já flutua/brilha. Precisa desse span
   // (.hero-title-white) porque esse texto vem solto (sem tag) direto do painel - sem ele
   // não dava pra aplicar a animação só nessa parte.
-  return `<span class="hero-title-white">${highlightWord(escapeHtml(rest), 'ideia')}</span> ${wrapAccent(last)}`;
+  // Pedido em 11/09/2026: "em filmes deixa na coluna junto, o atual ta filmes sozinho" - a
+  // palavra logo antes da dourada (aqui, "em") e a palavra dourada em si (aqui, "filmes")
+  // podiam quebrar em linhas diferentes em telas estreitas, deixando a dourada sozinha numa
+  // linha. Primeira tentativa foi só trocar o espaço entre as duas por um espaço não-quebrável
+  // (&nbsp;), mas isso NÃO resolveu de verdade: os dois `<span>` (o texto branco e o dourado)
+  // são "inline-block" (precisam disso pra animação de zoom/flicker funcionar) e um elemento
+  // inline-block quebra de linha inteiro como bloco, ignorando o nbsp - testado e confirmado
+  // que a palavra dourada continuava indo sozinha pra linha de baixo mesmo com o nbsp.
+  // Solução de verdade: tira essa última palavra antes da dourada (aqui "em") de dentro do
+  // span grande que teria o resto da frase, e agrupa ela junto com a palavra dourada dentro de
+  // um span extra (.hero-title-join) com "white-space: nowrap" - esse span extra vira um único
+  // bloco atômico pro navegador, que só pode ir inteiro pra própria linha (nunca quebrando "em"
+  // de um lado e "filmes" do outro). O resto da frase antes disso continua quebrando normal.
+  const secondLastSpace = beforeLast.lastIndexOf(' ');
+  const rest = secondLastSpace === -1 ? '' : beforeLast.slice(0, secondLastSpace);
+  const secondLastWord = secondLastSpace === -1 ? beforeLast : beforeLast.slice(secondLastSpace + 1);
+  const restHtml = rest
+    ? `<span class="hero-title-white">${highlightWord(escapeHtml(rest), 'ideia')}</span> `
+    : '';
+  const joinHtml = `<span class="hero-title-join"><span class="hero-title-white">${highlightWord(
+    escapeHtml(secondLastWord),
+    'ideia',
+  )}</span>&nbsp;${wrapAccent(last)}</span>`;
+  return `${restHtml}${joinHtml}`;
 }
 
 export async function homePage(req, res) {
