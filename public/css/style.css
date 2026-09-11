@@ -680,6 +680,17 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    fica la" - só pra ver como fica, trocada a cor da luz no pico (50%, quando "papel" fica
    dourado) de branco pra preto - mantido tudo o resto igual (mesmo esquema invertido do
    comentário acima, mesma duração/timing/pontos). */
+/* Ajustado em seguida (11/09/2026): "a transicao de um brilho pra o outro ta muito duro deixa
+   algo mais suavizado quando muda" - com só 2 cores no keyframe (0%/100% dourado, 50% preto), o
+   navegador NÃO faz um fade suave entre as cores do gradiente (background/radial-gradient não
+   interpola cor a cor como a propriedade "color" faz) - ele troca de golpe, de uma vez, bem no
+   meio do caminho entre os pontos, o que lê como um corte duro. Corrigido adicionando pontos
+   intermediários (a cada 12.5%, 8 no total por ciclo) com a cor MISTURADA matematicamente entre
+   dourado e preto (mistura linear de cada canal r/g/b/alpha) - assim em vez de 1 corte brusco
+   por metade do ciclo, viram 8 passos pequenos e graduais, o que o olho lê como um fade contínuo
+   em vez de um "pisca-troca". Opacidade e escala (que já eram só 3 pontos: 0.8/1/0.8 e 1/1.12/1)
+   ganharam os mesmos pontos intermediários, interpolados linearmente, pra acompanhar o mesmo
+   ritmo suave. */
 .js .hero-content h1 .text-accent::before {
   animation: heroGlowPulse 4s ease-in-out infinite;
 }
@@ -688,6 +699,21 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     opacity: 0.8;
     transform: scale(1);
     background: radial-gradient(ellipse at center, rgba(255, 224, 140, 0.7) 0%, rgba(246, 196, 69, 0.32) 52%, rgba(246, 196, 69, 0) 78%);
+  }
+  12.5%, 87.5% {
+    opacity: 0.85;
+    transform: scale(1.03);
+    background: radial-gradient(ellipse at center, rgba(191, 168, 105, 0.71) 0%, rgba(185, 147, 52, 0.33) 52%, rgba(185, 147, 52, 0) 78%);
+  }
+  25%, 75% {
+    opacity: 0.9;
+    transform: scale(1.06);
+    background: radial-gradient(ellipse at center, rgba(128, 112, 70, 0.73) 0%, rgba(123, 98, 35, 0.33) 52%, rgba(123, 98, 35, 0) 78%);
+  }
+  37.5%, 62.5% {
+    opacity: 0.95;
+    transform: scale(1.09);
+    background: radial-gradient(ellipse at center, rgba(64, 56, 35, 0.74) 0%, rgba(62, 49, 17, 0.34) 52%, rgba(62, 49, 17, 0) 78%);
   }
   50% {
     opacity: 1;
