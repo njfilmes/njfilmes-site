@@ -411,11 +411,20 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    que um único ease-in-out entre só 2 pontos causava. Os valores de cor nos novos pontos (25%/75%)
    são os MESMOS nos dois keyframes (aqui e heroPunctSwing), pra manter a troca de cor sincronizada
    entre "papel" e a interrogação. */
-.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroPapelColorFloat 4s linear infinite; }
+/* Revertido em 11/09/2026: "ajuste esse zoom q ta meio travando do nome papel" - o linear com
+   pontos em 25%/75% (ajuste acima) resolveu a sincronia com a interrogação, mas fez o PULSO DE
+   ESCALA (o "zoom" do scale()) parecer mecânico/travado - com velocidade constante entre cada
+   ponto e só 4 trechos retos, dava pra perceber uma leve "quebrada" de ritmo a cada 25% do ciclo
+   (mais perceptível na escala/zoom do que seria numa cor, já que o olho pega variação de tamanho
+   mais fácil). Voltado pro padrão simples de 2 pontos (0%/50%/100%) com ease-in-out - o mesmo
+   esquema usado em heroAccentFloat/heroTitleZoom (os outros "zooms" do hero, nunca reclamados) -
+   que desacelera suavemente perto do pico em vez de andar reto e mudar de direção de repente. A
+   troca de cor continua sincronizada com a interrogação porque as DUAS (aqui e heroPunctSwing)
+   voltaram a usar exatamente o mesmo esquema (0%/50%/100%, mesma duração, mesmo timing). */
+.js .hero-content h1 .text-accent { display: inline-block; margin-top: 0.22em; animation: heroPapelColorFloat 4s ease-in-out infinite; }
 @keyframes heroAccentFloat { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-10px) scale(1.06); } }
 @keyframes heroPapelColorFloat {
   0%, 100% { transform: translateY(0) scale(1); color: #fff; }
-  25%, 75% { transform: translateY(-7px) scale(1.04); color: rgb(228, 209, 147); }
   50% { transform: translateY(-10px) scale(1.06); color: var(--accent); }
 }
 
@@ -516,12 +525,26 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    tinha ficado), aumentado um pouco o ângulo (de 10deg pra 14deg) pra compensar a "profundidade" do
    3D que saiu e manter o movimento bem visível. transform-origin voltou pra 50% 85% (perto da base
    do "?", pra girar feito um pêndulo pendurado, igual era antes de entrar o rotateY). */
-.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 85%; }
-.js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s linear infinite; }
+/* Ajustado em 11/09/2026: "deixa a animacao da virgula animada igual o primeiro projeto q vc fez
+   balancando de forma 3d" - pedido pra voltar o giro 3D (em vez do rotate() 2D puro do ajuste
+   acima). O problema do achatamento antes não era rotateY() em si - era rotateY() num ÂNGULO
+   GRANDE (32deg) com uma perspective() bem próxima (300px), forte demais pro glifo fino do "?".
+   Voltado o giro 3D (perspective + rotateY, sem rotate() - continua sem misturar os dois eixos,
+   que é o que causava a distorção mais feia), mas com valores bem mais moderados: 22deg (era
+   32deg) e perspective(240px) (era 300px, então uma perspectiva um pouco mais "aberta"/menos
+   dramática) - parecido com o giro 3D da palavra "ideia" (heroIdeiaSwing, mais abaixo: 16deg/220px)
+   que nunca teve reclamação de achatamento, só um pouco mais forte já que aqui é só um caractere
+   (compensa não ter tanta "área" pra mostrar o giro). transform-origin voltou pra 50% 50% (centro),
+   já que só sobrou o giro em Y de novo. Keyframes voltados pra só 2 pontos (0%/50%/100%) com
+   ease-in-out em vez de 25%/75%+linear (mesmo motivo do ajuste no heroPapelColorFloat, acima: o
+   esquema mais simples é o que a palavra "ideia" já usa sem problema, e evita o "zoom"/giro parecer
+   mecânico) - "papel" (heroPapelColorFloat, acima) foi ajustado igual no mesmo pedido, pros dois
+   continuarem trocando de cor exatamente juntos (mesma duração 4s, mesmo timing, mesmos pontos). */
+.hero-content h1 .hero-punct { margin-left: 0.12em; display: inline-block; transform-origin: 50% 50%; }
+.js .hero-content h1 .hero-punct { animation: heroPunctSwing 4s ease-in-out infinite; }
 @keyframes heroPunctSwing {
-  0%, 100% { transform: rotate(-14deg); color: #fff; }
-  25%, 75% { transform: rotate(0deg); color: rgb(228, 209, 147); }
-  50% { transform: rotate(14deg); color: var(--accent); }
+  0%, 100% { transform: perspective(240px) rotateY(-22deg); color: #fff; }
+  50% { transform: perspective(240px) rotateY(22deg); color: var(--accent); }
 }
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
    tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
