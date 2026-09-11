@@ -547,34 +547,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   50% { transform: perspective(240px) rotateY(22deg); color: var(--accent); }
 }
 /* Pedido em 11/09/2026: "coloca uma animacao nessa interrogacao q fique bonita com esse efeito" /
-   depois esclarecido: "o efeito 3d da interrogacao pra mudar" - o giro 3D sozinho (só rotateY +
-   troca de cor) ficou meio "seco"/sem graça. Acrescentado um brilho dourado pulsando atrás do "?"
-   (::before, mesma receita visual do brilho que "papel" já tem atrás dele - heroGlowPulse, ver
-   .text-accent::before, acima - só que num tamanho menor, proporcional ao "?"), sincronizado com o
-   PRÓPRIO ciclo de cor da interrogação (heroPunctSwing, mesmos 4s/ease-in-out, pico exatamente em
-   50%): o brilho aparece/cresce junto com a interrogação ficando dourada e some junto com ela
-   voltando a branca - fica parecendo que o giro em 3D "acende" a interrogação no ponto mais dourado
-   do giro, em vez de só girar uma cor sólida. position:relative + z-index adicionados (mesmo padrão
-   do .text-accent) pra servir de âncora ao ::before absoluto. */
-.hero-content h1 .hero-punct { position: relative; z-index: 1; }
-.hero-content h1 .hero-punct::before {
-  content: '';
-  position: absolute;
-  inset: -45% -75%;
-  z-index: -1;
-  border-radius: 50%;
-  background: radial-gradient(ellipse at center, rgba(255, 224, 140, 0.7) 0%, rgba(246, 196, 69, 0.32) 52%, rgba(246, 196, 69, 0) 78%);
-  filter: blur(5px);
-  opacity: 0;
-  pointer-events: none;
-}
-.js .hero-content h1 .hero-punct::before {
-  animation: heroPunctGlow 4s ease-in-out infinite;
-}
-@keyframes heroPunctGlow {
-  0%, 100% { opacity: 0; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.15); }
-}
+   depois esclarecido: "o efeito 3d da interrogacao pra mudar" - tentado um brilho dourado
+   pulsando atrás do "?" (::before), sincronizado com o pico de cor do giro (mesma receita visual
+   do brilho de "papel"). Desfeito em seguida (mesmo dia): "tira isso, vc fez, n gostei, deixa
+   como tava antes" - o brilho não agradou, revertido por completo (::before, keyframe
+   heroPunctGlow e o position:relative/z-index que só existiam pra sustentar ele removidos) -
+   heroPunctSwing volta a ser só o giro 3D (perspective+rotateY) + troca de cor, sem brilho extra,
+   do jeito que estava antes desse pedido. */
 /* Pedido em seguida (10/09/2026): "deixa a palavra ideia se balancando bem de leve estilo como
    tava antes mais um pouco lenta e bem sutil permanecendo a mesma cor branca" - a palavra "ideia"
    (.hero-highlight-word) ganha de volta um balanço, mas BEM mais discreto que o heroPunctSwing da
@@ -698,7 +677,6 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent::before { animation: none; opacity: 0.85; }
-  .js .hero-content h1 .hero-punct::before { animation: none; opacity: 0.5; }
 }
 .hero-scroll {
   position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
