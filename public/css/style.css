@@ -1931,11 +1931,12 @@ html.no-intro .cine-intro { display: none; }
      centrais do card (play com anel dourado + cursor, e o de foto com a seta) ficavam grandes
      demais nas telas pequenas (cards em coluna única, ver .work-grid acima). Reduzidos só no
      mobile; no desktop continuam do tamanho de sempre (.play 62px / .photo-hint 74px, mais acima
-     no CSS). */
-  .work-card .play { width: 50px; height: 50px; }
-  .work-card .play svg:not(.play-ring) { width: 18px; height: 18px; }
-  .work-card .photo-hint { width: 58px; height: 58px; }
-  .work-card .photo-hint svg { width: 24px; height: 24px; }
+     no CSS). Diminuído de novo em seguida (mesmo dia): "diminua mais um pouco o circulo no
+     celular" - reduzido mais uma vez (50px/58px foi pro tamanho atual abaixo). */
+  .work-card .play { width: 42px; height: 42px; }
+  .work-card .play svg:not(.play-ring) { width: 15px; height: 15px; margin-left: 2px; }
+  .work-card .photo-hint { width: 48px; height: 48px; }
+  .work-card .photo-hint svg { width: 20px; height: 20px; }
   .services-grid { grid-template-columns: 1fr; }
   .service-card { padding: 32px 4px; }
   .service-card img { display: none; }
