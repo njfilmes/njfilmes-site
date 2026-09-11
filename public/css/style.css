@@ -357,8 +357,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   content: '';
   position: absolute; inset: 0;
   /* 10/09/2026: pedido pra deixar a foto de fundo do hero mais clara/visível - escurecido reduzido
-     (mantendo mais forte só bem embaixo, atrás do título, pra continuar legível). */
-  background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.36) 40%, rgba(10,10,11,0.88) 100%);
+     (mantendo mais forte só bem embaixo, atrás do título, pra continuar legível).
+     Ajustado em 11/09/2026: "o degrade que falei foi no fundo pegando minha foto toda" - pedido
+     pra escurecer mais a foto/video de fundo inteira (nao so uma caixa atras do titulo, que foi
+     removida) - aumentada a opacidade em todos os pontos do degrade. */
+  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.5) 40%, rgba(6,6,7,0.92) 100%);
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -536,19 +539,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   84% { opacity: 1; }
 }
 /* Pedido do usuario (11/09/2026): "coloca uma pelicula mais escura de fundo em degrade atras
-   das letras" - uma pelicula/gradiente escuro atras do texto do titulo (todo ele, nao so
-   "filmes"), pra dar mais contraste/legibilidade contra a foto/video de fundo. Usa ::before
-   no proprio h1 (position:relative ja existe nele), atras do texto (z-index -1, igual o
-   clarao de camera que usa ::after). */
-.hero-content h1::before {
-  content: '';
-  position: absolute;
-  inset: -14% -6%;
-  z-index: -1;
-  pointer-events: none;
-  border-radius: 14px;
-  background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 40%, rgba(0, 0, 0, 0.72) 100%);
-}
+   das letras" - entendido a princípio como um degrade só atrás do bloco de texto (::before no
+   h1), mas causou um contorno/caixa visivel por cima da foto. Esclarecido em seguida: "o
+   degrade que falei foi no fundo pegando a minha foto toda, e nao no texto" - o pedido e pra
+   escurecer mais o FUNDO INTEIRO (a foto/video do hero), nao uma caixa atras do titulo. Removido
+   o ::before daqui (nao e mais usado) - o ajuste de escurecimento entra direto no gradiente que
+   ja cobre o hero inteiro (.hero-media::after, mais acima no arquivo).*/
 /* Pedido em 10/09/2026: análise crítica dos efeitos do hero (do ponto de vista de cliente/
    produtor/marca) - conclusão foi que tinha efeito demais rodando ao mesmo tempo no título,
    competindo entre si e passando impressão de "poluído" em vez de profissional. Pedido em
