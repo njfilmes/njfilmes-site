@@ -391,6 +391,22 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    Pedido em seguida: "aproveita e coloca as coisas pra cima achei muito em baixo" - ainda
    estava baixo demais, subido mais um pouco (de -18vh pra -28vh). */
 .hero-content { transform: translateY(-28vh); }
+/* Pedido do usuario (11/09/2026): "a parte de cima n ta afastada" (print mostrando a legenda
+   "Produção Audiovisual..." quase colada no menu) - o -28vh acima é uma % da altura da TELA,
+   entao em janelas de PC mais baixas (navegador não maximizado, notebook menor, etc.) esse
+   mesmo -28vh sobe o bloco de texto demais, quase até embaixo do menu fixo (.site-header),
+   já que o texto sempre fica "grudado" embaixo (align-items:flex-end la em .hero) e o -28vh
+   original foi calibrado pensando numa tela de altura "normal". Duas faixas de segurança pra
+   telas mais baixas (só no PC - min-width aqui pra não interferir no celular, que já tem seu
+   proprio ajuste separado): quanto mais baixa a janela, menos ele sobe, garantindo sempre uma
+   distância mínima do menu. Valores testados e conferidos (respiro sempre positivo) da altura
+   400px até 900px+. */
+@media (min-width: 721px) and (max-height: 760px) {
+  .hero-content { transform: translateY(-14vh); }
+}
+@media (min-width: 721px) and (max-height: 600px) {
+  .hero-content { transform: translateY(-4vh); }
+}
 /* Desce um pouco o texto pequeno acima do título, a pedido. */
 .hero-eyebrow-lower { margin-top: 0.5em; }
 /* 10/09/2026: o dourado padrão do site (--accent) ficava meio "mostarda" nesses dois textos do
@@ -723,21 +739,15 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   0%, 100% { transform: perspective(220px) rotateY(-16deg); }
   50% { transform: perspective(220px) rotateY(16deg); }
 }
-.js .hero-content h1::after { animation: heroCameraFlash 0.9s ease-in-out 1.7s 1 both; }
-.hero-content h1::after {
-  content: '';
-  position: absolute;
-  inset: -12% -4%;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 32% 38% at 50% 45%, rgba(255, 224, 160, 0.85), rgba(255, 205, 120, 0.22) 35%, transparent 55%);
-  opacity: 0;
-}
-@keyframes heroCameraFlash {
-  0%, 100% { opacity: 0; }
-  45% { opacity: 0.28; }
-  65% { opacity: 0; }
-}
+/* Pedido do usuario (11/09/2026): "em 4 segundo q entro na pagina aparece uma luz bem debaixo
+   de momentos tira ela ver se n e bug" - achado: era esse "clarão de câmera" (heroCameraFlash),
+   um flash único de luz quente que disparava sozinho ~1,7s depois da página carregar. Como o
+   ::after cobre o título INTEIRO (as duas linhas: "transformamos...em" + "filmes"), o brilho
+   ficava centralizado no meio do bloco (50% 45%) - ou seja, bem na altura de "momentos"/na
+   emenda entre as duas linhas, não atrás de "filmes" como o usuário queria - por isso
+   parecia fora de lugar/"errado". Removido de vez (o efeito nunca tinha sido pedido em si,
+   era só uma ideia testada antigamente e esquecida ligada). */
+.hero-content h1::after { display: none; }
 .hero-content .lead { font-size: 1.15rem; max-width: 560px; color: var(--fg-muted); }
 
 /* 10/09/2026: pedido pra deixar a fonte do titulo do hero com cantos mais arredondados/mais
