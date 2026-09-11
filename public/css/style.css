@@ -398,6 +398,13 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    só aqui (o resto do site - botões, links, outros títulos - continua com o dourado padrão de
    sempre, sem mudar a marca inteira). */
 .hero-content .eyebrow { color: #f6c445; }
+/* Pedido do usuario (11/09/2026): "producao audio visual salvador ba nao precisa de efeito
+   nenhum deixa parado" - essa legenda (.eyebrow) tinha herdado a flutuacao labelFloat que
+   o site usa nos labels dourados em geral (.js .eyebrow, mais acima no arquivo). Desligada
+   só aqui (dentro de .hero-content), pra nao afetar os outros textos que usam a mesma classe
+   .eyebrow em outras paginas/secoes - essa regra ganha por ter mais especificidade (2 classes
+   + .js contra 1 classe + .js), nao depende de ordem no arquivo. */
+.js .hero-content .eyebrow { animation: none; transform: none; }
 /* Pedido em seguida (10/09/2026): a palavra de destaque ("papel") tava mais clara que o
    brilho atras dela (::before mais abaixo), entao o brilho nao aparecia como luz vindo de
    tras - so ficava uma cor lisa. Escurecida um pouco (só a palavra do título, o texto
@@ -461,6 +468,15 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    (server/routes/public.js, heroHeadlineHtml) já que esse texto é editável pelo painel. */
 .js .hero-content h1 .hero-title-white { display: inline-block; animation: heroTitleZoom 5s ease-in-out infinite; }
 @keyframes heroTitleZoom { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.025); } }
+/* Pedido do usuario (11/09/2026): "em filmes deixa na coluna junto, o atual ta filmes
+   sozinho" - a palavra logo antes da dourada e a palavra dourada (ambas "inline-block", que
+   e obrigatorio pra animacao de zoom/piscada funcionar) podiam ir cada uma pra uma linha
+   diferente no celular, ja que um elemento inline-block sempre quebra de linha inteiro (nao
+   adianta só um espaço não-quebrável entre eles - testado, nao resolvia). Esse span extra
+   (gerado em server/routes/public.js, heroHeadlineHtml) embrulha as duas palavras junto com
+   "white-space: nowrap", virando um único bloco atômico que só pode ir inteiro pra sua
+   própria linha - nunca quebrando as duas palavras em linhas separadas. */
+.hero-content h1 .hero-title-join { display: inline-block; white-space: nowrap; }
 .hero-content h1 {
   font-family: 'Hanken Grotesk', var(--font-body);
   font-weight: 800;
@@ -486,8 +502,10 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    Pedido em seguida: "abaixa mais o ver portfolio e entrar em contato deixa tambem meno
    ambos" - ainda estava perto demais do titulo, empurrado mais um pouco (28px -> 48px), e os
    dois botoes ficam um pouco menores (menos padding e fonte menor), so no desktop - o celular
-   ja tem seu proprio tamanho reduzido aqui embaixo, dentro do @media (max-width:720px). */
-.hero .btn-row { margin-top: 48px; }
+   ja tem seu proprio tamanho reduzido aqui embaixo, dentro do @media (max-width:720px).
+   Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
+   empurrado mais uma vez (48px -> 64px), so no desktop. */
+.hero .btn-row { margin-top: 64px; }
 .hero .btn-row .btn { padding: 11px 22px; font-size: 0.72rem; }
 /* Pedido do usuario (11/09/2026): "deixa o texto da frase transformamos momentos reais em
    filmes todo branco sem efeitos ta" - tira a cor dourada da palavra "filmes" e desliga
@@ -2079,7 +2097,9 @@ html.no-intro .cine-intro { display: none; }
   }
   .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
-  .hero .btn-row { align-items: center; gap: 22px; margin-top: 14px; }
+  /* Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
+     empurrado mais uma vez tambem no celular (14px -> 26px). */
+  .hero .btn-row { align-items: center; gap: 22px; margin-top: 26px; }
   .hero .btn-row .btn {
     padding: 11px 20px;
     font-size: 0.7rem;
