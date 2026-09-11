@@ -676,6 +676,10 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    do heroPapelColorFloat, com os mesmos 3 pontos (0%/50%/100%) e sem delay em nenhum dos dois -
    assim os dois trocam de cor exatamente juntos, só que em direções opostas. Pulso de
    opacidade/escala mantido do jeito que já era (só a cor do gradiente que passou a variar). */
+/* Teste pedido em 11/09/2026: "no lugar de branco coloca cor preta d aluz pra eu ver como eu
+   fica la" - só pra ver como fica, trocada a cor da luz no pico (50%, quando "papel" fica
+   dourado) de branco pra preto - mantido tudo o resto igual (mesmo esquema invertido do
+   comentário acima, mesma duração/timing/pontos). */
 .js .hero-content h1 .text-accent::before {
   animation: heroGlowPulse 4s ease-in-out infinite;
 }
@@ -688,7 +692,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   50% {
     opacity: 1;
     transform: scale(1.12);
-    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.34) 52%, rgba(255, 255, 255, 0) 78%);
+    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.34) 52%, rgba(0, 0, 0, 0) 78%);
   }
 }
 @media (prefers-reduced-motion: reduce) {
