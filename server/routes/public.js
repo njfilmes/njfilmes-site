@@ -69,32 +69,35 @@ function previewHintHtml() {
 }
 
 // Selo de "dá pra clicar" pros cards que só têm foto (sem nenhum vídeo) - criado em 10/09/2026
-// (pequeno, num cantinho, ícone parado de setinhas). Redesenhado em 11/09/2026: "o q ta e muito
-// simples e n passa a impressao de abrir, poe uma animacao tipo mao pincelando ou algo do tipo,
-// dourada, no centro" - trocado de cantinho estático pra CENTRALIZADO no card (mesmo lugar de
-// destaque do selo de play dos cards com vídeo, ver .play), bem maior, e o ícone virou uma
-// "moldura" de 4 cantos (estilo visor de câmera/tela cheia, o mesmo tipo de ícone universal de
-// "abrir/expandir" que apps de foto usam) em vez de setinhas simples. Cada cantinho "se desenha"
-// sozinho (efeito de traço sendo pincelado, via stroke-dasharray) em sequência (um cantinho começa
-// um pouco depois do outro, dando a sensação de estar sendo "pintado" ao redor do quadro) e depois
-// os 4 cantos se abrem um pouco pra fora ao mesmo tempo (ver CSS phDraw) - a moldura literalmente
-// "abre" na animação, resolvendo a reclamação de não passar a impressão de abrir.
+// (pequeno, num cantinho, ícone parado de setinhas), redesenhado em 11/09/2026 pra centralizado
+// e maior, com uma moldura de 4 cantos que se desenhava sozinha. Trocado de novo em seguida (mesmo
+// dia): "o da foto pode ser a seta igual vc botou nas fotos do rodapé animadas" - reaproveita a
+// MESMA seta dupla diagonal dourada pulsando (↖↘) já usada como indicador de "toque pra ampliar"
+// nas fotos da galeria do projeto e dos Bastidores (ver .project-gallery-expand/.gallery-expand-
+// arrow, mais abaixo no CSS - mesma classe/animação, só reaproveitada aqui dentro do selo
+// centralizado) - fica com a cara já conhecida/aprovada em vez de um ícone novo.
 function photoHintHtml() {
-  return `<span class="photo-hint" aria-hidden="true"><svg class="photo-hint-frame" viewBox="0 0 24 24" fill="none">
-      <path class="ph-c ph-tl" d="M2 8V4.5C2 3.11929 3.11929 2 4.5 2H8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-      <path class="ph-c ph-tr" d="M16 2H19.5C20.8807 2 22 3.11929 22 4.5V8" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-      <path class="ph-c ph-br" d="M22 16V19.5C22 20.8807 20.8807 22 19.5 22H16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
-      <path class="ph-c ph-bl" d="M8 22H4.5C3.11929 22 2 20.8807 2 19.5V16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"/>
+  return `<span class="photo-hint" aria-hidden="true"><svg viewBox="-4 -4 32 32" fill="currentColor" width="30" height="30">
+      <g transform="translate(6,6) rotate(-45)"><path class="gallery-expand-arrow" d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z"/></g>
+      <g transform="translate(18,18) rotate(135)"><path class="gallery-expand-arrow" d="M0,-8L5,-2L2,-2L2,6L-2,6L-2,-2L-5,-2Z"/></g>
     </svg></span>`;
 }
 
 // Anel dourado decorativo em volta do selo de play dos cards COM vídeo - pedido em 11/09/2026
-// junto com o redesign do photoHintHtml() acima: "a do video a mesma coisa, ver o que pode fazer
-// de forma incrivel". Um círculo que se desenha sozinho (mesmo efeito de traço/stroke-dasharray da
-// moldura da foto) e fica girando devagar em loop (ver CSS .play-ring), dando o mesmo tratamento
-// "pincelado em dourado" pro selo de play, pra ficar consistente com o selo novo dos cards só-foto.
+// junto com o redesign do photoHintHtml() (histórico acima): "a do video a mesma coisa, ver o que
+// pode fazer de forma incrivel". Um círculo que se desenha sozinho e fica girando devagar em loop
+// (ver CSS .play-ring), dando um tratamento "pincelado em dourado" pro selo de play.
 function playRingHtml() {
   return `<svg class="play-ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="28"/></svg>`;
+}
+
+// Cursor de mouse "clicando" no canto do selo de play - pedido em seguida (mesmo dia): "o do video
+// pode ser um click, algo do tipo". Reaproveita o MESMO ícone/animação (ytCursorTap) já usado no
+// link do YouTube no rodapé do site (ver footer-youtube-cursor em render.js/CSS) - a mesma
+// setinha branca "tocando" no canto, só que agora no selo de play dos cards de vídeo do
+// portfólio, reforçando "clique aqui" sem tirar o triângulo de play de lugar.
+function playCursorHtml() {
+  return `<svg class="play-cursor" viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M3 2l7 17 2-7 7-2z" fill="#fff" stroke="#111" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
 }
 
 function workCard(project, opts = {}) {
@@ -107,7 +110,7 @@ function workCard(project, opts = {}) {
   return `<a href="/portfolio/${escapeHtml(project.slug)}" class="work-card reveal ${opts.tall ? 'tall' : ''} ${preview ? 'has-preview-video' : ''}" data-work-card data-category="${escapeHtml(project.category_slug || '')}">
     <img class="work-card-cover" src="${escapeHtml(coverUrl(project))}" alt="${escapeHtml(project.title)}" loading="lazy">
     ${preview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(preview.provider)}" data-preview-src="${escapeHtml(preview.src)}"></div>` : ''}
-    ${hasVideo ? `<span class="play">${playRingHtml()}<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+    ${hasVideo ? `<span class="play">${playRingHtml()}<svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${playCursorHtml()}</span>` : ''}
     ${preview ? previewHintHtml() : ''}
     ${!hasVideo ? photoHintHtml() : ''}
     <span class="overlay">
@@ -255,7 +258,7 @@ export async function homePage(req, res) {
       <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featuredPreview ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
         ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
-        ${Number(featured.video_count) > 0 ? `<span class="play">${playRingHtml()}<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></span>` : ''}
+        ${Number(featured.video_count) > 0 ? `<span class="play">${playRingHtml()}<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${playCursorHtml()}</span>` : ''}
         ${featuredPreview ? previewHintHtml() : ''}
         ${Number(featured.video_count) === 0 ? photoHintHtml() : ''}
         <span class="overlay"><span class="cat">${escapeHtml(featured.category_name || '')}</span><h3>${escapeHtml(featured.title)}</h3></span>
