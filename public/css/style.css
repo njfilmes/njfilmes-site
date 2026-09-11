@@ -477,6 +477,24 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    "white-space: nowrap", virando um único bloco atômico que só pode ir inteiro pra sua
    própria linha - nunca quebrando as duas palavras em linhas separadas. */
 .hero-content h1 .hero-title-join { display: inline-block; white-space: nowrap; }
+/* Pedido do usuario (11/09/2026): "o nome (em) n ta dando zoom" - "em" tem só 2 letras, entao
+   o mesmo pulso de escala (heroTitleZoom) que já rodava nela ficava praticamente invisível
+   (2,5% de um texto tão curto é menos de 1px de diferença) - dava pra ver no resto da frase
+   (bem mais larga) mas não nela sozinha. Solução: em vez de cada palavra dentro do bloco
+   ".hero-title-join" (em + filmes) fazer seu próprio zoom sozinha, o zoom passa a rodar no
+   bloco inteiro de uma vez (as duas palavras juntas, que já ficam sempre grudadas por causa
+   do "white-space: nowrap" acima) - o bloco "em filmes" fica bem mais largo que só "em"
+   sozinho, entao o mesmo pulso de 2,5% vira um movimento bem mais visível. As animações
+   individuais de "em" (zoom) e "filmes" (zoom) são desligadas aqui dentro pra não dobrar o
+   efeito (ficaria um zoom do bloco + outro zoom por cima, meio "tremido") - a piscada de
+   "filmes" (heroOffAirFlicker, que é só opacidade, não escala) continua normal, sem conflito.
+   Também pedido nessa hora: "coloque tambem espaçamento entre as palavras pq tao colada uma
+   na outra" - o &nbsp; sozinho (gerado em server/routes/public.js) deixava só um espaço comum
+   entre elas; somado um respiro a mais (margin-right) na palavra "em" pra ficar visualmente
+   mais separada de "filmes". */
+.js .hero-content h1 .hero-title-join { animation: heroTitleZoom 5s ease-in-out infinite; }
+.js .hero-content h1 .hero-title-join .hero-title-white { animation: none; margin-right: 0.28em; }
+.js .hero-content h1 .hero-title-join .text-accent { animation: heroOffAirFlicker 2.2s steps(1) infinite; }
 .hero-content h1 {
   font-family: 'Hanken Grotesk', var(--font-body);
   font-weight: 800;
@@ -749,28 +767,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     0 1px 0 rgba(255, 255, 255, 0.15),
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
-.hero-content h1 .text-accent {
-  /* Pedido em seguida (10/09/2026): o contorno da palavra "papel" tava saindo acinzentado
-     (a sombra clara rgba(255,240,200,0.4) em cima do dourado lia como cinza) - trocado por
-     um contorno sólido preto de verdade (text-stroke), mais a sombra suave por baixo pra
-     dar profundidade.
-     Pedido em seguida: contorno de 1px tava forte demais - pediu "quase nada de contorno",
-     reduzido pra 0.4px (só um fiozinho preto, quase imperceptível).
-     Pedido em seguida: 0.4px sumiu demais ("parece que tirou tudo") - subido um pouco pra
-     0.65px, ponto intermediário: sutil mas visível.
-     Pedido em seguida (mesma data): tirar só mais um pouquinho ("quase nada") - reduzido pra
-     0.5px. Junto, pedida uma sombra preta leve (quase imperceptível) no nome "papel" - somada
-     uma segunda camada de text-shadow bem colada e pouco espalhada (0 1px 1px, opacidade
-     baixa), separada da sombra suave/espalhada que já existia (que dá profundidade geral) -
-     essa nova é só um toque de "chão" embaixo da letra, sem ficar pesada.
-     Pedido em seguida (10/09/2026): tirar mais um pouquinho ainda - reduzido pra 0.35px. A
-     sombra colada (text-shadow acima) já segura a legibilidade da letra, então dá pra afinar
-     mais o contorno sem a palavra "sumir". */
-  -webkit-text-stroke: 0.35px #000;
-  text-shadow:
-    0 1px 1px rgba(0, 0, 0, 0.4),
-    0 2px 6px rgba(0, 0, 0, 0.65);
-}
+/* Pedido do usuario (11/09/2026): "ver se toda frase ta com a mesma fonte e mesmo tamanho pq
+   parece q o nome filmes ta mais fino quero bold igual o restante" - achado o motivo de
+   verdade: existia AINDA um resto da época em que essa palavra se chamava "papel" (contorno
+   -webkit-text-stroke de 0.35px preto + uma sombra dupla só nela), que ficou esquecido mais
+   embaixo no arquivo depois que a correção de fonte/sombra já tinha sido feita lá em cima
+   (regra ".hero-content h1 .text-accent" perto da piscada, mais acima nesse arquivo) - como
+   as duas regras tem a MESMA especificidade, essa aqui (que vinha depois no arquivo) ganhava
+   e reintroduzia o contorno escondido, fazendo "filmes" parecer mais fino/com um acabamento
+   diferente de "transformamos". Bloco removido de vez (a regra correta, sem contorno e com a
+   MESMA sombra do resto do título, já existe mais acima e continua valendo sozinha). */
 
 /* Luz dourada pulsando por trás da última palavra do título (ex: "papel") - pedida pelo usuário.
    Um brilho suave (radial-gradient com blur) atrás do texto, sempre "vivo" (pulsa infinito,
@@ -2100,9 +2106,12 @@ html.no-intro .cine-intro { display: none; }
   /* Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
      empurrado mais uma vez tambem no celular (14px -> 26px). */
   .hero .btn-row { align-items: center; gap: 22px; margin-top: 26px; }
+  /* Pedido do usuario (11/09/2026): "em ver portfolio e entre em contato coloca menor o
+     tamanho pra versao de cel tambem" - reduzido mais um pouco tambem so no celular (o
+     desktop, mais acima no arquivo, continua do jeito que estava). */
   .hero .btn-row .btn {
-    padding: 11px 20px;
-    font-size: 0.7rem;
+    padding: 9px 16px;
+    font-size: 0.64rem;
   }
   .hero .btn-row .btn-outline {
     border-color: transparent;
@@ -2110,7 +2119,7 @@ html.no-intro .cine-intro { display: none; }
     text-decoration: underline;
     text-underline-offset: 4px;
     color: var(--fg-muted);
-    font-size: 0.62rem;
+    font-size: 0.58rem;
   }
   .hero .btn-row .btn-outline:hover { background: none; color: var(--fg); transform: none; }
   /* Pedido do usuario (11/09/2026): as duas regras abaixo foram removidas daqui -
