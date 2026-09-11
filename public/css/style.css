@@ -666,60 +666,21 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   filter: blur(7px);
   pointer-events: none;
 }
-/* Pedido em 11/09/2026: "quando o nome ficar amarelo a luz atras fica branca e quando o nome
-   ficar branco a luz fica dourada igual como ta" - a luz por tras de "papel" pulsava sempre na
-   mesma cor dourada, sem ligação com a troca de cor do proprio texto (heroPapelColorFloat, acima:
-   branco no 0%/100%, dourado no 50%). Agora a cor da luz troca de forma INVERTIDA à palavra: nos
-   momentos em que o texto fica dourado (50%), a luz atras vira branca; nos momentos em que o
-   texto volta a branco (0%/100%), a luz volta a ser dourada (a cor original, "como ja tava").
-   Pra isso funcionar sincronizado, a duração do pulso (que era 3.2s, solta) foi igualada aos 4s
-   do heroPapelColorFloat, com os mesmos 3 pontos (0%/50%/100%) e sem delay em nenhum dos dois -
-   assim os dois trocam de cor exatamente juntos, só que em direções opostas. Pulso de
-   opacidade/escala mantido do jeito que já era (só a cor do gradiente que passou a variar). */
-/* Teste pedido em 11/09/2026: "no lugar de branco coloca cor preta d aluz pra eu ver como eu
-   fica la" - só pra ver como fica, trocada a cor da luz no pico (50%, quando "papel" fica
-   dourado) de branco pra preto - mantido tudo o resto igual (mesmo esquema invertido do
-   comentário acima, mesma duração/timing/pontos). */
-/* Ajustado em seguida (11/09/2026): "a transicao de um brilho pra o outro ta muito duro deixa
-   algo mais suavizado quando muda" - com só 2 cores no keyframe (0%/100% dourado, 50% preto), o
-   navegador NÃO faz um fade suave entre as cores do gradiente (background/radial-gradient não
-   interpola cor a cor como a propriedade "color" faz) - ele troca de golpe, de uma vez, bem no
-   meio do caminho entre os pontos, o que lê como um corte duro. Corrigido adicionando pontos
-   intermediários (a cada 12.5%, 8 no total por ciclo) com a cor MISTURADA matematicamente entre
-   dourado e preto (mistura linear de cada canal r/g/b/alpha) - assim em vez de 1 corte brusco
-   por metade do ciclo, viram 8 passos pequenos e graduais, o que o olho lê como um fade contínuo
-   em vez de um "pisca-troca". Opacidade e escala (que já eram só 3 pontos: 0.8/1/0.8 e 1/1.12/1)
-   ganharam os mesmos pontos intermediários, interpolados linearmente, pra acompanhar o mesmo
-   ritmo suave. */
+/* Pedido em 11/09/2026: tentativa de fazer a cor da luz trocar em sincronia (invertida) com a
+   cor do texto de "papel" - primeiro branco no pico, depois testado preto no lugar do branco "pra
+   ver como ficava", e suavizada a transição entre as cores (pontos intermediários misturados).
+   Desfeito em seguida, no mesmo dia: "deixa so a luz dourada mesmo de fundo como tava antes" - o
+   usuário não gostou do resultado da luz trocando de cor, então toda essa linha de experimentos
+   foi revertida - a luz volta a ser SÓ dourada o tempo todo (nem branca nem preta, sem trocar
+   junto com o texto), pulsando só em opacidade/escala, exatamente como era antes de todos esses
+   pedidos (mesmos 3.2s de duração de antes, já que o motivo de ter mudado pra 4s - sincronizar a
+   cor com heroPapelColorFloat - deixou de existir). */
 .js .hero-content h1 .text-accent::before {
-  animation: heroGlowPulse 4s ease-in-out infinite;
+  animation: heroGlowPulse 3.2s ease-in-out infinite;
 }
 @keyframes heroGlowPulse {
-  0%, 100% {
-    opacity: 0.8;
-    transform: scale(1);
-    background: radial-gradient(ellipse at center, rgba(255, 224, 140, 0.7) 0%, rgba(246, 196, 69, 0.32) 52%, rgba(246, 196, 69, 0) 78%);
-  }
-  12.5%, 87.5% {
-    opacity: 0.85;
-    transform: scale(1.03);
-    background: radial-gradient(ellipse at center, rgba(191, 168, 105, 0.71) 0%, rgba(185, 147, 52, 0.33) 52%, rgba(185, 147, 52, 0) 78%);
-  }
-  25%, 75% {
-    opacity: 0.9;
-    transform: scale(1.06);
-    background: radial-gradient(ellipse at center, rgba(128, 112, 70, 0.73) 0%, rgba(123, 98, 35, 0.33) 52%, rgba(123, 98, 35, 0) 78%);
-  }
-  37.5%, 62.5% {
-    opacity: 0.95;
-    transform: scale(1.09);
-    background: radial-gradient(ellipse at center, rgba(64, 56, 35, 0.74) 0%, rgba(62, 49, 17, 0.34) 52%, rgba(62, 49, 17, 0) 78%);
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1.12);
-    background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.75) 0%, rgba(0, 0, 0, 0.34) 52%, rgba(0, 0, 0, 0) 78%);
-  }
+  0%, 100% { opacity: 0.8; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.12); }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent::before { animation: none; opacity: 0.85; }
