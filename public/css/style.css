@@ -190,8 +190,8 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .nav-glow-2,
   .js .nav-menu-label,
   .js .work-card .photo-hint,
-  .js .work-card .photo-hint-frame .ph-c,
-  .js .work-card .play-ring circle {
+  .js .work-card .play-ring circle,
+  .js .work-card .play-cursor {
     animation: none;
   }
 }
@@ -846,6 +846,19 @@ section { padding: 110px 0; position: relative; }
 @keyframes playRingSpin {
   to { transform: rotate(360deg); }
 }
+/* Pedido em seguida (mesmo dia): "o do video pode ser um click, algo do tipo" - cursor de mouse
+   "clicando" no canto do selo de play, reaproveitando o MESMO ícone/animação (ytCursorTap) já
+   usado no link do YouTube no rodapé (ver .footer-youtube-cursor mais abaixo no CSS) - reforça
+   "clique aqui" sem tirar o triângulo de play nem o anel dourado de lugar. Ver playCursorHtml()
+   em routes/public.js. */
+.work-card .play-cursor {
+  position: absolute;
+  right: -6px; bottom: -6px;
+  animation: ytCursorTap 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+  z-index: 2;
+}
+.work-card:hover .play-cursor { animation-play-state: paused; }
 .work-card:hover .play {
   transform: translate(-50%, -50%) scale(1.15);
   background: var(--accent);
@@ -917,9 +930,12 @@ section { padding: 110px 0; position: relative; }
    com setinhas paradas. Redesenhado em 11/09/2026: "esse q ta e muito simples e n passa a
    impressao de abrir, poe uma animacao tipo mao pincelando ou algo do tipo, dourada, no centro" -
    movido do cantinho pro CENTRO do card (mesmo lugar de destaque do selo de play dos cards com
-   vídeo, ver .play acima) e aumentado, com um ícone novo de "moldura" de 4 cantos (estilo visor de
-   câmera/tela cheia) em vez das setinhas simples. Continua sempre visível (nunca só no hover),
-   igual antes, pra não sumir no celular. */
+   vídeo, ver .play acima) e aumentado. Trocado de novo em seguida (mesmo dia): "o da foto pode ser
+   a seta igual vc botou nas fotos do rodapé animadas" - o ícone interno passou a ser a MESMA seta
+   dupla diagonal dourada pulsando (↖↘) já usada nas galerias de fotos (ver .photo-hint svg/
+   .gallery-expand-arrow no CSS, reaproveitada aqui via photoHintHtml() em routes/public.js), no
+   lugar da moldura de 4 cantos usada na tentativa anterior. O selo (círculo de fundo, sempre
+   visível, nunca só no hover) continua igual. */
 .work-card .photo-hint {
   position: absolute;
   top: 50%; left: 50%;
@@ -939,29 +955,6 @@ section { padding: 110px 0; position: relative; }
   transition: transform 0.35s var(--ease), background 0.35s var(--ease), color 0.35s var(--ease), opacity 0.35s ease;
   animation: photoHintPulse 2.6s ease-in-out infinite;
 }
-.work-card .photo-hint-frame { width: 34px; height: 34px; overflow: visible; }
-/* Cada cantinho da moldura "se pinta" sozinho (o traço nasce escondido via stroke-dasharray e vai
-   se desenhando, dando a sensação de estar sendo pincelado) e no meio do ciclo os 4 cantos se
-   afastam um pouco pra fora ao mesmo tempo (--ph-open, diferente por cantinho pra abrir na
-   diagonal certa) antes de fechar e apagar de novo - a moldura literalmente "abre e fecha" em
-   loop, resolvendo a reclamação de que o ícone antigo não passava impressão de abrir. Delay
-   crescente por cantinho (tl/tr/br/bl) faz o desenho correr em cascata ao redor do quadro em vez
-   de nascer tudo de uma vez. */
-.work-card .photo-hint-frame .ph-c {
-  stroke-dasharray: 20;
-  animation: phDraw 3.2s ease-in-out infinite;
-}
-.work-card .photo-hint-frame .ph-tl { --ph-open: translate(-2.5px, -2.5px); animation-delay: 0s; }
-.work-card .photo-hint-frame .ph-tr { --ph-open: translate(2.5px, -2.5px); animation-delay: 0.12s; }
-.work-card .photo-hint-frame .ph-br { --ph-open: translate(2.5px, 2.5px); animation-delay: 0.24s; }
-.work-card .photo-hint-frame .ph-bl { --ph-open: translate(-2.5px, 2.5px); animation-delay: 0.36s; }
-@keyframes phDraw {
-  0% { stroke-dashoffset: 20; opacity: 0.3; transform: translate(0, 0); }
-  30% { stroke-dashoffset: 0; opacity: 1; transform: translate(0, 0); }
-  55% { stroke-dashoffset: 0; opacity: 1; transform: var(--ph-open); }
-  80% { stroke-dashoffset: 0; opacity: 1; transform: translate(0, 0); }
-  100% { stroke-dashoffset: 20; opacity: 0.3; transform: translate(0, 0); }
-}
 .work-card:hover .photo-hint {
   opacity: 1;
   transform: translate(-50%, -50%) scale(1.12);
@@ -969,7 +962,6 @@ section { padding: 110px 0; position: relative; }
   color: #12100a;
   animation-play-state: paused;
 }
-.work-card:hover .photo-hint-frame .ph-c { animation-play-state: paused; }
 @keyframes photoHintPulse {
   0%, 100% { box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 0 0 rgba(201,162,39,0.4); }
   50% { box-shadow: 0 6px 20px rgba(0,0,0,0.3), 0 0 0 12px rgba(201,162,39,0); }
