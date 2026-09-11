@@ -666,14 +666,30 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   filter: blur(7px);
   pointer-events: none;
 }
+/* Pedido em 11/09/2026: "quando o nome ficar amarelo a luz atras fica branca e quando o nome
+   ficar branco a luz fica dourada igual como ta" - a luz por tras de "papel" pulsava sempre na
+   mesma cor dourada, sem ligação com a troca de cor do proprio texto (heroPapelColorFloat, acima:
+   branco no 0%/100%, dourado no 50%). Agora a cor da luz troca de forma INVERTIDA à palavra: nos
+   momentos em que o texto fica dourado (50%), a luz atras vira branca; nos momentos em que o
+   texto volta a branco (0%/100%), a luz volta a ser dourada (a cor original, "como ja tava").
+   Pra isso funcionar sincronizado, a duração do pulso (que era 3.2s, solta) foi igualada aos 4s
+   do heroPapelColorFloat, com os mesmos 3 pontos (0%/50%/100%) e sem delay em nenhum dos dois -
+   assim os dois trocam de cor exatamente juntos, só que em direções opostas. Pulso de
+   opacidade/escala mantido do jeito que já era (só a cor do gradiente que passou a variar). */
 .js .hero-content h1 .text-accent::before {
-  animation: heroGlowPulse 3.2s ease-in-out infinite;
+  animation: heroGlowPulse 4s ease-in-out infinite;
 }
 @keyframes heroGlowPulse {
-  /* Pedido em 10/09/2026: pulso mais intenso (opacidade e escala mínimas mais altas) pra luz
-     ficar mais brilhante o tempo todo, não só no pico. */
-  0%, 100% { opacity: 0.8; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.12); }
+  0%, 100% {
+    opacity: 0.8;
+    transform: scale(1);
+    background: radial-gradient(ellipse at center, rgba(255, 224, 140, 0.7) 0%, rgba(246, 196, 69, 0.32) 52%, rgba(246, 196, 69, 0) 78%);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.12);
+    background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.34) 52%, rgba(255, 255, 255, 0) 78%);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .js .hero-content h1 .text-accent::before { animation: none; opacity: 0.85; }
