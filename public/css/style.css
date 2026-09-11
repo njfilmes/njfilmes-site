@@ -365,7 +365,20 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   width: 100%;
   padding: 0 0 90px;
 }
-.hero-content h1 { max-width: 850px; position: relative; }
+/* Pedido do usuario (11/09/2026): centralizar o hero inteiro (texto pequeno em cima,
+   titulo, botoes embaixo - MESMA ordem que ja existia no HTML, so centralizado na tela).
+   Testado antes com referencia do philipbloom.net (titulo gigante, ordem invertida) - o
+   usuario preferiu manter a ordem original e so encolher/centralizar. Depois de varias
+   rodadas de ajuste (2 sites de referencia + pedido de "deixar em 2 linhas" tanto no PC
+   quanto no celular), o tamanho final do titulo ficou bem menor que o original. */
+.hero-content { text-align: center; }
+.hero-content h1 {
+  max-width: 900px;
+  width: 100%;
+  min-width: 0;
+  margin: 0 auto;
+  position: relative;
+}
 /* Desce um pouco o texto pequeno acima do título, a pedido. */
 .hero-eyebrow-lower { margin-top: 0.5em; }
 /* 10/09/2026: o dourado padrão do site (--accent) ficava meio "mostarda" nesses dois textos do
@@ -441,7 +454,19 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   font-weight: 800;
   letter-spacing: -0.01em;
 }
-.hero-content h1 { font-size: clamp(3.4rem, 7.29vw, 6.885rem); }
+/* Pedido do usuario (11/09/2026): titulo bem menor que o original (referencia enviada:
+   titulo moderado, proporcional ao resto da tela, nao gigante), quebrando em exatamente
+   2 linhas tanto no PC quanto no celular ("deixa a frase apenas com duas linhas ta 3
+   linhas"). Tamanho fluido (clamp) testado e aprovado em previa local nesses valores.
+   overflow-wrap/word-break: trava de seguranca pra nenhuma palavra comprida (ex.:
+   "TRANSFORMAMOS") nunca mais estourar a borda da tela, o que ja acontecia antes disso
+   no celular com o tamanho fixo antigo. */
+.hero-content h1 {
+  font-size: clamp(1.1rem, 3.6vw, 2.5rem);
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+.hero .btn-row { justify-content: center; }
 /* Pedido em 10/09/2026: análise crítica dos efeitos do hero (do ponto de vista de cliente/
    produtor/marca) - conclusão foi que tinha efeito demais rodando ao mesmo tempo no título,
    competindo entre si e passando impressão de "poluído" em vez de profissional. Pedido em
@@ -1982,14 +2007,14 @@ html.no-intro .cine-intro { display: none; }
     font-size: 0.62rem;
   }
   .hero .btn-row .btn-outline:hover { background: none; color: var(--fg); transform: none; }
-  .hero-content {
-    padding-left: 24px;
-  }
+  /* Pedido do usuario (11/09/2026): as duas regras abaixo foram removidas daqui -
+     "padding-left: 24px" empurrava o conteudo pra direita (desalinhava a centralizacao
+     nova) e "font-size: 2.72rem" era um tamanho fixo que nao encolhia o suficiente pra
+     palavras compridas, cortando o titulo na borda da tela no celular. Agora o
+     tamanho do titulo vem do clamp() fluido definido mais acima (que ja cobre todas as
+     larguras de tela) e o hero-content fica centralizado (text-align:center) igual ao PC. */
   .hero-content {
     transform: translateY(-8vh);
-  }
-  .hero-content h1 {
-    font-size: 2.72rem;
   }
   .hero-eyebrow-lower { margin-top: 0.9em; }
   .hero-content h1 .hero-punct {
