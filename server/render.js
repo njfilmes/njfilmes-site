@@ -39,16 +39,25 @@ const DEFAULT_NAV_LINKS = [
 // 12/09/2026: pedido do usuario "tem como eu conseguir mudar as fontes do site pelo painel?"
 // (ver /admin/configuracoes, campo "Fonte do site"). Cada opção só troca as variáveis CSS
 // --font-display (títulos de seção, menu, números, etc.) e --font-body (texto corrido) - usando
-// SEMPRE fontes que o site já carrega (Inter, Hanken Grotesk, Outfit, Poppins, Anton, Bebas Neue
-// - ver o <link> do Google Fonts logo abaixo), pra nunca correr o risco de carregar uma fonte
-// que não existe/não foi importada. O título grande da Home tem fonte própria (Poppins),
-// ajustada à parte várias vezes já, e fica de fora de propósito - só as outras fontes do site
-// (menu, títulos de seção, texto) mudam por aqui.
+// SEMPRE fontes que o site já carrega (ver o <link> do Google Fonts logo abaixo), pra nunca
+// correr o risco de carregar uma fonte que não existe/não foi importada. O título grande da
+// Home tem fonte própria (Poppins), ajustada à parte várias vezes já, e fica de fora de
+// propósito - só as outras fontes do site (menu, títulos de seção, texto) mudam por aqui.
+// Pedido em seguida (12/09/2026): "deixa o maximo de fontes possiveis de varios estilos pra eu
+// n precisar mudar no futuro e precisar de vc toda hora" - lista bem ampliada, cobrindo estilos
+// bem diferentes entre si (serifada/elegante, geometrica limpa, condensada, "tech"/monoespaçada,
+// arredondada/suave), alem das 4 que ja existiam.
 const FONT_PRESETS = {
   moderna: { display: "'Outfit', var(--font-body)" },
   impacto: { display: "'Anton', var(--font-body)" },
   cinema: { display: "'Bebas Neue', var(--font-body)" },
   arredondada: { display: "'Hanken Grotesk', sans-serif", body: "'Hanken Grotesk', sans-serif" },
+  elegante: { display: "'Playfair Display', serif", body: "'Lora', serif" },
+  minimalista: { display: "'Manrope', sans-serif", body: "'Manrope', sans-serif" },
+  geometrica: { display: "'Montserrat', var(--font-body)" },
+  condensada: { display: "'Oswald', var(--font-body)" },
+  tech: { display: "'Space Mono', monospace", body: "'Space Mono', monospace" },
+  suave: { display: "'Quicksand', sans-serif", body: "'Quicksand', sans-serif" },
 };
 function fontOverrideStyle(presetKey) {
   const preset = FONT_PRESETS[presetKey];
@@ -217,7 +226,7 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
      ExtraBold), bem mais arredondada e combinando com o estilo das outras fontes do site.
      Anton e Bebas Neue continuam importadas mas não usadas mais no título (deixadas caso
      sirvam de novo depois). -->
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Manrope:wght@400;600;700;800&family=Montserrat:wght@500;600;700;800&family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${fontOverrideStyle(settings.site_font_preset)}
