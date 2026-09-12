@@ -998,6 +998,11 @@ section { padding: 110px 0; position: relative; }
 .work-card:nth-child(5n+5) { grid-column: span 3; grid-row: span 2; }
 .work-card.tall { grid-column: span 3; grid-row: span 3; }
 .work-card.wide { grid-column: span 4; grid-row: span 2; }
+/* Card do "Projeto em destaque" da Home (fora do grid dos outros cards, sozinho dentro do
+   .container) - proporcao de cinema (21:9) no desktop. Antes era um style="aspect-ratio:21/9"
+   direto no HTML; virou classe pra dar pra ter um valor diferente so no celular (ver
+   @media max-width:720px mais abaixo) - inline style nunca e vencido por media query nenhuma. */
+.work-card.home-featured-card { aspect-ratio: 21/9; }
 /* Trocado de "contain" pra "cover" em 04/09/2026: com contain, uma foto de capa vertical
    (retrato) dentro de um card horizontal (largura maior que altura, que é como boa parte dos
    cards nascem no grid) sobrava espaço vazio nas laterais, preenchido pelo fundo escuro do
@@ -2195,6 +2200,19 @@ html.no-intro .cine-intro { display: none; }
     grid-column: span 1; grid-row: auto; aspect-ratio: 4/5;
   }
   .work-card img { object-fit: cover; }
+  /* Pedido do usuario (12/09/2026): "esses clipes de video que ta no destaque da pagina, na
+     versao de cel, ta mostrando meio cortado, deveria ser mais horizontal ou deixar um padrao
+     que se encaixe automatico pra videos verticais ou horizontais do youtube" - o card do
+     "Projeto em destaque" ficava no formato de cinema (21:9) tambem no celular (regra acima
+     .home-featured-card, que so muda no desktop) - numa tela estreita isso vira uma caixa bem
+     baixinha e larga, cortando bastante a foto de capa (esp. gente/rosto perto do topo). No
+     celular passa a usar 16:9 (formato padrao de video, ainda claramente "horizontal", mas bem
+     menos extremo que 21:9 - corta bem menos a foto de capa, seja ela de video horizontal ou
+     vertical). Selector ".work-card.home-featured-card" (2 classes) de proposito - o grupo
+     generico ".work-card, .work-card:nth-child(5n+3), ..." ali em cima tambem tem regra com 2
+     classes de especificidade (a pseudo-classe :nth-child conta igual classe), entao so uma
+     classe (".home-featured-card" sozinha) perdia mesmo vindo depois no arquivo. */
+  .work-card.home-featured-card { aspect-ratio: 16/9; }
   /* Pedido em 11/09/2026: "o circulo ta muito grande no celular, diminua um pouco" - os selos
      centrais do card (play com anel dourado + cursor, e o de foto com a seta) ficavam grandes
      demais nas telas pequenas (cards em coluna única, ver .work-grid acima). Reduzidos só no
