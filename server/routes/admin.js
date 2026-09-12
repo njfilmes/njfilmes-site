@@ -1234,8 +1234,41 @@ export async function settingsPage(req, res, admin) {
           { value: 'condensada', label: 'Condensada (Oswald)' },
           { value: 'tech', label: 'Tech / monoespaçada (Space Mono)' },
           { value: 'suave', label: 'Suave / arredondada 2 (Quicksand)' },
+          { value: 'lato', label: 'Clássica (Lato)' },
+          { value: 'nunito', label: 'Amigável (Nunito)' },
+          { value: 'editorial', label: 'Editorial (Merriweather)' },
+          { value: 'sofisticada', label: 'Sofisticada (Raleway)' },
+          { value: 'divertida', label: 'Divertida (Rubik)' },
+          { value: 'retro', label: 'Retrô elegante (Josefin Sans)' },
         ],
-        help: 'Troca a fonte dos títulos das seções e do menu em todo o site. Em algumas opções (Elegante, Minimalista, Tech e Suave) o texto corrido também muda junto, pra combinar; nas outras, o texto corrido continua no mesmo, pra manter a leitura confortável. O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
+        help: 'Troca a fonte dos títulos das seções e do menu em todo o site. Em algumas opções (Elegante, Minimalista, Tech, Suave, Clássica, Amigável, Editorial e Divertida) o texto corrido também muda junto, pra combinar; nas outras, o texto corrido continua no mesmo, pra manter a leitura confortável. O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
+      })}
+      ${selectField({
+        label: 'Peso dos títulos (negrito)',
+        name: 'site_font_weight',
+        selected: s.site_font_weight || '',
+        options: [
+          { value: '', label: 'Padrão (Negrito)' },
+          { value: '400', label: 'Normal (mais fina)' },
+          { value: '500', label: 'Média' },
+          { value: '600', label: 'Semi-negrito' },
+          { value: '800', label: 'Extra-negrito (mais forte)' },
+        ],
+        help: 'Deixa os títulos das seções, do menu e das páginas mais finos ou mais grossos em todo o site. O título grande da Home não muda por aqui (fonte e peso próprios, já ajustados à parte).',
+      })}
+      ${selectField({
+        label: 'Tamanho da fonte do site',
+        name: 'site_font_scale',
+        selected: s.site_font_scale || '',
+        options: [
+          { value: '', label: 'Padrão' },
+          { value: '0.85', label: 'Bem menor (85%)' },
+          { value: '0.9', label: 'Menor (90%)' },
+          { value: '0.95', label: 'Um pouco menor (95%)' },
+          { value: '1.05', label: 'Um pouco maior (105%)' },
+          { value: '1.1', label: 'Maior (110%)' },
+        ],
+        help: 'Diminui ou aumenta o tamanho de quase todo o texto do site de uma vez só (títulos, textos, botões, menu). Útil se algum texto estiver maior ou menor do que você gostaria em geral.',
       })}
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
@@ -1416,6 +1449,8 @@ export async function settingsUpdate(req, res, body) {
     facebook_url: body.facebook_url || '',
     google_review_url: body.google_review_url || '',
     site_font_preset: body.site_font_preset || '',
+    site_font_weight: body.site_font_weight || '',
+    site_font_scale: body.site_font_scale || '',
   });
   redirect(res, '/admin/configuracoes' + withFlash(
     res,
