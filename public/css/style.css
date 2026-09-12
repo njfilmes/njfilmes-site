@@ -252,15 +252,16 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    selo de play) pra ficar consistente com os outros lugares que ja tem esse "clique" no site. */
 .btn-hero-cta {
   position: relative;
-  /* Espaco reservado a mais no padding direito do botao pra caber o cursor sem tampar a
-     ultima letra do texto (pedido do usuario: "a seta ta tapando a letra O, deixa um pouco
-     pro lado"). */
-  padding-right: 40px;
 }
+/* Pedido do usuario (12/09/2026, 4o ajuste): "mexeu no formato do quadrado branco, quero o
+   tamanho do quadrado igual a antes" - o padding extra pra caber o cursor tinha deixado o
+   botao mais largo que o original. Volta o botao pro tamanho de sempre (sem padding-right
+   extra) e o cursor cabe dentro do padding que ja existia, so posicionado mais junto da
+   borda (mais pra dentro do "right") pra nao tampar a ultima letra do texto. */
 .btn-hero-cta .btn-arrow-icon {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: 3px;
   transform: translateY(-50%);
   display: inline-flex;
   z-index: 2;
@@ -635,10 +636,6 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    empurrado mais uma vez (48px -> 64px), so no desktop. */
 .hero .btn-row { margin-top: 64px; }
 .hero .btn-row .btn { padding: 11px 22px; font-size: 0.72rem; }
-/* Espaco a mais so no "Ver portfólio" pro cursor de clique (.btn-arrow-icon) caber sem tampar
-   a ultima letra do texto - selector com a mesma "forca" (3 classes) do ".hero .btn-row .btn"
-   logo acima pra conseguir sobrescrever soh o padding-right dele. */
-.hero .btn-row .btn-hero-cta { padding-right: 40px; }
 /* Pedido do usuario (11/09/2026): "deixa o texto da frase transformamos momentos reais em
    filmes todo branco sem efeitos ta" - tira a cor dourada da palavra "filmes" e desliga
    todas as animacoes do titulo (zoom sutil da parte branca, flutuar/trocar de cor de
@@ -2252,13 +2249,11 @@ html.no-intro .cine-intro { display: none; }
     font-size: 0.54rem;
   }
   /* Cursor de clique em cima do botao (ver .btn-hero-cta .btn-arrow-icon mais acima) reduzido
-     no celular, proporcional ao botao bem menor nessa largura. Padding direito bem menor que
-     no desktop (botao aqui e bem mais compacto), so o suficiente pra nao tampar a letra.
-     Selector mais especifico (.hero .btn-row .btn-hero-cta) pra ganhar do "padding: 6px 12px"
-     de ".hero .btn-row .btn" logo acima, que tem mais classes e senao ganharia por especificidade. */
-  .hero .btn-row .btn-hero-cta { padding-right: 24px; }
-  .btn-hero-cta .btn-arrow-icon { right: 7px; }
-  .btn-hero-cta .btn-arrow-icon svg { width: 11px; height: 11px; }
+     no celular, proporcional ao botao bem menor nessa largura. Sem padding extra (botao volta
+     ao tamanho original) - cursor bem pequeno e colado na borda pra caber dentro do padding
+     que ja existia (6px 12px) sem tampar a letra. */
+  .btn-hero-cta .btn-arrow-icon { right: 3px; }
+  .btn-hero-cta .btn-arrow-icon svg { width: 8px; height: 8px; }
   .hero .btn-row .btn-outline {
     border-color: transparent;
     padding-left: 0; padding-right: 0;
