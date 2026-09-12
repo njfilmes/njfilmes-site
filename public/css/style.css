@@ -243,15 +243,30 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    portfólio" do hero, com uma animacao continua de "empurrar pra frente" (nudge), sugerindo
    pra clicar. So nesse botao especifico (.btn-hero-cta), os outros botoes "solid" do site (pedir
    orcamento, etc.) continuam sem seta. */
+/* Pedido do usuario (12/09/2026, ajuste): "a seta nao quero dentro da moldura quero fora,
+   parecida com a seta que botou pro youtube" - referencia ao .footer-youtube-cursor (seta/cursor
+   posicionado fora do circulo do icone, com position:absolute). Igual aqui: a seta sai do fluxo
+   do botao (position:absolute) e fica pendurada do lado de fora da borda, em vez de ocupar espaco
+   dentro do padding/moldura junto do texto. */
+.btn-hero-cta {
+  position: relative;
+  /* Espaco extra reservado do lado de fora (alem do gap normal do .btn-row) pra seta nao
+     encostar/sobrepor o botao "Entrar em contato" ao lado. */
+  margin-right: 20px;
+}
 .btn-hero-cta .btn-arrow-icon {
+  position: absolute;
+  top: 50%;
+  right: -25px;
+  transform: translateY(-50%);
   display: inline-flex;
   color: var(--accent);
 }
 .btn-hero-cta .btn-arrow-icon svg { width: 15px; height: 15px; display: block; }
 .js .btn-hero-cta .btn-arrow-icon { animation: heroCtaArrowNudge 1.4s ease-in-out infinite; }
 @keyframes heroCtaArrowNudge {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(5px); }
+  0%, 100% { transform: translateY(-50%) translateX(0); }
+  50% { transform: translateY(-50%) translateX(5px); }
 }
 /* Pedido do usuario (12/09/2026): "a cor da moldura do entrar em contato coloque dourado igual
    a todo site, o filtro dourado que ta aplicado em todo site, bem sutil como se nao existisse" -
@@ -2215,6 +2230,11 @@ html.no-intro .cine-intro { display: none; }
     padding: 6px 12px;
     font-size: 0.54rem;
   }
+  /* Seta fora da moldura (ver .btn-hero-cta .btn-arrow-icon mais acima) reduzida e mais perto
+     no celular, proporcional ao botao bem menor nessa largura. */
+  .btn-hero-cta { margin-right: 14px; }
+  .btn-hero-cta .btn-arrow-icon { right: -18px; }
+  .btn-hero-cta .btn-arrow-icon svg { width: 11px; height: 11px; }
   .hero .btn-row .btn-outline {
     border-color: transparent;
     padding-left: 0; padding-right: 0;
