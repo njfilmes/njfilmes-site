@@ -243,30 +243,30 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    portfólio" do hero, com uma animacao continua de "empurrar pra frente" (nudge), sugerindo
    pra clicar. So nesse botao especifico (.btn-hero-cta), os outros botoes "solid" do site (pedir
    orcamento, etc.) continuam sem seta. */
-/* Pedido do usuario (12/09/2026, ajuste): "a seta nao quero dentro da moldura quero fora,
-   parecida com a seta que botou pro youtube" - referencia ao .footer-youtube-cursor (seta/cursor
-   posicionado fora do circulo do icone, com position:absolute). Igual aqui: a seta sai do fluxo
-   do botao (position:absolute) e fica pendurada do lado de fora da borda, em vez de ocupar espaco
-   dentro do padding/moldura junto do texto. */
-.btn-hero-cta {
-  position: relative;
-  /* Espaco extra reservado do lado de fora (alem do gap normal do .btn-row) pra seta nao
-     encostar/sobrepor o botao "Entrar em contato" ao lado. */
-  margin-right: 20px;
-}
+/* Pedido do usuario (12/09/2026, 2o ajuste): "queria como se fose um click em cima do botao,
+   uma animacao como se estivesse apertando o botao com a seta em cima de ver portifolio" -
+   virou o mesmo cursor de mouse "clicando" ja usado no selo de play dos cards de video
+   (.play-cursor) e no link do YouTube no rodape (.footer-youtube-cursor), so que agora por
+   cima do proprio botao "Ver portfólio" (nao mais do lado de fora nem so uma seta empurrando).
+   Reaproveita a mesma animacao de toque (ytCursorTap, definida mais abaixo no CSS junto do
+   selo de play) pra ficar consistente com os outros lugares que ja tem esse "clique" no site. */
+.btn-hero-cta { position: relative; }
 .btn-hero-cta .btn-arrow-icon {
   position: absolute;
   top: 50%;
-  right: -25px;
+  right: 12px;
   transform: translateY(-50%);
   display: inline-flex;
-  color: var(--accent);
+  z-index: 2;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
 }
 .btn-hero-cta .btn-arrow-icon svg { width: 15px; height: 15px; display: block; }
-.js .btn-hero-cta .btn-arrow-icon { animation: heroCtaArrowNudge 1.4s ease-in-out infinite; }
-@keyframes heroCtaArrowNudge {
-  0%, 100% { transform: translateY(-50%) translateX(0); }
-  50% { transform: translateY(-50%) translateX(5px); }
+.js .btn-hero-cta .btn-arrow-icon { animation: heroCtaCursorTap 1.8s ease-in-out infinite; }
+@keyframes heroCtaCursorTap {
+  0%, 20%, 100% { transform: translateY(-50%) translate(0, 0) scale(1); }
+  35% { transform: translateY(-50%) translate(-4px, 4px) scale(0.92); }
+  48% { transform: translateY(-50%) translate(-4px, 4px) scale(1.12); }
+  60% { transform: translateY(-50%) translate(0, 0) scale(1); }
 }
 /* Pedido do usuario (12/09/2026): "a cor da moldura do entrar em contato coloque dourado igual
    a todo site, o filtro dourado que ta aplicado em todo site, bem sutil como se nao existisse" -
@@ -482,6 +482,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    só aqui (o resto do site - botões, links, outros títulos - continua com o dourado padrão de
    sempre, sem mudar a marca inteira). */
 .hero-content .eyebrow { color: #f6c445; }
+/* Pedido do usuario (12/09/2026): "producao audiovisual salvador bahia deixa menor a letra
+   tanto cel tanto pc" - reduz so essa legenda do hero (nao mexe no tamanho padrao de .eyebrow
+   usado em titulos de outras secoes/paginas, tipo "Trabalhos recentes"). Vale pro desktop; o
+   celular tem seu proprio valor, ainda menor, la embaixo no bloco @media (max-width: 720px). */
+.hero-content .eyebrow { font-size: 0.62rem; }
 /* Pedido do usuario (11/09/2026): "producao audio visual salvador ba nao precisa de efeito
    nenhum deixa parado" - essa legenda (.eyebrow) tinha herdado a flutuacao labelFloat que
    o site usa nos labels dourados em geral (.js .eyebrow, mais acima no arquivo). Desligada
@@ -2211,7 +2216,7 @@ html.no-intro .cine-intro { display: none; }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
   .hero .eyebrow {
-    font-size: 0.62rem;
+    font-size: 0.54rem;
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
   }
@@ -2230,10 +2235,9 @@ html.no-intro .cine-intro { display: none; }
     padding: 6px 12px;
     font-size: 0.54rem;
   }
-  /* Seta fora da moldura (ver .btn-hero-cta .btn-arrow-icon mais acima) reduzida e mais perto
+  /* Cursor de clique em cima do botao (ver .btn-hero-cta .btn-arrow-icon mais acima) reduzido
      no celular, proporcional ao botao bem menor nessa largura. */
-  .btn-hero-cta { margin-right: 14px; }
-  .btn-hero-cta .btn-arrow-icon { right: -18px; }
+  .btn-hero-cta .btn-arrow-icon { right: 6px; }
   .btn-hero-cta .btn-arrow-icon svg { width: 11px; height: 11px; }
   .hero .btn-row .btn-outline {
     border-color: transparent;
