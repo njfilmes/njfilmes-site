@@ -2183,6 +2183,15 @@ html.no-intro .cine-intro { display: none; }
   .hero-content h1 .hero-punct {
     margin-left: 0.08em;
   }
+  /* Pedido do usuario (12/09/2026): "sobre o desfoque no celular ficou de mais, ajuste e veja
+     o motivo que ficou assim" - o motivo: o filter: blur(1.7px) la em cima (regra
+     ".hero-content h1 { filter: blur(1.7px); }") e um valor FIXO em pixel, igual pra qualquer
+     tamanho de tela. So que no celular o titulo usa um font-size bem menor (o clamp() do
+     titulo cai pra pertinho do minimo, 1.1rem/~17-18px, contra ate 2.5rem/40px no PC) -
+     entao o MESMO desfoque em pixel fica proporcionalmente bem mais forte em cima de letras
+     menores (borra uma fatia maior de cada letra). Reduzido aqui so pro celular, mantendo o
+     1.7px original intacto no PC (regra de cima, fora desse @media). */
+  .hero-content h1 { filter: blur(0.7px); }
   /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
      site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
      site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo).
