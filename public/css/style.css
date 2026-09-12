@@ -1354,8 +1354,13 @@ html.no-intro .cine-intro { display: none; }
 @media (max-width: 720px) {
   .about-split h1 { font-size: clamp(1.6rem, 7.5vw, 2.1rem); }
 }
-@media (min-width: 981px) {
-  .about-split h1 { font-size: 5rem; }
+/* Pedido do usuario (12/09/2026): "no do pc o nome meu ta grande, diminua" - o nome
+   (Noberto Junior (NJ)) continuava grande demais no desktop (5rem chegava a quebrar em
+   2 linhas gigantes). Reduzido, e a faixa passa a valer a partir de 721px (tablet) tambem,
+   pra nao sobrar um meio-termo sem regra propria que caisse de volta no h1 generico do site
+   (esse sim do tamanho de "hero", clamp(2.4rem, 7.5vw, 6.8rem)). */
+@media (min-width: 721px) {
+  .about-split h1 { font-size: 3.4rem; }
 }
 .about-split img { width: 100%; aspect-ratio: 4/5; object-fit: cover; filter: grayscale(15%); }
 .about-split .quote { font-family: var(--font-display); font-size: clamp(1.4rem, 2.4vw, 2.1rem); text-transform: none; color: var(--fg); border-left: 2px solid var(--accent); padding-left: 24px; margin: 24px 0; }
