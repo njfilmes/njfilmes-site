@@ -2239,8 +2239,10 @@ html.no-intro .cine-intro { display: none; }
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
   }
-  /* Desfoque ainda mais leve no celular (letra ja e a menor de todas aqui). */
-  .hero-content .eyebrow { filter: blur(0.2px); }
+  /* Pedido do usuario (12/09/2026): "coloca mais pq no cel n parece q ta com desfoque, e no
+     site (PC) ta" - 0.2px nao dava pra notar no celular (fonte pequena, tela com mais densidade
+     de pixels). Aumentado bem mais que o desktop pra ficar visivel de verdade. */
+  .hero-content .eyebrow { filter: blur(0.6px); }
   .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
