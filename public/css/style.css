@@ -359,9 +359,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   /* 10/09/2026: pedido pra deixar a foto de fundo do hero mais clara/visível - escurecido reduzido
      (mantendo mais forte só bem embaixo, atrás do título, pra continuar legível).
      Ajustado em 11/09/2026: "o degrade que falei foi no fundo pegando minha foto toda" - pedido
-     pra escurecer mais a foto/video de fundo inteira (nao so uma caixa atras do titulo, que foi
-     removida) - aumentada a opacidade em todos os pontos do degrade. */
-  background: linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.5) 40%, rgba(6,6,7,0.92) 100%);
+     pra escurecer mais a foto/video de fundo inteira (nao so una caixa atras do titulo, que foi
+     removida) - aumentada a opacidade em todos os pontos do degrade.
+     Ajustado em seguida (11/09/2026): "deixa a foto mais escura com degrade no topo pra destacar
+     a frase" - alem de escurecer geral, reforcado especificamente o TOPO do degrade (onde fica a
+     legenda pequena + o titulo), com um novo pico de escurecido logo nos primeiros ~22% da foto
+     (que depois suaviza de novo em direcao ao meio, antes de escurecer forte de novo no rodape
+     como ja era). */
+  background: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.58) 22%, rgba(0,0,0,0.5) 45%, rgba(6,6,7,0.94) 100%);
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -790,6 +795,18 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
     0 1px 0 rgba(255, 255, 255, 0.15),
     0 2px 6px rgba(0, 0, 0, 0.65);
 }
+/* Pedido do usuario (11/09/2026): "deixa essa frase um pouco desfocado ... so um pouco" - um
+   desfoque BEM sutil no titulo inteiro, so pra dar um acabamento mais suave/cinematico (nao pra
+   dificultar a leitura). Pedido em seguida: "quero mais desfocada ainda" - aumentado de 0.6px
+   pra 1.4px. Pedido em seguida: "bota um pouco menos desfocada" - reduzido pra 1px. Pedido em
+   seguida: "ta demais desfocado, deixa algo mediana" - reduzido de novo, pra 0.7px (entre o
+   0.6px bem sutil do inicio e o 1px que ainda estava forte demais pro usuario). Pedido em
+   seguida: "coloca mais um pouco" - aumentado de novo, pra 0.9px. Pedido em seguida: "coloca
+   mais desfoque" - aumentado de novo, pra 1.2px. Pedido em seguida: "coloca mais um pouco" -
+   aumentado de novo, pra 1.4px. Pedido em seguida: "ainda n sinto diferenca, consegue colocar
+   1.7?" - aumentado pra 1.7px. Pedido em seguida: "coloca 2.0 pq ainda n vejo desfoque" -
+   aumentado pra 2px. */
+.hero-content h1 { filter: blur(2px); }
 /* Pedido do usuario (11/09/2026): "ver se toda frase ta com a mesma fonte e mesmo tamanho pq
    parece q o nome filmes ta mais fino quero bold igual o restante" - achado o motivo de
    verdade: existia AINDA um resto da época em que essa palavra se chamava "papel" (contorno
@@ -2114,8 +2131,12 @@ html.no-intro .cine-intro { display: none; }
        um pouco, mantendo o texto ainda legivel por cima.
        Pedido em seguida (10/09/2026): ainda tava escura so no celular - clareado de novo,
        chegando bem mais perto do nivel de brilho da versao PC (que o usuario disse que
-       estava normal e pra nao mexer). PC continua com o gradiente original la em cima. */
-    background: linear-gradient(180deg, rgba(0,0,0,0.48) 0%, rgba(0,0,0,0.42) 35%, rgba(2,2,3,0.85) 100%);
+       estava normal e pra nao mexer). PC continua com o gradiente original la em cima.
+       Ajustado em seguida (11/09/2026): mesmo pedido geral de "foto mais escura com degrade no
+       topo pra destacar a frase" - reforcado tambem aqui no celular (onde a legenda + titulo
+       ficam), so que um pouco mais leve que no PC, seguindo o mesmo cuidado historico de nao
+       escurecer demais so no celular. */
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.46) 22%, rgba(0,0,0,0.4) 40%, rgba(2,2,3,0.88) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
