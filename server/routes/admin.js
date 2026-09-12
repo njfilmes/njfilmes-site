@@ -1228,8 +1228,14 @@ export async function settingsPage(req, res, admin) {
           { value: 'impacto', label: 'Impacto (Anton)' },
           { value: 'cinema', label: 'Cinematográfica (Bebas Neue)' },
           { value: 'arredondada', label: 'Arredondada (Hanken Grotesk)' },
+          { value: 'elegante', label: 'Elegante / serifada (Playfair Display + Lora)' },
+          { value: 'minimalista', label: 'Minimalista (Manrope)' },
+          { value: 'geometrica', label: 'Geométrica (Montserrat)' },
+          { value: 'condensada', label: 'Condensada (Oswald)' },
+          { value: 'tech', label: 'Tech / monoespaçada (Space Mono)' },
+          { value: 'suave', label: 'Suave / arredondada 2 (Quicksand)' },
         ],
-        help: 'Troca a fonte dos títulos das seções e do menu em todo o site (o texto corrido continua no mesmo, pra manter a leitura confortável). O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
+        help: 'Troca a fonte dos títulos das seções e do menu em todo o site. Em algumas opções (Elegante, Minimalista, Tech e Suave) o texto corrido também muda junto, pra combinar; nas outras, o texto corrido continua no mesmo, pra manter a leitura confortável. O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
       })}
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
