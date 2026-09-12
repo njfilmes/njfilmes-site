@@ -635,6 +635,10 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    empurrado mais uma vez (48px -> 64px), so no desktop. */
 .hero .btn-row { margin-top: 64px; }
 .hero .btn-row .btn { padding: 11px 22px; font-size: 0.72rem; }
+/* Espaco a mais so no "Ver portfólio" pro cursor de clique (.btn-arrow-icon) caber sem tampar
+   a ultima letra do texto - selector com a mesma "forca" (3 classes) do ".hero .btn-row .btn"
+   logo acima pra conseguir sobrescrever soh o padding-right dele. */
+.hero .btn-row .btn-hero-cta { padding-right: 40px; }
 /* Pedido do usuario (11/09/2026): "deixa o texto da frase transformamos momentos reais em
    filmes todo branco sem efeitos ta" - tira a cor dourada da palavra "filmes" e desliga
    todas as animacoes do titulo (zoom sutil da parte branca, flutuar/trocar de cor de
