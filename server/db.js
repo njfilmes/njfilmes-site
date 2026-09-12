@@ -514,6 +514,20 @@ export async function initSchema() {
           await query("ALTER TABLE settings ADD COLUMN site_font_preset TEXT DEFAULT ''");
     }
 
+    // 12/09/2026: pedido em seguida do usuario - "consegue colocar bold e etc" + "opcao pra eu
+    // mesmo diminuir o tamanho das fontes" - dois novos controles de tipografia, do mesmo jeito
+    // seguro (SELECT com opcoes fixas, nunca texto livre): peso dos titulos (normal ate
+    // extra-negrito) e escala do tamanho de fonte do site inteiro (a maioria dos tamanhos no CSS
+    // usa "rem", que e relativo ao tamanho de fonte do <html> - entao mudar esse tamanho raiz
+    // encolhe/aumenta o site quase todo de forma proporcional). Vazio em ambos = exatamente como
+    // esta hoje (titulos em negrito/700, escala 100%).
+    if (!settingsCols.includes('site_font_weight')) {
+          await query("ALTER TABLE settings ADD COLUMN site_font_weight TEXT DEFAULT ''");
+    }
+    if (!settingsCols.includes('site_font_scale')) {
+          await query("ALTER TABLE settings ADD COLUMN site_font_scale TEXT DEFAULT ''");
+    }
+
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
       );
