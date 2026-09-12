@@ -500,6 +500,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    usado em titulos de outras secoes/paginas, tipo "Trabalhos recentes"). Vale pro desktop; o
    celular tem seu proprio valor, ainda menor, la embaixo no bloco @media (max-width: 720px). */
 .hero-content .eyebrow { font-size: 0.62rem; }
+/* Pedido do usuario (12/09/2026): "na producao audio visual que tem escrito ali com letras
+   menores, deixa um pouco desfocado, o minimo possivel" - mesma ideia do desfoque sutil que
+   ja existe no titulo grande do hero (".hero-content h1 { filter: blur(1.7px) }" mais abaixo),
+   so que um valor bem mais leve aqui (letra ja pequena, pediu o minimo possivel). Celular tem
+   seu proprio valor ainda menor, dentro do @media (max-width: 720px). */
+.hero-content .eyebrow { filter: blur(0.3px); }
 /* Pedido do usuario (11/09/2026): "producao audio visual salvador ba nao precisa de efeito
    nenhum deixa parado" - essa legenda (.eyebrow) tinha herdado a flutuacao labelFloat que
    o site usa nos labels dourados em geral (.js .eyebrow, mais acima no arquivo). Desligada
@@ -2233,6 +2239,8 @@ html.no-intro .cine-intro { display: none; }
     letter-spacing: 0.14em;
     margin-bottom: 0.6em;
   }
+  /* Desfoque ainda mais leve no celular (letra ja e a menor de todas aqui). */
+  .hero-content .eyebrow { filter: blur(0.2px); }
   .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
