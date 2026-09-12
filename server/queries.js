@@ -13,7 +13,7 @@ export async function getSettings() {
 // da coluna passaria a vir do visitante, o que abriria brecha pra mexer em coluna que não
 // devia. Essa lista trava isso: qualquer chave fora dela é ignorada silenciosamente.
 const SETTINGS_COLUMNS = new Set([
-  'site_name', 'tagline', 'hero_headline', 'hero_subheadline', 'hero_video_url', 'hero_photo',
+  'site_name', 'tagline', 'hero_headline', 'hero_subheadline', 'hero_eyebrow', 'hero_video_url', 'hero_photo',
   'meta_title', 'meta_description', 'og_image', 'footer_text', 'contact_headline',
   'contact_email', 'whatsapp_number', 'whatsapp_message', 'contact_budget_title',
   'contact_budget_text', 'contact_whatsapp_button_text', 'contact_channels_title',

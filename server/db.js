@@ -500,6 +500,12 @@ export async function initSchema() {
     if (!settingsCols.includes('cta_title')) {
           await query("ALTER TABLE settings ADD COLUMN cta_title TEXT DEFAULT 'Solicite um orçamento sem compromisso'");
     }
+    // 12/09/2026: "deixa editavel esse texto tambem" - a legendinha acima do título grande da
+    // Home ("Produção Audiovisual · Salvador, BA") também era fixa no código. Mesmo padrão dos
+    // outros eyebrows acima: cai pro texto de sempre se ficar vazio no painel.
+    if (!settingsCols.includes('hero_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN hero_eyebrow TEXT DEFAULT 'Produção Audiovisual · Salvador, BA'");
+    }
 
     // 12/09/2026: pedido do usuario "tem como eu conseguir mudar as fontes do site pelo painel?" -
     // em vez de um campo de texto livre (arriscado - uma fonte digitada errada, ou que nao esta
