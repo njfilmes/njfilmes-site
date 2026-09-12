@@ -77,14 +77,19 @@ button { font-family: inherit; cursor: pointer; }
    e, por fim (pedido do usuário nesta sessão), reduzido de volta pra ficar discreto — o
    objetivo é só dar um leve aquecimento visual, sem lavar as cores nem competir com o
    conteúdo. Div fixa (server/render.js), por cima de tudo (pointer-events:none pra não
-   atrapalhar clique em nada), com um movimento lento e contínuo (gradeDrift, abaixo). */
+   atrapalhar clique em nada), com um movimento lento e contínuo (gradeDrift, abaixo).
+   Ajustado em seguida (12/09/2026): "a pelicula ja que ta o site todo tipo filtro, faltou
+   tirar mais e deixar quase nada" - reduzido bem mais uma vez (pouco menos da metade do
+   que estava). O reforço extra que só existia na versão mobile (ver @media, mais abaixo)
+   foi removido nesse mesmo pedido - ele que deixava o efeito mais forte/perceptível
+   justamente no celular. */
 .grade-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
   z-index: 9998;
   mix-blend-mode: normal;
-  background: linear-gradient(160deg, rgba(255,150,60,0.04) 0%, rgba(201,162,39,0.028) 45%, rgba(120,55,15,0.05) 100%);
+  background: linear-gradient(160deg, rgba(255,150,60,0.018) 0%, rgba(201,162,39,0.012) 45%, rgba(120,55,15,0.02) 100%);
   background-size: 160% 160%;
 }
 .js .grade-overlay { animation: gradeDrift 16s ease-in-out infinite; }
@@ -2228,10 +2233,11 @@ html.no-intro .cine-intro { display: none; }
   /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
      site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
      site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo).
-     Ajustado (mesmo dia): aumentado bem de leve, a pedido do usuario. */
-  .grade-overlay {
-    background: linear-gradient(160deg, rgba(255,140,50,0.085) 0%, rgba(255,120,40,0.065) 45%, rgba(140,60,15,0.095) 100%);
-  }
+     Ajustado (mesmo dia): aumentado bem de leve, a pedido do usuario.
+     Removido em seguida (12/09/2026): "a pelicula ja que ta o site todo tipo filtro, faltou
+     tirar mais e deixar quase nada" - esse reforço extra so do celular foi exatamente o que
+     deixava o efeito mais visivel/"poluido" ali. Removido - o celular passa a usar a mesma
+     pelicula bem mais fraca da regra base (.grade-overlay, mais acima no arquivo), igual ao PC. */
 }
 @media (max-width: 480px) {
   /* Pedido em 10/09/2026: mesmo motivo do ajuste acima (fonte Poppins mais "cheia" que a
