@@ -394,8 +394,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      como ja era).
      Ajustado em seguida (12/09/2026): "deixa um degrade escuro tanto no site quanto no celular" -
      escurecido mais um pouco em todos os pontos do degrade (PC - a versao mobile tem seu proprio
-     ajuste separado, mais abaixo no arquivo). */
-  background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.66) 22%, rgba(0,0,0,0.58) 45%, rgba(4,4,5,0.96) 100%);
+     ajuste separado, mais abaixo no arquivo).
+     Ajustado em seguida (12/09/2026): "degrade na foto, escureca mais, deixa bem mais escuro, ta
+     no cel tanto no pc" - escurecido bem mais uma vez (pedido explicito de "bem mais escuro"),
+     em todos os pontos do degrade. */
+  background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.78) 22%, rgba(0,0,0,0.7) 45%, rgba(2,2,3,0.98) 100%);
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -2168,8 +2171,11 @@ html.no-intro .cine-intro { display: none; }
        escurecer demais so no celular.
        Ajustado em seguida (12/09/2026): "deixa um degrade escuro tanto no site quanto no
        celular" - escurecido mais um pouco aqui tambem, mantendo a mesma diferenca (um pouco
-       mais leve que o PC) que ja existia. */
-    background: linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.54) 22%, rgba(0,0,0,0.48) 40%, rgba(1,1,2,0.92) 100%);
+       mais leve que o PC) que ja existia.
+       Ajustado em seguida (12/09/2026): "degrade na foto, escureca mais, deixa bem mais escuro,
+       ta no cel tanto no pc" - escurecido bem mais uma vez, praticamente igualando ao PC (o
+       pedido foi explicito pros dois). */
+    background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.74) 22%, rgba(0,0,0,0.66) 40%, rgba(1,1,2,0.97) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
