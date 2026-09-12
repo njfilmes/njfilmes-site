@@ -250,17 +250,29 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    cima do proprio botao "Ver portfólio" (nao mais do lado de fora nem so uma seta empurrando).
    Reaproveita a mesma animacao de toque (ytCursorTap, definida mais abaixo no CSS junto do
    selo de play) pra ficar consistente com os outros lugares que ja tem esse "clique" no site. */
-.btn-hero-cta { position: relative; }
+.btn-hero-cta {
+  position: relative;
+  /* Espaco reservado a mais no padding direito do botao pra caber o cursor sem tampar a
+     ultima letra do texto (pedido do usuario: "a seta ta tapando a letra O, deixa um pouco
+     pro lado"). */
+  padding-right: 40px;
+}
 .btn-hero-cta .btn-arrow-icon {
   position: absolute;
   top: 50%;
-  right: 12px;
+  right: 14px;
   transform: translateY(-50%);
   display: inline-flex;
   z-index: 2;
   filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
 }
 .btn-hero-cta .btn-arrow-icon svg { width: 15px; height: 15px; display: block; }
+/* Pedido do usuario (12/09/2026, 3o ajuste): "faltou deixar a seta dourada igual da fonte" -
+   o cursor reaproveitado (playCursorHtml/footer-youtube-cursor) e branco com contorno escuro
+   nos outros lugares (selo de play, link do YouTube) - so aqui no botao do hero ele fica
+   dourado (mesmo tom --accent usado nos titulos/destaques do site), sem mexer no icone
+   original usado nesses outros lugares. */
+.btn-hero-cta .btn-arrow-icon svg path { fill: var(--accent); stroke: #2a1f08; }
 .js .btn-hero-cta .btn-arrow-icon { animation: heroCtaCursorTap 1.8s ease-in-out infinite; }
 @keyframes heroCtaCursorTap {
   0%, 20%, 100% { transform: translateY(-50%) translate(0, 0) scale(1); }
@@ -2236,8 +2248,12 @@ html.no-intro .cine-intro { display: none; }
     font-size: 0.54rem;
   }
   /* Cursor de clique em cima do botao (ver .btn-hero-cta .btn-arrow-icon mais acima) reduzido
-     no celular, proporcional ao botao bem menor nessa largura. */
-  .btn-hero-cta .btn-arrow-icon { right: 6px; }
+     no celular, proporcional ao botao bem menor nessa largura. Padding direito bem menor que
+     no desktop (botao aqui e bem mais compacto), so o suficiente pra nao tampar a letra.
+     Selector mais especifico (.hero .btn-row .btn-hero-cta) pra ganhar do "padding: 6px 12px"
+     de ".hero .btn-row .btn" logo acima, que tem mais classes e senao ganharia por especificidade. */
+  .hero .btn-row .btn-hero-cta { padding-right: 24px; }
+  .btn-hero-cta .btn-arrow-icon { right: 7px; }
   .btn-hero-cta .btn-arrow-icon svg { width: 11px; height: 11px; }
   .hero .btn-row .btn-outline {
     border-color: transparent;
