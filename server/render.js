@@ -36,6 +36,31 @@ const DEFAULT_NAV_LINKS = [
   { label: 'Contato', url: '/contato' },
 ];
 
+// 12/09/2026: pedido do usuario "tem como eu conseguir mudar as fontes do site pelo painel?"
+// (ver /admin/configuracoes, campo "Fonte do site"). Cada opção só troca as variáveis CSS
+// --font-display (títulos de seção, menu, números, etc.) e --font-body (texto corrido) - usando
+// SEMPRE fontes que o site já carrega (Inter, Hanken Grotesk, Outfit, Poppins, Anton, Bebas Neue
+// - ver o <link> do Google Fonts logo abaixo), pra nunca correr o risco de carregar uma fonte
+// que não existe/não foi importada. O título grande da Home tem fonte própria (Poppins),
+// ajustada à parte várias vezes já, e fica de fora de propósito - só as outras fontes do site
+// (menu, títulos de seção, texto) mudam por aqui.
+const FONT_PRESETS = {
+  moderna: { display: "'Outfit', var(--font-body)" },
+  impacto: { display: "'Anton', var(--font-body)" },
+  cinema: { display: "'Bebas Neue', var(--font-body)" },
+  arredondada: { display: "'Hanken Grotesk', sans-serif", body: "'Hanken Grotesk', sans-serif" },
+};
+function fontOverrideStyle(presetKey) {
+  const preset = FONT_PRESETS[presetKey];
+  if (!preset) return '';
+  const decls = [
+    preset.display ? `--font-display: ${preset.display};` : '',
+    preset.body ? `--font-body: ${preset.body};` : '',
+  ].filter(Boolean).join(' ');
+  if (!decls) return '';
+  return `<style>:root { ${decls} }</style>`;
+}
+
 export function layout({
   title,
   description,
@@ -195,6 +220,7 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
 <link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
+${fontOverrideStyle(settings.site_font_preset)}
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
 </head>
 <body class="${escapeHtml(bodyClass)}">

@@ -501,6 +501,19 @@ export async function initSchema() {
           await query("ALTER TABLE settings ADD COLUMN cta_title TEXT DEFAULT 'Solicite um orçamento sem compromisso'");
     }
 
+    // 12/09/2026: pedido do usuario "tem como eu conseguir mudar as fontes do site pelo painel?" -
+    // em vez de um campo de texto livre (arriscado - uma fonte digitada errada, ou que nao esta
+    // carregada no <head>, quebraria a tipografia do site inteiro), um SELECT com um punhado de
+    // combinacoes ja testadas, todas usando fontes que o site ja carrega hoje (Inter, Hanken
+    // Grotesk, Outfit, Poppins, Anton, Bebas Neue - ver server/render.js) - troca sem precisar
+    // adicionar nenhum link novo de fonte nem arriscar carregar algo quebrado. Vazio = continua
+    // exatamente como esta hoje (Poppins/Bebas Neue nos titulos, Inter no corpo do texto). O
+    // titulo do Hero (a frase grande da Home) tem fonte propria, ajustada a parte varias vezes
+    // ja - fica de fora dessa troca geral por enquanto, pra nao desfazer esse ajuste fino.
+    if (!settingsCols.includes('site_font_preset')) {
+          await query("ALTER TABLE settings ADD COLUMN site_font_preset TEXT DEFAULT ''");
+    }
+
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
       );
