@@ -210,7 +210,8 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   .js .nav-menu-label,
   .js .work-card .photo-hint,
   .js .work-card .play-ring circle,
-  .js .work-card .play-cursor {
+  .js .work-card .play-cursor,
+  .js .btn-hero-cta .btn-arrow-icon {
     animation: none;
   }
 }
@@ -237,6 +238,21 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .btn:active { filter: brightness(0.88); transition-duration: 0.1s; }
 .btn-solid { background: var(--fg); color: var(--bg); }
 .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: #12100a; }
+/* Pedido do usuario (12/09/2026): "no nome ver portifolio bota uma animacao de uma seta ou algo
+   do tipo apertando a seta da cor dourado" - seta dourada ao lado do texto do botao "Ver
+   portfólio" do hero, com uma animacao continua de "empurrar pra frente" (nudge), sugerindo
+   pra clicar. So nesse botao especifico (.btn-hero-cta), os outros botoes "solid" do site (pedir
+   orcamento, etc.) continuam sem seta. */
+.btn-hero-cta .btn-arrow-icon {
+  display: inline-flex;
+  color: var(--accent);
+}
+.btn-hero-cta .btn-arrow-icon svg { width: 15px; height: 15px; display: block; }
+.js .btn-hero-cta .btn-arrow-icon { animation: heroCtaArrowNudge 1.4s ease-in-out infinite; }
+@keyframes heroCtaArrowNudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
 /* Pedido do usuario (12/09/2026): "a cor da moldura do entrar em contato coloque dourado igual
    a todo site, o filtro dourado que ta aplicado em todo site, bem sutil como se nao existisse" -
    trocada a borda cinza/branca (var(--border-strong)) por um dourado bem discreto, no mesmo
