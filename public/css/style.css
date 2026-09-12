@@ -23,12 +23,23 @@
      A fonte antiga (Bebas Neue) fica soh comentada aqui embaixo caso precise voltar. */
   --font-display: 'Poppins', 'Bebas Neue', 'Arial Narrow', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  /* Pedido do usuario (12/09/2026): "consegue colocar bold e etc" + "opcao pra eu mesmo
+     diminuir o tamanho das fontes" - duas variaveis novas, controladas la no painel
+     (Configuracoes > Identidade e SEO) via server/render.js (fontOverrideStyle). Padrao aqui
+     e exatamente o que ja existia antes (titulos em negrito/700, escala 100% = tamanho normal
+     do site) - só mudam quando a pessoa escolhe uma opção diferente no painel. */
+  --font-weight-display: 700;
+  --font-scale: 1;
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --container: 1280px;
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; overflow-x: hidden; }
+/* A variavel --font-scale acima (controlada pelo painel) multiplica o tamanho de fonte "raiz"
+   aqui no <html> - como quase todo tamanho de texto do site usa "rem" (relativo a esse tamanho
+   raiz, nao ao elemento pai), isso encolhe/aumenta o site inteiro de forma proporcional, títulos,
+   textos, botões e menu juntos, sem precisar mexer em cada regra CSS uma por uma. */
+html { scroll-behavior: smooth; overflow-x: hidden; font-size: calc(16px * var(--font-scale)); }
 
 body {
   margin: 0;
@@ -88,8 +99,11 @@ h1, h2, h3, h4 {
      ExtraBold/800) em vez do 400 que a Bebas Neue (fonte fina por natureza) usava.
      Sombra suave adicionada tambem (mesma do titulo do hero) pra dar profundidade/legibilidade
      - efeito "padrao" pedido pra combinar com a Home, sem contorno/brilho animado (isso fica
-     só na palavra de destaque do hero, não faria sentido em todo título do site). */
-  font-weight: 700;
+     só na palavra de destaque do hero, não faria sentido em todo título do site).
+     Pedido em seguida (12/09/2026): "consegue colocar bold e etc" - trocado o 700 fixo pela
+     variavel --font-weight-display, controlada no painel (Configuracoes). Continua 700 por
+     padrao (ver :root, no topo do arquivo) - só muda se a pessoa escolher outra opção lá. */
+  font-weight: var(--font-weight-display);
   letter-spacing: 0.02em;
   text-transform: uppercase;
   line-height: 1.05;
@@ -218,7 +232,14 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
 .btn:active { filter: brightness(0.88); transition-duration: 0.1s; }
 .btn-solid { background: var(--fg); color: var(--bg); }
 .btn-solid:hover { background: var(--accent); border-color: var(--accent); color: #12100a; }
-.btn-outline { border-color: var(--border-strong); }
+/* Pedido do usuario (12/09/2026): "a cor da moldura do entrar em contato coloque dourado igual
+   a todo site, o filtro dourado que ta aplicado em todo site, bem sutil como se nao existisse" -
+   trocada a borda cinza/branca (var(--border-strong)) por um dourado bem discreto, no mesmo
+   tom do --accent do site mas com opacidade baixa (parecido com o "grade-overlay", a pelicula
+   dourada sutil que já cobre o site inteiro) - da pra notar que e dourado sem chamar atencao
+   demais. Afeta todo botao ".btn-outline" do site (inclui "Entrar em contato" no hero e os
+   outros "Ver todos/Ver mais trabalhos"), pra ficar igual/consistente em todo lugar. */
+.btn-outline { border-color: rgba(201, 162, 39, 0.4); }
 .btn-accent { border-color: var(--accent); color: var(--accent); }
 .btn-accent:hover { background: var(--accent); color: #12100a; }
 .btn-row { display: flex; gap: 16px; flex-wrap: wrap; }
@@ -365,8 +386,11 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      a frase" - alem de escurecer geral, reforcado especificamente o TOPO do degrade (onde fica a
      legenda pequena + o titulo), com um novo pico de escurecido logo nos primeiros ~22% da foto
      (que depois suaviza de novo em direcao ao meio, antes de escurecer forte de novo no rodape
-     como ja era). */
-  background: linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.58) 22%, rgba(0,0,0,0.5) 45%, rgba(6,6,7,0.94) 100%);
+     como ja era).
+     Ajustado em seguida (12/09/2026): "deixa um degrade escuro tanto no site quanto no celular" -
+     escurecido mais um pouco em todos os pontos do degrade (PC - a versao mobile tem seu proprio
+     ajuste separado, mais abaixo no arquivo). */
+  background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.66) 22%, rgba(0,0,0,0.58) 45%, rgba(4,4,5,0.96) 100%);
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -2136,8 +2160,11 @@ html.no-intro .cine-intro { display: none; }
        Ajustado em seguida (11/09/2026): mesmo pedido geral de "foto mais escura com degrade no
        topo pra destacar a frase" - reforcado tambem aqui no celular (onde a legenda + titulo
        ficam), so que um pouco mais leve que no PC, seguindo o mesmo cuidado historico de nao
-       escurecer demais so no celular. */
-    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.46) 22%, rgba(0,0,0,0.4) 40%, rgba(2,2,3,0.88) 100%);
+       escurecer demais so no celular.
+       Ajustado em seguida (12/09/2026): "deixa um degrade escuro tanto no site quanto no
+       celular" - escurecido mais um pouco aqui tambem, mantendo a mesma diferenca (um pouco
+       mais leve que o PC) que ja existia. */
+    background: linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.54) 22%, rgba(0,0,0,0.48) 40%, rgba(1,1,2,0.92) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
@@ -2165,6 +2192,12 @@ html.no-intro .cine-intro { display: none; }
     border-color: transparent;
     padding-left: 0; padding-right: 0;
     text-decoration: underline;
+    /* Pedido do usuario (12/09/2026): mesmo pedido da borda dourada sutil do botao (regra
+       ".btn-outline" mais acima no arquivo) - aqui no celular o "entra em contato" nao tem
+       caixa/borda (vira sublinhado), entao quem faz esse papel de "moldura" e a cor do
+       sublinhado - trocada pra esse mesmo dourado bem discreto, o texto continua na cor
+       normal (var(--fg-muted)) pra nao perder legibilidade. */
+    text-decoration-color: rgba(201, 162, 39, 0.55);
     text-underline-offset: 4px;
     color: var(--fg-muted);
     font-size: 0.48rem;
