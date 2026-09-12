@@ -301,7 +301,7 @@ export async function homePage(req, res) {
         <h2>${escapeHtml(featured.title)}</h2>
         <a href="/portfolio/${escapeHtml(featured.slug)}" class="btn btn-accent">Assistir projeto</a>
       </div>
-      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card reveal ${featuredPreview ? 'has-preview-video' : ''}" style="aspect-ratio:21/9;" data-work-card>
+      <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card home-featured-card reveal ${featuredPreview ? 'has-preview-video' : ''}" data-work-card>
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
         ${featuredPreview ? `<div class="work-card-video" data-preview-provider="${escapeHtml(featuredPreview.provider)}" data-preview-src="${escapeHtml(featuredPreview.src)}"></div>` : ''}
         ${Number(featured.video_count) > 0 ? `<span class="play">${playRingHtml()}<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>${playCursorHtml()}</span>` : ''}
