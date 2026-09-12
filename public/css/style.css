@@ -805,8 +805,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    mais desfoque" - aumentado de novo, pra 1.2px. Pedido em seguida: "coloca mais um pouco" -
    aumentado de novo, pra 1.4px. Pedido em seguida: "ainda n sinto diferenca, consegue colocar
    1.7?" - aumentado pra 1.7px. Pedido em seguida: "coloca 2.0 pq ainda n vejo desfoque" -
-   aumentado pra 2px. */
-.hero-content h1 { filter: blur(2px); }
+   aumentado pra 2px. Pedido em seguida: "coloca 1.7px o desfoque" - reduzido de volta pra
+   1.7px. */
+.hero-content h1 { filter: blur(1.7px); }
 /* Pedido do usuario (11/09/2026): "ver se toda frase ta com a mesma fonte e mesmo tamanho pq
    parece q o nome filmes ta mais fino quero bold igual o restante" - achado o motivo de
    verdade: existia AINDA um resto da época em que essa palavra se chamava "papel" (contorno
