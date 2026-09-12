@@ -1938,6 +1938,13 @@ html.no-intro .cine-intro { display: none; }
   .about-split { grid-template-columns: 1fr; gap: 40px; }
   .footer-inner { grid-template-columns: 1fr 1fr; }
   .contact-grid { grid-template-columns: 1fr; }
+  /* Pedido do usuario (12/09/2026): "aplique isso em todo formato de celular" - o ajuste do
+     card do "Projeto em destaque" pra 16:9 (ver @media max-width:720px mais abaixo) só cobria
+     até 720px; entre 721px e 980px (celular grande/deitado, tablet pequeno) ele ainda caía na
+     regra padrão de 21:9 (mais acima, fora de media query) e cortava a foto do mesmo jeito que
+     antes. Repetido aqui pra cobrir essa faixa também - só o desktop de verdade (981px+)
+     continua com o cinema 21:9 original. */
+  .work-card.home-featured-card { aspect-ratio: 16/9; }
 }
 @media (max-width: 720px) {
   section { padding: 72px 0; }
