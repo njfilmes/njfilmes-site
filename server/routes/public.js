@@ -286,7 +286,7 @@ export async function homePage(req, res) {
       <span class="eyebrow reveal hero-eyebrow-lower">Produção Audiovisual · Salvador, BA</span>
       <h1 class="reveal reveal-delay-1">${heroHeadlineHtml(settings.hero_headline)}</h1>
       <div class="btn-row reveal reveal-delay-3">
-        <a href="/portfolio" class="btn btn-solid">Ver portfólio</a>
+        <a href="/portfolio" class="btn btn-solid btn-hero-cta">Ver portfólio<span class="btn-arrow-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="12" x2="18" y2="12"/><polyline points="12 6 18 12 12 18"/></svg></span></a>
         <a href="/contato" class="btn btn-outline">Entrar em contato</a>
       </div>
     </div>
