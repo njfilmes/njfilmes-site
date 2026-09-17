@@ -735,6 +735,11 @@ export async function initSchema() {
     if (!settingsCols.includes('contact_eyebrow')) {
           await query("ALTER TABLE settings ADD COLUMN contact_eyebrow TEXT DEFAULT 'Contato'");
     }
+    // 17/09/2026: texto pequeno abaixo do nome na página /links (estilo "linktree"), pra dar pra
+    // trocar pelo painel em vez de ficar fixo no código.
+    if (!settingsCols.includes('links_tagline')) {
+          await query("ALTER TABLE settings ADD COLUMN links_tagline TEXT DEFAULT 'Vídeo, fotografia e drone em Salvador, Bahia'");
+    }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
