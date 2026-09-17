@@ -234,7 +234,7 @@ async function main() {
   for (const dc of deliveryCases) {
     const full = await getDeliveryCaseBySlug(dc.slug);
     if (!full) continue;
-    await writePage(`entregas/${full.slug}`, renderDeliveryCasePage(full));
+    await writePage(`entregas/${full.slug}`, renderDeliveryCasePage(full, settings));
   }
 
   await build404(settings, categories);
