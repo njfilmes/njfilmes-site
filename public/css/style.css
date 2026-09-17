@@ -919,8 +919,9 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    aumentado de novo, pra 1.4px. Pedido em seguida: "ainda n sinto diferenca, consegue colocar
    1.7?" - aumentado pra 1.7px. Pedido em seguida: "coloca 2.0 pq ainda n vejo desfoque" -
    aumentado pra 2px. Pedido em seguida: "coloca 1.7px o desfoque" - reduzido de volta pra
-   1.7px. */
-.hero-content h1 { filter: blur(1.7px); }
+   1.7px. Pedido em 17/09/2026: "deixa um pouco mais focado tanto no pc tanto no cel" -
+   reduzido de 1.7px pra 1px (celular ajustado na mesma proporcao, ver @media mais abaixo). */
+.hero-content h1 { filter: blur(1px); }
 /* Pedido do usuario (11/09/2026): "ver se toda frase ta com a mesma fonte e mesmo tamanho pq
    parece q o nome filmes ta mais fino quero bold igual o restante" - achado o motivo de
    verdade: existia AINDA um resto da época em que essa palavra se chamava "papel" (contorno
@@ -2357,8 +2358,10 @@ html.no-intro .cine-intro { display: none; }
      titulo cai pra pertinho do minimo, 1.1rem/~17-18px, contra ate 2.5rem/40px no PC) -
      entao o MESMO desfoque em pixel fica proporcionalmente bem mais forte em cima de letras
      menores (borra uma fatia maior de cada letra). Reduzido aqui so pro celular, mantendo o
-     1.7px original intacto no PC (regra de cima, fora desse @media). */
-  .hero-content h1 { filter: blur(0.7px); }
+     1.7px original intacto no PC (regra de cima, fora desse @media).
+     Pedido em 17/09/2026: "deixa um pouco mais focado tanto no pc tanto no cel" - reduzido
+     na mesma proporcao que o PC (de 0.7px pra 0.4px). */
+  .hero-content h1 { filter: blur(0.4px); }
   /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
      site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
      site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo).
