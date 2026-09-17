@@ -622,6 +622,15 @@ export async function updateDeliveryCase(id, data) {
 export async function deleteDeliveryCase(id) {
   await query('DELETE FROM delivery_cases WHERE id = $1', [id]);
 }
+// Usado antes de excluir uma entrega inteira (ver deliveryCaseDelete em server/routes/admin.js)
+// pra apagar os arquivos de foto (R2/Vercel Blob/disco) de cada uma antes de apagar as linhas do
+// banco — excluir só a entrega em si (DELETE FROM delivery_cases) apaga as fotos/vídeos do banco
+// em cascata, mas NÃO apaga os arquivos de imagem em si, que ficavam pra sempre ocupando espaço
+// de armazenamento sem nenhuma entrega apontando mais pra eles. Pedido do usuário em 17/09/2026
+// ("se encher posso deletar cliente antigo e volta a ficar normal?").
+export async function listDeliveryPhotosForCase(caseId) {
+  return queryRows('SELECT * FROM delivery_photos WHERE case_id = $1', [caseId]);
+}
 
 export async function incrementDeliveryCaseViews(id) {
   await query('UPDATE delivery_cases SET views = views + 1 WHERE id = $1', [id]);
