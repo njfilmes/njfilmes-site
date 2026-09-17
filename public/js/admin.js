@@ -120,6 +120,65 @@
     }
   }
 
+  // -------- Upload de vídeo de entrega arrastando o arquivo (além de colar link) --------
+  // Pedido do usuário em 17/09/2026: na aba de Vídeos das Entregas, além de colar um link
+  // (YouTube/Mega/Drive/etc), poder simplesmente arrastar o arquivo de vídeo direto — mesma ideia
+  // do "arraste as fotos" acima, só que um vídeo de cada vez (arquivo de vídeo costuma ser bem
+  // maior que foto, então já nasce como upload único em vez de múltiplo).
+  const VIDEO_EXT_RE = /\.(mp4|webm|mov|m4v|mkv)$/i;
+  function isVideoFile(f) {
+    return (f.type && f.type.startsWith('video/')) || VIDEO_EXT_RE.test(f.name || '');
+  }
+  const videoUploadDrop = document.querySelector('[data-video-upload-drop]');
+  if (videoUploadDrop) {
+    const input = videoUploadDrop.querySelector('input[type=file]');
+    const statusEl = videoUploadDrop.querySelector('[data-video-upload-status]');
+    const uploadUrl = videoUploadDrop.dataset.uploadUrl;
+
+    const openPicker = () => input.click();
+    videoUploadDrop.addEventListener('click', openPicker);
+    ['dragover', 'dragenter'].forEach((evt) =>
+      videoUploadDrop.addEventListener(evt, (e) => { e.preventDefault(); videoUploadDrop.classList.add('dragover'); })
+    );
+    ['dragleave', 'drop'].forEach((evt) =>
+      videoUploadDrop.addEventListener(evt, (e) => { e.preventDefault(); videoUploadDrop.classList.remove('dragover'); })
+    );
+    videoUploadDrop.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files.length) handleVideoFile(e.dataTransfer.files[0]);
+    });
+    input.addEventListener('change', () => { if (input.files.length) handleVideoFile(input.files[0]); });
+
+    async function handleVideoFile(file) {
+      if (!isVideoFile(file)) {
+        if (statusEl) {
+          statusEl.textContent = 'Arquivo não reconhecido como vídeo (use .mp4, .webm ou .mov).';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
+      if (statusEl) { statusEl.textContent = 'Enviando vídeo...'; statusEl.style.color = ''; }
+      try {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ video: dataUrl }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Falha ao enviar vídeo.');
+        if (statusEl) { statusEl.textContent = 'Vídeo enviado com sucesso! Atualizando...'; statusEl.style.color = ''; }
+        setTimeout(() => window.location.reload(), 900);
+      } catch (err) {
+        if (statusEl) { statusEl.textContent = 'Erro: ' + err.message; statusEl.style.color = '#d0503a'; }
+      }
+    }
+  }
+
   // -------- Upload de fotos da página Sobre (multi-arquivo, mesmo esquema do upload de projeto) --------
   const bioUploadDrop = document.querySelector('[data-bio-photos-upload]');
   if (bioUploadDrop) {
