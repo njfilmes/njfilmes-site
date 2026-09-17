@@ -41,7 +41,10 @@ const CASE_CSS = `
   a{color:inherit;}
   .container{max-width:1080px;margin:0 auto;padding:0 24px;}
   .accent{color:#c9a227;}
-  .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease;}
+  /* Pedido do usuario (17/09/2026): "coloca o maximo de animacao possivel" - entrada mais forte
+     (vinha de mais longe + começava um pouco menor) e mais lenta/suave, pra ficar bem mais
+     perceptível ao rolar até cada seção. */
+  .reveal{opacity:0;transform:translateY(34px) scale(.95);transition:opacity 1.1s cubic-bezier(.16,.84,.44,1),transform 1.1s cubic-bezier(.16,.84,.44,1);}
   .reveal.is-visible{opacity:1;transform:none;}
 
   /* ---- Área "story": capa + uma foto/vídeo por tela, com rolagem que encaixa ---- */
@@ -64,7 +67,7 @@ const CASE_CSS = `
      no meio) e dar um ponto de encaixe de verdade pro download/comentários/rodapé também
      (".dc-story > section, .dc-story > .dc-footer" aqui embaixo) - assim o encaixe obrigatório
      para NELES em vez de forçar voltar pro último slide. */
-  .dc-story{scroll-snap-type:y mandatory;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
+  .dc-story{scroll-snap-type:y mandatory;scroll-behavior:smooth;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
   .dc-story > section, .dc-story > .dc-footer{scroll-snap-align:start;}
 
   .dc-cover{scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-end;position:relative;padding:80px 0 64px;background:#0b0a0d;overflow:hidden;}
@@ -72,7 +75,7 @@ const CASE_CSS = `
      fotos/vídeos da entrega eram uma imagem 100% parada, sem nenhum movimento (diferente do hero
      da Home, que já tem um zoom lento contínuo - ".hero-media img" em style.css). Mesma ideia
      aqui: um zoom bem lento e suave, vai-e-volta, só pra tirar a sensação de "imagem congelada". */
-  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;transform:scale(1);animation:dcKenBurns 18s ease-in-out infinite alternate;}
+  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;transform:scale(1);animation:dcKenBurns 12s ease-in-out infinite alternate;}
   .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
   .dc-cover-inner{position:relative;z-index:1;}
   .dc-brandmark{position:absolute;top:22px;left:24px;z-index:2;display:block;}
@@ -92,16 +95,24 @@ const CASE_CSS = `
      fundo desfocado da própria foto atrás — pedido do usuário em 17/09/2026 ("a foto horizontal
      tá ficando vertical e cortando as laterais"). Foto vertical/quadrada continua exatamente
      como antes (cover, tela cheia, sem essa camada de fundo). */
-  .dc-slide-media-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55);transform:scale(1.15);animation:dcSlideBgZoom 18s ease-in-out infinite alternate;}
+  .dc-slide-media-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55);transform:scale(1.15);animation:dcSlideBgZoom 12s ease-in-out infinite alternate;}
   .dc-slide-media.is-landscape img{object-fit:contain;}
-  /* Mesmo zoom lento do ".dc-cover-bg" (ver comentário ali em cima), aplicado nas fotos verticais/
-     quadradas em tela cheia (":not(.is-landscape)" pra não mexer na foto horizontal, que usa
-     "contain" e não pode ser cortada). */
-  .dc-slide-media:not(.is-landscape) img{animation:dcKenBurns 18s ease-in-out infinite alternate;}
-  @keyframes dcKenBurns{from{transform:scale(1);}to{transform:scale(1.08);}}
-  @keyframes dcSlideBgZoom{from{transform:scale(1.15);}to{transform:scale(1.26);}}
+  /* Pedido do usuario (17/09/2026): "tinha animacao de zoom em cada imagem... no que vc fez n
+     tem, coloca o maximo de animacao possivel" - duas correções: (1) antes o zoom só rodava nas
+     fotos verticais/quadradas (":not(.is-landscape) img") - a maioria das fotos reais (esse caso
+     de teste incluso) é horizontal, então na prática quase nenhuma foto tinha zoom nenhum, só o
+     fundo desfocado atrás dela (".dc-slide-media-bg" ali em cima). Agora TODA foto/vídeo tem zoom,
+     landscape incluso. (2) o efeito também ficou mais forte e mais rápido (12s em vez de 18s, zoom
+     maior), e ganhou um leve movimento de câmera (translate) junto, não só zoom parado no centro -
+     alterna a direção a cada foto (ímpar/par) pra não ficar repetitivo. */
+  .dc-slide:nth-child(odd) .dc-slide-media img{animation:dcKenBurnsA 12s ease-in-out infinite alternate;}
+  .dc-slide:nth-child(even) .dc-slide-media img{animation:dcKenBurnsB 14s ease-in-out infinite alternate;}
+  @keyframes dcKenBurns{from{transform:scale(1);}to{transform:scale(1.14);}}
+  @keyframes dcKenBurnsA{from{transform:scale(1) translate(0,0);}to{transform:scale(1.18) translate(-2.4%,-1.8%);}}
+  @keyframes dcKenBurnsB{from{transform:scale(1.04) translate(1.6%,1%);}to{transform:scale(1.2) translate(-1.2%,-2.2%);}}
+  @keyframes dcSlideBgZoom{from{transform:scale(1.15);}to{transform:scale(1.32);}}
   @media (prefers-reduced-motion: reduce){
-    .dc-cover-bg, .dc-slide-media-bg, .dc-slide-media:not(.is-landscape) img{animation:none;}
+    .dc-cover-bg, .dc-slide-media-bg, .dc-slide-media img{animation:none;}
   }
   .dc-slide-media .dc-story-video{position:absolute;inset:0;background:#000;}
   .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
