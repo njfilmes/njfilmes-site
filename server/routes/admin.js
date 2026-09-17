@@ -1471,6 +1471,9 @@ export async function settingsPage(req, res, admin) {
       </div>
       ${field({ label: 'Facebook', name: 'facebook_url', value: s.facebook_url, type: 'url' })}
       ${field({ label: 'Link de avaliação do Google (Perfil da Empresa)', name: 'google_review_url', value: s.google_review_url, type: 'url', help: 'No seu Perfil da Empresa no Google, clique em "Solicitar avaliações" pra pegar o link (formato g.page/r/.../review). Preenchendo aqui, aparece um botão "Avalie-nos no Google" no rodapé e na página Contato.' })}
+      <h2 style="margin-top:32px;">Página /links (link único para a bio do Instagram)</h2>
+      <p class="muted" style="margin-top:-8px;">Essa página (<a href="/links" target="_blank" rel="noopener">njfilmes.com.br/links</a>) é montada automaticamente com as redes sociais e o WhatsApp preenchidos acima — não precisa editar em outro lugar. Os botões extras que aparecem nela vêm da lista em <a href="/admin/links">Links</a>, no menu. Aqui você só ajusta o texto que fica embaixo do nome.</p>
+      ${field({ label: 'Frase abaixo do nome na página /links', name: 'links_tagline', value: s.links_tagline })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar configurações</button></div>
     </form>
   </div>
@@ -1592,6 +1595,7 @@ export async function settingsUpdate(req, res, body) {
     tiktok_url: body.tiktok_url || '',
     facebook_url: body.facebook_url || '',
     google_review_url: body.google_review_url || '',
+    links_tagline: body.links_tagline || '',
     site_font_preset: body.site_font_preset || '',
     site_font_weight: body.site_font_weight || '',
     site_font_scale: body.site_font_scale || '',
