@@ -45,6 +45,13 @@ const CASE_CSS = `
   .reveal.is-visible{opacity:1;transform:none;}
 
   /* ---- Área "story": capa + uma foto/vídeo por tela, com rolagem que encaixa ---- */
+  /* Pedido do usuario (17/09/2026): "a rolagem do pc ta estranha, tem outra rolagem do lado" -
+     antes só a capa+fotos/vídeos ficavam dentro de ".dc-story" (que rola por conta própria) e o
+     download/comentários/rodapé vinham soltos depois, deixando a página (html/body) rolar TAMBÉM
+     por conta própria - duas rolagens ao mesmo tempo. Agora ".dc-story" engloba a página inteira
+     (ver renderDeliveryCasePage mais abaixo) e html/body ficam travados do tamanho exato da tela
+     (".dc-locked", só quando existe foto/vídeo) - sobra uma única barra de rolagem. */
+  html.dc-locked, body.dc-locked{height:100vh;height:100dvh;overflow:hidden;margin:0;}
   .dc-story{scroll-snap-type:y mandatory;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
 
   .dc-cover{scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-end;position:relative;padding:80px 0 64px;background:#0b0a0d;overflow:hidden;}
@@ -332,21 +339,7 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
   const videos = c.videos || [];
   const hasStoryContent = videos.length > 0 || photos.length > 0;
 
-  const storyHtml = hasStoryContent
-    ? `<div class="dc-story">
-        <div class="dc-cover">
-          ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
-          <span class="dc-brandmark reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></span>
-          <div class="container dc-cover-inner">
-            <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
-            <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
-            ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
-          </div>
-          <span class="dc-scroll-hint reveal">Role para ver</span>
-        </div>
-        ${renderMediaSlides(videos, photos)}
-      </div>`
-    : `<header class="dc-cover">
+  const coverHtml = `<div class="dc-cover">
         ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
         <span class="dc-brandmark reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></span>
         <div class="container dc-cover-inner">
@@ -354,7 +347,8 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
           <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
           ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
         </div>
-      </header>`;
+        ${hasStoryContent ? '<span class="dc-scroll-hint reveal">Role para ver</span>' : ''}
+      </div>`;
 
   const downloadHtml = c.photos_download_url
     ? `<section><div class="container">
@@ -403,8 +397,35 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
       ${socialLinksHtml}
     </div>`;
 
+  // Pedido do usuario (17/09/2026): "a rolagem do pc ta estranha ainda n ta na pagina toda
+  // tendo outra rolagem do lado" - o motivo: quando tem foto/video (hasStoryContent), a capa +
+  // fotos/videos ficavam dentro de ".dc-story" (uma div com scroll PRÓPRIO, pra dar o efeito de
+  // "story" com encaixe), mas o download/comentarios/rodape vinham DEPOIS, fora dela, soltos no
+  // fluxo normal da pagina - ou seja, a pagina toda (html/body) tambem podia rolar por conta
+  // propria. Resultado: duas barras de rolagem, uma pra dentro da ".dc-story" e outra pra pagina
+  // em si, um comportamento estranho (e foi tambem a causa raiz do problema anterior do botao de
+  // download "sumido" - ele nao era filho de ".dc-story", entao a deteccao de "ta visivel na
+  // tela" que usa ela como referencia nunca funcionava direito).
+  // Correcao: quando tem foto/video, TUDO (capa, fotos/videos, download, comentarios, rodape) fica
+  // dentro da mesma ".dc-story", que vira a UNICA coisa que rola - e a pagina (html/body) fica
+  // travada (classe "dc-locked" mais abaixo no CSS) do tamanho exato da tela, sem rolagem propria.
+  // Só uma barra de rolagem, do inicio ao fim. Quando NAO tem foto/video (so uma capa avulsa),
+  // continua como antes - pagina normal, rolagem unica de qualquer forma, nada muda aqui.
+  const bodyContent = hasStoryContent
+    ? `<div class="dc-story">
+        ${coverHtml}
+        ${renderMediaSlides(videos, photos)}
+        ${downloadHtml}
+        ${commentsHtml}
+        ${footerHtml}
+      </div>`
+    : `<header class="dc-cover-wrap">${coverHtml}</header>
+      ${downloadHtml}
+      ${commentsHtml}
+      ${footerHtml}`;
+
   return `<!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR"${hasStoryContent ? ' class="dc-locked"' : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -414,11 +435,8 @@ ${c.cover_photo ? `<meta property="og:image" content="${escapeHtml(c.cover_photo
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <style>${CASE_CSS}</style>
 </head>
-<body>
-  ${storyHtml}
-  ${downloadHtml}
-  ${commentsHtml}
-  ${footerHtml}
+<body${hasStoryContent ? ' class="dc-locked"' : ''}>
+  ${bodyContent}
   <div class="lightbox" id="dc-lightbox"><button class="lightbox-close" aria-label="Fechar">×</button><img src="" alt=""></div>
   <script>window.NJFILMES_API_BASE = ${JSON.stringify(PUBLIC_API_BASE)};</script>
   <script>${pageScript(c.slug)}</script>
