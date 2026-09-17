@@ -155,7 +155,7 @@ function applyCors(req, res) {
 function robotsTxt(req, res) {
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.end(`User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${base}/sitemap.xml\n`);
+  res.end(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nSitemap: ${base}/sitemap.xml\n`);
 }
 
 async function router(req, res) {
@@ -190,7 +190,7 @@ async function router(req, res) {
   // pelo navegador ao carregar a página do projeto — necessário porque a página em si passa a
   // ser HTML estático). As duas aceitam chamadas de outra origem (o site estático), por isso o
   // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
-  if (pathname.match(/^\/api\/(curtir|curtir-foto|visualizar|comentarios)\/[a-z0-9-]+$/)) {
+  if (pathname.match(/^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios)\/[a-z0-9-]+$/)) {
     applyCors(req, res);
     if (method === 'OPTIONS') {
       res.statusCode = 204;
@@ -216,6 +216,14 @@ async function router(req, res) {
   }
   if ((m = pathname.match(/^\/api\/comentarios\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.postComment(req, res, m[1], await parseBody(req));
+  }
+  // Comentários das páginas de entrega (/entregas/:slug) — mesmo mecanismo dos comentários de
+  // projeto acima, só que num endpoint e numa tabela separados (ver server/db.js, delivery_comments).
+  if ((m = pathname.match(/^\/api\/entrega-comentarios\/([a-z0-9-]+)$/)) && method === 'GET') {
+    return Pub.getDeliveryComments(req, res, m[1]);
+  }
+  if ((m = pathname.match(/^\/api\/entrega-comentarios\/([a-z0-9-]+)$/)) && method === 'POST') {
+    return Pub.postDeliveryComment(req, res, m[1], await parseBody(req));
   }
 
   // ---------------- Admin ----------------
@@ -366,6 +374,29 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/projetos\/(\d+)\/fotos\/(\d+)\/legenda$/)) && method === 'POST') return Admin.projectPhotoCaption(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/projetos\/(\d+)\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.projectPhotoMove(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
 
+    if (pathname === '/admin/entregas' && method === 'GET') return Admin.deliveryCasesListPage(req, res, admin);
+    if (pathname === '/admin/entregas/novo' && method === 'GET') return Admin.deliveryCaseNewPage(req, res, admin);
+    if (pathname === '/admin/entregas/criar' && method === 'POST') return Admin.deliveryCaseCreate(req, res, await parseBody(req));
+
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)$/)) && method === 'GET') return Admin.deliveryCaseEditPage(req, res, admin, Number(m[1]), 'info');
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos$/)) && method === 'GET') return Admin.deliveryCaseEditPage(req, res, admin, Number(m[1]), 'videos');
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos$/)) && method === 'GET') return Admin.deliveryCaseEditPage(req, res, admin, Number(m[1]), 'fotos');
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios$/)) && method === 'GET') return Admin.deliveryCaseEditPage(req, res, admin, Number(m[1]), 'comentarios');
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.deliveryCaseUpdate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryCaseDelete(req, res, Number(m[1]));
+
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/criar$/)) && method === 'POST') return Admin.deliveryVideoCreate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryVideoDelete(req, res, Number(m[1]), Number(m[2]));
+
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/upload$/)) && method === 'POST') return Admin.deliveryPhotosUpload(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryPhotoDelete(req, res, Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/capa$/)) && method === 'POST') return Admin.deliveryPhotoSetCover(req, res, Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/legenda$/)) && method === 'POST') return Admin.deliveryPhotoCaption(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.deliveryPhotoMove(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
+
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/responder$/)) && method === 'POST') return Admin.deliveryCommentReply(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/remover$/)) && method === 'POST') return Admin.deliveryCommentDelete(req, res, Number(m[1]), Number(m[2]));
+
     res.statusCode = 404;
     return res.end('Admin: página não encontrada.');
   }
@@ -380,6 +411,10 @@ async function router(req, res) {
   if (pathname === '/sobre' && method === 'GET') return Pub.aboutPage(req, res);
   if (pathname === '/servicos' && method === 'GET') return Pub.servicesPage(req, res);
   if (pathname === '/contato' && method === 'GET') return Pub.contactPage(req, res);
+  if ((m = pathname.match(/^\/entregas\/([a-z0-9-]+)$/)) && method === 'GET') {
+    req.params = { slug: m[1] };
+    return Pub.deliveryCasePage(req, res);
+  }
 
   return notFoundPublic(req, res);
 }

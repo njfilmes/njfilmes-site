@@ -14,6 +14,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { useR2, putR2Object, deleteR2Object } from './r2Storage.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const UPLOADS_DIR = path.join(__dirname, '..', 'public', 'uploads');
@@ -111,6 +112,73 @@ export async function saveProjectPhoto(dataUrl, originalName = 'foto') {
     width,
     height,
   };
+}
+
+// Igual storeBuffer, mas usada só pelas fotos das Entregas: se as variáveis do R2 estiverem
+// configuradas (ver server/r2Storage.js), guarda lá em vez de no Vercel Blob — pedido do usuário
+// em 17/09/2026 pra não esbarrar no limite de armazenamento do Vercel Blob no futuro. Sem essas
+// variáveis, cai de volta pro storeBuffer normal (Vercel Blob ou disco local), então nada quebra
+// pra quem ainda não configurou o R2.
+async function storeDeliveryBuffer(buffer, relPath, contentType = 'image/webp') {
+  if (useR2()) {
+    return putR2Object(buffer, `entregas/${relPath}`, contentType);
+  }
+  return storeBuffer(buffer, relPath);
+}
+
+// Mesmo processamento de saveProjectPhoto (redimensiona, gera thumbnail), só muda pra onde o
+// resultado é enviado (ver storeDeliveryBuffer acima).
+export async function saveDeliveryPhoto(dataUrl) {
+  const buffer = decodeDataUrl(dataUrl);
+  if (!buffer) throw new Error('Formato de imagem inválido. Envie um arquivo de imagem (JPG, PNG ou WEBP).');
+  if (buffer.length > MAX_UPLOAD_BYTES) {
+    throw new Error('Arquivo muito grande. O limite é 20MB por foto.');
+  }
+
+  const id = crypto.randomBytes(8).toString('hex');
+  const filename = `${id}.webp`;
+  const thumbFilename = `${id}-thumb.webp`;
+
+  const mainResult = await sharp(buffer, { failOn: 'none' })
+    .rotate()
+    .resize({ width: 2200, height: 2200, fit: 'inside', withoutEnlargement: true })
+    .webp({ quality: 82 })
+    .toBuffer({ resolveWithObject: true });
+  const mainBuffer = mainResult.data;
+  const { width, height } = mainResult.info;
+
+  const thumbBuffer = await sharp(buffer, { failOn: 'none' })
+    .rotate()
+    .resize({ width: 640, height: 640, fit: 'cover', position: 'attention' })
+    .webp({ quality: 70 })
+    .toBuffer();
+
+  const [photoUrl, thumbUrl] = await Promise.all([
+    storeDeliveryBuffer(mainBuffer, `photos/${filename}`),
+    storeDeliveryBuffer(thumbBuffer, `thumbs/${thumbFilename}`),
+  ]);
+
+  return { filename: photoUrl, thumbFilename: thumbUrl, width, height };
+}
+
+// Apaga uma foto de entrega — tenta o R2 primeiro (se configurado e a URL for de lá), senão usa
+// a mesma lógica de sempre (Vercel Blob ou disco local, ver deletePhotoFiles abaixo).
+export async function deleteDeliveryPhotoFiles(filename, thumbFilename) {
+  const r2Base = (process.env.R2_PUBLIC_URL_BASE || '').replace(/\/$/, '');
+  const tryDelete = async (value) => {
+    if (!value) return;
+    if (r2Base && value.startsWith(r2Base)) {
+      try {
+        await deleteR2Object(value.slice(r2Base.length + 1));
+      } catch {
+        // já pode não existir mais; ignora, igual ao Vercel Blob abaixo
+      }
+      return;
+    }
+    return deletePhotoFiles(value, null);
+  };
+  await tryDelete(filename);
+  await tryDelete(thumbFilename);
 }
 
 export async function saveMiscImage(dataUrl) {

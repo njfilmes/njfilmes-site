@@ -428,11 +428,86 @@ export async function initSchema() {
                             );
                               `);
 
+  // "Entregas": página individual que o NJ monta pra cada cliente (fotos + vídeos + link de
+  // download) e manda o link por WhatsApp — pedido do usuário em 12/09/2026 pra parar de depender
+  // da ferramenta do Claude pra montar isso, e ter tudo dentro do próprio painel (mesmo banco,
+  // mesmo Vercel Blob, mesmo domínio). Mesmo padrão de projects/photos/project_videos/comments
+  // acima, só que "case_id" no lugar de "project_id". "published" controla se a página estática
+  // em /entregas/:slug é gerada no próximo build (ver scripts/build-static.js) — sem isso, criar
+  // uma entrega ainda em rascunho já deixaria o link no ar antes da hora.
+  await query(`
+      CREATE TABLE IF NOT EXISTS delivery_cases (
+        id SERIAL PRIMARY KEY,
+        client_name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        cover_photo TEXT DEFAULT '',
+        welcome_message TEXT DEFAULT '',
+        photos_download_url TEXT DEFAULT '',
+        photos_download_label TEXT DEFAULT 'Baixar fotos em alta',
+        whatsapp_number TEXT DEFAULT '',
+        published INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        views INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+
+  // download_url: link pra baixar o vídeo completo (Mega/Drive/WeTransfer/etc) — o vídeo em si
+  // (url/provider/video_id) é só a prévia que toca embutida na página, igual já funciona em
+  // project_videos. Pedido do usuário: "colocar algumas cenas do clipe... na parte do download
+  // eu botava o arquivo completo" — por isso os dois campos separados.
+  await query(`
+      CREATE TABLE IF NOT EXISTS delivery_videos (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES delivery_cases(id) ON DELETE CASCADE,
+        provider TEXT NOT NULL,
+        video_id TEXT DEFAULT '',
+        url TEXT NOT NULL,
+        title TEXT DEFAULT '',
+        download_url TEXT DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0
+      );
+  `);
+
+  await query(`
+      CREATE TABLE IF NOT EXISTS delivery_photos (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES delivery_cases(id) ON DELETE CASCADE,
+        filename TEXT NOT NULL,
+        thumb_filename TEXT NOT NULL,
+        caption TEXT DEFAULT '',
+        is_cover INTEGER NOT NULL DEFAULT 0,
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        width INTEGER,
+        height INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+
+  // Mural de comentários específico das páginas de entrega — separado da tabela "comments" (essa
+  // é só de projetos do portfólio) pra excluir/reordenar entregas nunca mexer nos comentários dos
+  // projetos, e vice-versa.
+  await query(`
+      CREATE TABLE IF NOT EXISTS delivery_comments (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES delivery_cases(id) ON DELETE CASCADE,
+        author_name TEXT NOT NULL,
+        content TEXT NOT NULL,
+        admin_reply TEXT DEFAULT '',
+        admin_reply_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+
   await query('CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id);');
 
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_photos_project ON photos(project_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_videos_project ON project_videos(project_id);');
+    await query('CREATE INDEX IF NOT EXISTS idx_delivery_photos_case ON delivery_photos(case_id);');
+    await query('CREATE INDEX IF NOT EXISTS idx_delivery_videos_case ON delivery_videos(case_id);');
+    await query('CREATE INDEX IF NOT EXISTS idx_delivery_comments_case ON delivery_comments(case_id);');
 
   // Migrações defensivas: bancos já existentes (criados antes destes campos existirem) não ganham
   // as colunas novas automaticamente com CREATE TABLE IF NOT EXISTS, então checamos e adicionamos

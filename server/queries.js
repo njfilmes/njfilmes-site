@@ -547,3 +547,137 @@ export async function countComments() {
   const row = await queryOne('SELECT COUNT(*)::int as n FROM comments');
   return row ? row.n : 0;
 }
+
+// ---------- Entregas (páginas individuais pra cada cliente) ----------
+async function attachDeliveryRelations(deliveryCase) {
+  if (!deliveryCase) return deliveryCase;
+  deliveryCase.videos = await queryRows('SELECT * FROM delivery_videos WHERE case_id = $1 ORDER BY sort_order ASC, id ASC', [
+    deliveryCase.id,
+  ]);
+  deliveryCase.photos = await queryRows('SELECT * FROM delivery_photos WHERE case_id = $1 ORDER BY sort_order ASC, id ASC', [
+    deliveryCase.id,
+  ]);
+  deliveryCase.comments = await queryRows('SELECT * FROM delivery_comments WHERE case_id = $1 ORDER BY created_at ASC', [
+    deliveryCase.id,
+  ]);
+  return deliveryCase;
+}
+
+export async function listDeliveryCases() {
+  return queryRows('SELECT * FROM delivery_cases ORDER BY created_at DESC');
+}
+
+export async function getDeliveryCase(id) {
+  const c = await queryOne('SELECT * FROM delivery_cases WHERE id = $1', [id]);
+  return attachDeliveryRelations(c);
+}
+
+export async function getDeliveryCaseBySlug(slug) {
+  const c = await queryOne('SELECT * FROM delivery_cases WHERE slug = $1', [slug]);
+  return attachDeliveryRelations(c);
+}
+
+export async function createDeliveryCase({ client_name, slug, welcome_message, sort_order = 0 }) {
+  const now = new Date().toISOString();
+  const row = await queryOne(
+    `INSERT INTO delivery_cases (client_name, slug, welcome_message, sort_order, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
+    [client_name, slug, welcome_message || '', sort_order, now, now]
+  );
+  return row.id;
+}
+
+export async function updateDeliveryCase(id, data) {
+  await query(
+    `UPDATE delivery_cases SET client_name=$1, slug=$2, welcome_message=$3, cover_photo=$4,
+       photos_download_url=$5, photos_download_label=$6, whatsapp_number=$7, published=$8, updated_at=$9
+     WHERE id=$10`,
+    [
+      data.client_name,
+      data.slug,
+      data.welcome_message || '',
+      data.cover_photo || '',
+      data.photos_download_url || '',
+      data.photos_download_label || 'Baixar fotos em alta',
+      data.whatsapp_number || '',
+      data.published ? 1 : 0,
+      new Date().toISOString(),
+      id,
+    ]
+  );
+}
+
+export async function deleteDeliveryCase(id) {
+  await query('DELETE FROM delivery_cases WHERE id = $1', [id]);
+}
+
+export async function incrementDeliveryCaseViews(id) {
+  await query('UPDATE delivery_cases SET views = views + 1 WHERE id = $1', [id]);
+}
+
+// ---------- Vídeos da entrega ----------
+export async function addDeliveryVideo(caseId, { provider, video_id, url, title, download_url, sort_order = 0 }) {
+  const row = await queryOne(
+    'INSERT INTO delivery_videos (case_id, provider, video_id, url, title, download_url, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
+    [caseId, provider, video_id || '', url, title || '', download_url || '', sort_order]
+  );
+  return row.id;
+}
+export async function deleteDeliveryVideo(id) {
+  await query('DELETE FROM delivery_videos WHERE id = $1', [id]);
+}
+
+// ---------- Fotos da entrega ----------
+export async function addDeliveryPhoto(caseId, { filename, thumbFilename, caption = '', sort_order = 0, is_cover = 0, width = null, height = null }) {
+  const row = await queryOne(
+    'INSERT INTO delivery_photos (case_id, filename, thumb_filename, caption, is_cover, sort_order, width, height) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+    [caseId, filename, thumbFilename, caption, is_cover, sort_order, width, height]
+  );
+  return row.id;
+}
+export async function getDeliveryPhoto(id) {
+  return queryOne('SELECT * FROM delivery_photos WHERE id = $1', [id]);
+}
+export async function deleteDeliveryPhoto(id) {
+  await query('DELETE FROM delivery_photos WHERE id = $1', [id]);
+}
+export async function setDeliveryPhotoCaption(id, caption) {
+  await query('UPDATE delivery_photos SET caption = $1 WHERE id = $2', [caption, id]);
+}
+export async function setDeliveryPhotoAsCover(caseId, photoId) {
+  await query('UPDATE delivery_photos SET is_cover = 0 WHERE case_id = $1', [caseId]);
+  await query('UPDATE delivery_photos SET is_cover = 1 WHERE id = $1', [photoId]);
+  const photo = await queryOne('SELECT filename FROM delivery_photos WHERE id = $1', [photoId]);
+  if (photo) await query('UPDATE delivery_cases SET cover_photo = $1 WHERE id = $2', [photo.filename, caseId]);
+}
+export async function setDeliveryPhotoOrder(id, sortOrder) {
+  await query('UPDATE delivery_photos SET sort_order = $1 WHERE id = $2', [sortOrder, id]);
+}
+
+// ---------- Comentários da entrega ----------
+export async function listCommentsForDeliveryCase(caseId) {
+  return queryRows('SELECT * FROM delivery_comments WHERE case_id = $1 ORDER BY created_at ASC', [caseId]);
+}
+export async function listAllDeliveryComments() {
+  return queryRows(
+    `SELECT dc.*, d.client_name, d.slug as case_slug
+     FROM delivery_comments dc JOIN delivery_cases d ON d.id = dc.case_id
+     ORDER BY dc.created_at DESC
+     LIMIT 500`
+  );
+}
+export async function createDeliveryComment({ case_id, author_name, content }) {
+  const now = new Date().toISOString();
+  const row = await queryOne(
+    'INSERT INTO delivery_comments (case_id, author_name, content, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
+    [case_id, author_name, content, now]
+  );
+  return row;
+}
+export async function updateDeliveryCommentReply(id, adminReply) {
+  const now = new Date().toISOString();
+  await query('UPDATE delivery_comments SET admin_reply = $1, admin_reply_at = $2 WHERE id = $3', [adminReply, adminReply ? now : null, id]);
+}
+export async function deleteDeliveryComment(id) {
+  await query('DELETE FROM delivery_comments WHERE id = $1', [id]);
+}
