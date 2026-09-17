@@ -449,6 +449,7 @@ async function router(req, res) {
   if (pathname === '/sobre' && method === 'GET') return Pub.aboutPage(req, res);
   if (pathname === '/servicos' && method === 'GET') return Pub.servicesPage(req, res);
   if (pathname === '/contato' && method === 'GET') return Pub.contactPage(req, res);
+  if (pathname === '/links' && method === 'GET') return Pub.linksPage(req, res);
   if ((m = pathname.match(/^\/entregas\/([a-z0-9-]+)$/)) && method === 'GET') {
     req.params = { slug: m[1] };
     return Pub.deliveryCasePage(req, res);
