@@ -32,6 +32,18 @@ const CASE_CSS = `
   .sl-card-check{position:absolute;top:10px;right:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;font-size:.95rem;transition:background .2s ease,border-color .2s ease,transform .15s ease;}
   .sl-card.is-selected .sl-card-check{background:#c9a227;border-color:#c9a227;color:#171310;transform:scale(1.08);}
   .sl-card:active .sl-card-check{transform:scale(.92);}
+  .sl-card-zoom{position:absolute;top:10px;left:10px;width:30px;height:30px;border-radius:50%;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center;color:#fff;padding:0;cursor:zoom-in;}
+  .sl-card-zoom:hover{background:rgba(0,0,0,.75);}
+  .sl-card-zoom svg{width:15px;height:15px;}
+
+  .sl-lightbox{position:fixed;inset:0;background:rgba(6,5,7,.95);display:none;align-items:center;justify-content:center;z-index:50;padding:30px;}
+  .sl-lightbox.open{display:flex;}
+  .sl-lightbox img{max-width:100%;max-height:88vh;border-radius:6px;}
+  .sl-lightbox-close{position:absolute;top:22px;right:26px;background:none;border:0;color:#f1ede4;font-size:2rem;cursor:pointer;line-height:1;}
+  .sl-lightbox-select{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:#c9a227;color:#171310;font-weight:600;font-size:.9rem;padding:11px 26px;border-radius:100px;border:0;cursor:pointer;display:flex;align-items:center;gap:8px;}
+  .sl-lightbox-select:hover{background:#dab643;}
+  .sl-lightbox-select.is-selected{background:#1f8a4c;color:#fff;}
+  @media (max-width:640px){.sl-lightbox{padding:16px;} .sl-lightbox-select{bottom:18px;padding:10px 20px;}}
 
   .sl-bar{position:fixed;left:0;right:0;bottom:0;z-index:5;background:rgba(11,10,13,.94);backdrop-filter:blur(6px);border-top:1px solid rgba(241,237,228,.12);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
   .sl-bar-count{font-size:.92rem;}
@@ -86,6 +98,56 @@ function pageScript(slug, limit) {
       });
     });
 
+    // "Ver foto inteira" — pedido do usuário em 17/09/2026: a grade corta a foto em quadrado
+    // pra ficar organizada, mas o cliente não tinha como ver ela inteira antes de escolher. O
+    // ícone de lupa abre uma tela cheia com a foto sem cortar (mesma marca d'água/resolução
+    // baixa de sempre) e não mexe na seleção — só o botão "Selecionar" de dentro da tela cheia
+    // (ou o coração no card) muda isso.
+    var lightbox = document.querySelector('[data-sl-lightbox]');
+    var lightboxImg = lightbox ? lightbox.querySelector('img') : null;
+    var lightboxSelectBtn = lightbox ? lightbox.querySelector('[data-sl-lightbox-select]') : null;
+    var lightboxSelectLabel = lightboxSelectBtn ? lightboxSelectBtn.querySelector('[data-sl-lightbox-select-label]') : null;
+    var zoomCard = null;
+
+    function refreshLightboxSelectBtn() {
+      if (!lightboxSelectBtn || !zoomCard) return;
+      var isSel = zoomCard.classList.contains('is-selected');
+      lightboxSelectBtn.classList.toggle('is-selected', isSel);
+      if (lightboxSelectLabel) lightboxSelectLabel.textContent = isSel ? 'Selecionada ✓' : 'Selecionar';
+    }
+
+    document.querySelectorAll('[data-sl-zoom]').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var card = btn.closest('[data-sl-card]');
+        if (!card || !lightbox || !lightboxImg) return;
+        zoomCard = card;
+        var img = card.querySelector('img');
+        lightboxImg.src = img ? img.src : '';
+        refreshLightboxSelectBtn();
+        lightbox.classList.add('open');
+      });
+    });
+
+    if (lightbox) {
+      lightbox.addEventListener('click', function (e) {
+        if (e.target === lightbox || e.target.closest('[data-sl-lightbox-close]')) {
+          lightbox.classList.remove('open');
+          zoomCard = null;
+        }
+      });
+    }
+
+    if (lightboxSelectBtn) {
+      lightboxSelectBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        if (!zoomCard || zoomCard.classList.contains('readonly')) return;
+        zoomCard.click();
+        refreshLightboxSelectBtn();
+      });
+    }
+
     if (sendBtn) {
       sendBtn.addEventListener('click', function () {
         sendBtn.disabled = true;
@@ -116,10 +178,13 @@ export function renderSelectionCasePage(selectionCase, settings = {}) {
   const isLocked = c.status === 'revisao' || c.status === 'finalizado';
   const selected = photos.filter((p) => p.selected);
 
+  const zoomIconSvg = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>`;
+
   const gridHtml = (isLocked ? selected : photos)
     .map(
       (p) => `<div class="sl-card${isLocked ? ' readonly' : ''}${p.selected ? ' is-selected' : ''}" data-sl-card data-photo-id="${p.id}">
         <img src="${escapeHtml(p.filename)}" loading="lazy" alt="">
+        <button type="button" class="sl-card-zoom" data-sl-zoom aria-label="Ver foto inteira">${zoomIconSvg}</button>
         <span class="sl-card-check">${isLocked ? '✓' : '♥'}</span>
       </div>`
     )
@@ -160,6 +225,11 @@ export function renderSelectionCasePage(selectionCase, settings = {}) {
     ${c.welcome_message ? `<p class="sl-welcome">${escapeHtml(c.welcome_message)}</p>` : '<p class="sl-welcome">Escolha suas fotos favoritas clicando nelas — depois é só enviar.</p>'}
   </div>
   ${bodyContent}
+  <div class="sl-lightbox" data-sl-lightbox>
+    <button type="button" class="sl-lightbox-close" data-sl-lightbox-close aria-label="Fechar">×</button>
+    <img src="" alt="">
+    ${isLocked ? '' : `<button type="button" class="sl-lightbox-select" data-sl-lightbox-select><span data-sl-lightbox-select-label>Selecionar</span></button>`}
+  </div>
   <div class="sl-footer">
     <img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES">
     Feito com carinho pela NJFILMES.
