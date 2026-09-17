@@ -52,7 +52,15 @@ const CASE_CSS = `
      (ver renderDeliveryCasePage mais abaixo) e html/body ficam travados do tamanho exato da tela
      (".dc-locked", só quando existe foto/vídeo) - sobra uma única barra de rolagem. */
   html.dc-locked, body.dc-locked{height:100vh;height:100dvh;overflow:hidden;margin:0;}
-  .dc-story{scroll-snap-type:y mandatory;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
+  /* Pedido do usuario (17/09/2026): "ao fazer a rolagem ele ta subindo sem deixar aparecer o
+     final aonde tem pra baixar" - com "mandatory" o navegador é obrigado a sempre parar exatamente
+     em cima de um ponto de encaixe (scroll-snap-align), e o download/comentários/rodapé (que vêm
+     depois do último slide) não são pontos de encaixe - então, ao tentar rolar pra ver essas
+     seções, o encaixe "mandatory" forçava voltar pro último slide de foto/vídeo em vez de deixar
+     ir até o final. Trocado pra "proximity": só encaixa quando a rolagem já para naturalmente
+     perto de uma foto/vídeo (mantém o efeito de "story" ao passar pelas fotos), mas não trava mais
+     quem quer continuar rolando até o download/comentários/rodapé no final. */
+  .dc-story{scroll-snap-type:y proximity;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
 
   .dc-cover{scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-end;position:relative;padding:80px 0 64px;background:#0b0a0d;overflow:hidden;}
   .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;}
@@ -157,26 +165,27 @@ function pageScript(slug) {
         els.forEach(function(el){ io.observe(el); });
         // Rede de segurança: se por qualquer motivo o observer não disparar pros elementos que
         // já estão visíveis assim que a página carrega (ex.: nome do cliente e frase de
-        // boas-vindas na capa), força mostrar depois de meio segundo em vez de deixar invisível
-        // pra sempre — melhor perder a animação de entrada do que sumir com o conteúdo.
-        setTimeout(function(){
+        // boas-vindas na capa), força mostrar quem JÁ ESTÁ na tela em vez de deixar invisível pra
+        // sempre — melhor perder a animação de entrada do que sumir com o conteúdo.
+        // Importante: só revela quem já está dentro da área visível (checagem de posição real),
+        // nunca todo mundo de uma vez — 17/09/2026 tentei uma versão que forçava TUDO visível
+        // depois de 3s (pra resolver o download "sumido"), mas isso também apagava a propria
+        // animação de entrada pra quem demora mais de 3s pra rolar até uma seção mais abaixo
+        // ("n vi efeitos de nada" - o usuário via tudo já revelado antes de rolar até lá). A causa
+        // raiz do download sumido já foi corrigida de verdade: download/comentários/rodapé agora
+        // são filhos de ".dc-story" (fazem parte da mesma área rolável, ver
+        // renderDeliveryCasePage), então o IntersectionObserver acima já os detecta certinho ao
+        // rolar - essa rede de segurança aqui é só um reforço, repetida algumas vezes, sem nunca
+        // revelar o que ainda está fora da tela.
+        function revealVisibleNow(){
           var viewH = (storyRoot ? storyRoot.clientHeight : 0) || window.innerHeight || document.documentElement.clientHeight;
           els.forEach(function(el){
             if (el.classList.contains('is-visible')) return;
             var r = el.getBoundingClientRect();
             if (r.top < viewH && r.bottom > 0) el.classList.add('is-visible');
           });
-        }, 500);
-        // 17/09/2026: rede de segurança extra - relato de cliente que a seção de download não
-        // aparecia no final da entrega. A checagem de 500ms ali em cima só revela quem já está
-        // visível na tela logo no início (útil pra capa), mas uma seção mais pra baixo (como o
-        // download, que fica perto do fim) só vira visível quando o IntersectionObserver dispara
-        // ao rolar até ela - e em alguns navegadores/celulares isso pode falhar silenciosamente
-        // dentro desse container de scroll próprio (".dc-story"), deixando o elemento preso em
-        // opacity:0 pra sempre. Igual já existe no site principal (site.js), força TODO mundo a
-        // aparecer depois de alguns segundos, não importa se rolou até lá ou não - melhor perder
-        // a animação de entrada do que sumir com conteúdo (e o download) de vez.
-        setTimeout(revealAll, 3000);
+        }
+        [500, 1500, 4000, 8000].forEach(function(ms){ setTimeout(revealVisibleNow, ms); });
       } else {
         revealAll();
       }
