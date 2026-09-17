@@ -504,6 +504,48 @@ export async function initSchema() {
       );
   `);
 
+  // Seleção de fotos (aba separada de "Entregas", pedido do usuário em 17/09/2026 inspirado no
+  // Alboom: o cliente vê as fotos em baixa resolução com marca d'água — só pra escolher, nunca
+  // pra usar de verdade — marca as favoritas e envia. O fotógrafo edita só as escolhidas depois.
+  // status percorre: preparo (só o fotógrafo vê, ainda montando) -> andamento (link liberado pro
+  // cliente, ele pode marcar/desmarcar e enviar) -> revisao (cliente já enviou, fotógrafo confere)
+  // -> finalizado (fotógrafo confirmou, projeto arquivado). "Reativar" volta de revisao/finalizado
+  // pra andamento, caso o cliente precise mudar algo depois de enviar.
+  await query(`
+      CREATE TABLE IF NOT EXISTS selection_cases (
+        id SERIAL PRIMARY KEY,
+        client_name TEXT NOT NULL,
+        slug TEXT UNIQUE NOT NULL,
+        welcome_message TEXT DEFAULT '',
+        status TEXT NOT NULL DEFAULT 'preparo',
+        photo_limit INTEGER,
+        submitted_at TIMESTAMPTZ,
+        finalized_at TIMESTAMPTZ,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+
+  // filename/thumb_filename: versão já com marca d'água e resolução reduzida (é só isso que o
+  // cliente e o público em geral podem ver). original_filename: nome do arquivo tal como veio da
+  // câmera (ex: DSC03171.jpg) — não é exibido em lugar nenhum, serve só pra gerar a lista de
+  // exportação (pra colar no filtro do Lightroom/Finder/Explorer e achar os originais em alta que
+  // já estão no computador do fotógrafo).
+  await query(`
+      CREATE TABLE IF NOT EXISTS selection_photos (
+        id SERIAL PRIMARY KEY,
+        case_id INTEGER NOT NULL REFERENCES selection_cases(id) ON DELETE CASCADE,
+        filename TEXT NOT NULL,
+        thumb_filename TEXT NOT NULL,
+        original_filename TEXT NOT NULL DEFAULT '',
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        selected INTEGER NOT NULL DEFAULT 0,
+        width INTEGER,
+        height INTEGER,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+
   await query('CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id);');
 
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');
@@ -512,6 +554,7 @@ export async function initSchema() {
     await query('CREATE INDEX IF NOT EXISTS idx_delivery_photos_case ON delivery_photos(case_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_delivery_videos_case ON delivery_videos(case_id);');
     await query('CREATE INDEX IF NOT EXISTS idx_delivery_comments_case ON delivery_comments(case_id);');
+    await query('CREATE INDEX IF NOT EXISTS idx_selection_photos_case ON selection_photos(case_id);');
 
   // Migrações defensivas: bancos já existentes (criados antes destes campos existirem) não ganham
   // as colunas novas automaticamente com CREATE TABLE IF NOT EXISTS, então checamos e adicionamos

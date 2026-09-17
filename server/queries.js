@@ -754,3 +754,112 @@ export async function updateDeliveryCommentReply(id, adminReply) {
 export async function deleteDeliveryComment(id) {
   await query('DELETE FROM delivery_comments WHERE id = $1', [id]);
 }
+
+// ---------- Seleção de fotos (aba separada de Entregas — cliente marca favoritas em baixa
+// resolução/marca d'água, fotógrafo edita só as escolhidas depois) ----------
+async function attachSelectionPhotos(selectionCase) {
+  if (!selectionCase) return selectionCase;
+  selectionCase.photos = await queryRows('SELECT * FROM selection_photos WHERE case_id = $1 ORDER BY sort_order ASC, id ASC', [
+    selectionCase.id,
+  ]);
+  return selectionCase;
+}
+
+export async function listSelectionCases() {
+  return queryRows('SELECT * FROM selection_cases ORDER BY created_at DESC');
+}
+
+export async function getSelectionCase(id) {
+  const c = await queryOne('SELECT * FROM selection_cases WHERE id = $1', [id]);
+  return attachSelectionPhotos(c);
+}
+
+export async function getSelectionCaseBySlug(slug) {
+  const c = await queryOne('SELECT * FROM selection_cases WHERE slug = $1', [slug]);
+  return attachSelectionPhotos(c);
+}
+
+export async function createSelectionCase({ client_name, slug, welcome_message = '', photo_limit = null }) {
+  const now = new Date().toISOString();
+  const row = await queryOne(
+    `INSERT INTO selection_cases (client_name, slug, welcome_message, photo_limit, status, created_at, updated_at)
+     VALUES ($1, $2, $3, $4, 'preparo', $5, $5) RETURNING id`,
+    [client_name, slug, welcome_message || '', photo_limit || null, now]
+  );
+  return row.id;
+}
+
+export async function updateSelectionCase(id, { client_name, slug, welcome_message, photo_limit }) {
+  await query(
+    `UPDATE selection_cases SET client_name=$1, slug=$2, welcome_message=$3, photo_limit=$4, updated_at=$5 WHERE id=$6`,
+    [client_name, slug, welcome_message || '', photo_limit || null, new Date().toISOString(), id]
+  );
+}
+
+// Muda só a etapa (preparo/andamento/revisao/finalizado) — usado pelos botões do quadro no painel
+// e também pelo fluxo do cliente (enviar seleção) e por "reativar" (ver server/routes/admin.js).
+export async function setSelectionCaseStatus(id, status) {
+  await query('UPDATE selection_cases SET status = $1, updated_at = $2 WHERE id = $3', [status, new Date().toISOString(), id]);
+}
+export async function markSelectionSubmitted(id) {
+  const now = new Date().toISOString();
+  await query("UPDATE selection_cases SET status = 'revisao', submitted_at = $1, updated_at = $1 WHERE id = $2", [now, id]);
+}
+export async function markSelectionFinalized(id) {
+  const now = new Date().toISOString();
+  await query("UPDATE selection_cases SET status = 'finalizado', finalized_at = $1, updated_at = $1 WHERE id = $2", [now, id]);
+}
+// Reabre pro cliente poder mudar a seleção de novo — não mexe nas fotos já marcadas, só destrava.
+export async function reactivateSelectionCase(id) {
+  await query("UPDATE selection_cases SET status = 'andamento', updated_at = $1 WHERE id = $2", [new Date().toISOString(), id]);
+}
+
+export async function deleteSelectionCase(id) {
+  await query('DELETE FROM selection_cases WHERE id = $1', [id]);
+}
+// Usado antes de excluir um projeto de seleção inteiro, pra apagar os arquivos de foto (R2/Vercel
+// Blob/disco) antes de apagar as linhas do banco — mesma lógica de listDeliveryPhotosForCase.
+export async function listSelectionPhotosForCase(caseId) {
+  return queryRows('SELECT * FROM selection_photos WHERE case_id = $1', [caseId]);
+}
+
+// ---------- Fotos da seleção ----------
+export async function addSelectionPhoto(caseId, { filename, thumbFilename, originalFilename = '', sort_order = 0, width, height }) {
+  const row = await queryOne(
+    `INSERT INTO selection_photos (case_id, filename, thumb_filename, original_filename, sort_order, width, height)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+    [caseId, filename, thumbFilename, originalFilename || '', sort_order, width || null, height || null]
+  );
+  return row.id;
+}
+export async function getSelectionPhoto(id) {
+  return queryOne('SELECT * FROM selection_photos WHERE id = $1', [id]);
+}
+export async function deleteSelectionPhoto(id) {
+  await query('DELETE FROM selection_photos WHERE id = $1', [id]);
+}
+export async function setSelectionPhotoOrder(id, sortOrder) {
+  await query('UPDATE selection_photos SET sort_order = $1 WHERE id = $2', [sortOrder, id]);
+}
+// Chamado pelo próprio cliente na página pública (marcar/desmarcar favorita) — por isso confere
+// que o projeto ainda está "andamento" (depois de enviado ou finalizado, fica travado pro cliente,
+// só o "reativar" do fotógrafo destrava de novo).
+export async function toggleSelectionPhotoSelected(photoId, caseId, selected) {
+  const row = await queryOne(
+    `UPDATE selection_photos SET selected = $1
+     WHERE id = $2 AND case_id = $3
+       AND case_id IN (SELECT id FROM selection_cases WHERE status = 'andamento')
+     RETURNING id`,
+    [selected ? 1 : 0, photoId, caseId]
+  );
+  return Boolean(row);
+}
+export async function countSelectedPhotos(caseId) {
+  const row = await queryOne('SELECT COUNT(*)::int as n FROM selection_photos WHERE case_id = $1 AND selected = 1', [caseId]);
+  return row ? row.n : 0;
+}
+// Pra tela de revisão do painel e pra lista de exportação (nomes originais das fotos escolhidas,
+// pra colar no filtro do Lightroom/Finder/Explorer — ver selectionExport em server/routes/admin.js).
+export async function getSelectedPhotosForCase(caseId) {
+  return queryRows('SELECT * FROM selection_photos WHERE case_id = $1 AND selected = 1 ORDER BY sort_order ASC, id ASC', [caseId]);
+}

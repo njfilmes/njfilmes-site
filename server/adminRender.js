@@ -6,6 +6,7 @@ const NAV_ITEMS = [
   { href: '/admin/menu', label: 'Menu do site', icon: '☰' },
   { href: '/admin/projetos', label: 'Projetos', icon: '▤' },
   { href: '/admin/entregas', label: 'Entregas', icon: '↗' },
+  { href: '/admin/selecao', label: 'Seleção', icon: '♥' },
   { href: '/admin/categorias', label: 'Categorias', icon: '▦' },
   { href: '/admin/servicos', label: 'Serviços', icon: '✦' },
   { href: '/admin/marcas', label: 'Marcas', icon: '◈' },

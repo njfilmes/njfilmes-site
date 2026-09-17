@@ -155,7 +155,7 @@ function applyCors(req, res) {
 function robotsTxt(req, res) {
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.end(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nSitemap: ${base}/sitemap.xml\n`);
+  res.end(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nDisallow: /selecao\nSitemap: ${base}/sitemap.xml\n`);
 }
 
 async function router(req, res) {
@@ -192,7 +192,7 @@ async function router(req, res) {
   // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
   if (
     pathname.match(
-      /^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios|entrega-curtir-foto|entrega-curtir-video)\/[a-z0-9-]+$/
+      /^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios|entrega-curtir-foto|entrega-curtir-video|selecao-marcar|selecao-enviar)\/[a-z0-9-]+$/
     )
   ) {
     applyCors(req, res);
@@ -236,6 +236,13 @@ async function router(req, res) {
   }
   if ((m = pathname.match(/^\/api\/entrega-curtir-video\/(\d+)$/)) && method === 'POST') {
     return Pub.likeDeliveryVideo(req, res, m[1]);
+  }
+  // Seleção de fotos: marcar/desmarcar uma foto e enviar a seleção final (ver server/routes/public.js).
+  if ((m = pathname.match(/^\/api\/selecao-marcar\/(\d+)$/)) && method === 'POST') {
+    return Pub.toggleSelectionPhoto(req, res, m[1], await parseBody(req));
+  }
+  if ((m = pathname.match(/^\/api\/selecao-enviar\/([a-z0-9-]+)$/)) && method === 'POST') {
+    return Pub.submitSelection(req, res, m[1]);
   }
 
   // ---------------- Admin ----------------
@@ -412,6 +419,22 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/responder$/)) && method === 'POST') return Admin.deliveryCommentReply(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/remover$/)) && method === 'POST') return Admin.deliveryCommentDelete(req, res, Number(m[1]), Number(m[2]));
 
+    // Seleção de fotos (aba separada de Entregas — ver server/routes/admin.js)
+    if (pathname === '/admin/selecao' && method === 'GET') return Admin.selectionCasesListPage(req, res, admin);
+    if (pathname === '/admin/selecao/novo' && method === 'GET') return Admin.selectionCaseNewPage(req, res, admin);
+    if (pathname === '/admin/selecao/criar' && method === 'POST') return Admin.selectionCaseCreate(req, res, await parseBody(req));
+
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)$/)) && method === 'GET') return Admin.selectionCaseEditPage(req, res, admin, Number(m[1]), 'info');
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/fotos$/)) && method === 'GET') return Admin.selectionCaseEditPage(req, res, admin, Number(m[1]), 'fotos');
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/revisao$/)) && method === 'GET') return Admin.selectionCaseEditPage(req, res, admin, Number(m[1]), 'revisao');
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/atualizar$/)) && method === 'POST') return Admin.selectionCaseUpdate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/mover-etapa$/)) && method === 'POST') return Admin.selectionCaseMoveStatus(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/excluir$/)) && method === 'POST') return Admin.selectionCaseDelete(req, res, Number(m[1]));
+
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/fotos\/upload$/)) && method === 'POST') return Admin.selectionPhotosUpload(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.selectionPhotoDelete(req, res, Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/selecao\/(\d+)\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.selectionPhotoMove(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
+
     res.statusCode = 404;
     return res.end('Admin: página não encontrada.');
   }
@@ -429,6 +452,10 @@ async function router(req, res) {
   if ((m = pathname.match(/^\/entregas\/([a-z0-9-]+)$/)) && method === 'GET') {
     req.params = { slug: m[1] };
     return Pub.deliveryCasePage(req, res);
+  }
+  if ((m = pathname.match(/^\/selecao\/([a-z0-9-]+)$/)) && method === 'GET') {
+    req.params = { slug: m[1] };
+    return Pub.selectionCasePage(req, res);
   }
 
   return notFoundPublic(req, res);

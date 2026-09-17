@@ -240,6 +240,100 @@ export async function deleteDeliveryVideoFile(url) {
   return deletePhotoFiles(url, null);
 }
 
+// ---------------- Seleção de fotos (marca d'água + baixa resolução) ----------------
+// Pedido do usuário em 17/09/2026, inspirado no site Alboom: antes de editar de verdade, o
+// fotógrafo sobe as fotos pro cliente escolher — só que em resolução bem menor e com marca
+// d'água repetida, então mesmo que a pessoa tire print não dá pra usar a foto de verdade.
+// A marca d'água é um "carimbo" (tile) pequeno gerado uma única vez e repetido (tile: true do
+// sharp) sobre a foto inteira, não importa o tamanho final dela — assim não precisa recalcular
+// nada por imagem, só carimbar.
+const WATERMARK_TILE = { width: 300, height: 170 };
+let watermarkTileBuffer = null;
+async function getWatermarkTile() {
+  if (watermarkTileBuffer) return watermarkTileBuffer;
+  const svg = `<svg width="${WATERMARK_TILE.width}" height="${WATERMARK_TILE.height}" xmlns="http://www.w3.org/2000/svg">
+    <g transform="rotate(-28 150 85)">
+      <text x="150" y="92" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="26" font-weight="700" fill="rgba(255,255,255,0.48)" stroke="rgba(0,0,0,0.32)" stroke-width="1.5" paint-order="stroke">NJFILMES</text>
+    </g>
+  </svg>`;
+  watermarkTileBuffer = await sharp(Buffer.from(svg)).png().toBuffer();
+  return watermarkTileBuffer;
+}
+
+// Mesma ideia de storeDeliveryBuffer (usa R2 se configurado, senão cai pro Vercel Blob/disco),
+// só que guardando debaixo de "selecao/" em vez de "entregas/" — pastas separadas, mesmo backend.
+async function storeSelectionBuffer(buffer, relPath) {
+  if (useR2()) {
+    return putR2Object(buffer, `selecao/${relPath}`, 'image/webp');
+  }
+  return storeBuffer(buffer, relPath);
+}
+
+// originalFilename: nome do arquivo tal como veio do computador do fotógrafo (ex: "DSC03171.jpg")
+// — não é otimizado nem exibido, só guardado no banco pra gerar a lista de exportação depois
+// (ver getSelectedPhotosForCase em server/queries.js e a tela de revisão no painel).
+export async function saveSelectionPhoto(dataUrl, originalFilename = '') {
+  const buffer = decodeDataUrl(dataUrl);
+  if (!buffer) throw new Error('Formato de imagem inválido. Envie um arquivo de imagem (JPG, PNG ou WEBP).');
+  if (buffer.length > MAX_UPLOAD_BYTES) {
+    throw new Error('Arquivo muito grande. O limite é 20MB por foto.');
+  }
+
+  const id = crypto.randomBytes(8).toString('hex');
+  const filename = `${id}.webp`;
+  const thumbFilename = `${id}-thumb.webp`;
+  const tile = await getWatermarkTile();
+
+  // Resolução bem menor que a de entrega (1280px vs 2200px) de propósito — é só pra escolher.
+  const mainResult = await sharp(buffer, { failOn: 'none' })
+    .rotate()
+    .resize({ width: 1280, height: 1280, fit: 'inside', withoutEnlargement: true })
+    .composite([{ input: tile, tile: true }])
+    .webp({ quality: 70 })
+    .toBuffer({ resolveWithObject: true });
+  const { width, height } = mainResult.info;
+
+  const thumbBuffer = await sharp(buffer, { failOn: 'none' })
+    .rotate()
+    .resize({ width: 480, height: 480, fit: 'cover', position: 'attention' })
+    .composite([{ input: tile, tile: true }])
+    .webp({ quality: 62 })
+    .toBuffer();
+
+  const [photoUrl, thumbUrl] = await Promise.all([
+    storeSelectionBuffer(mainResult.data, `photos/${filename}`),
+    storeSelectionBuffer(thumbBuffer, `thumbs/${thumbFilename}`),
+  ]);
+
+  return {
+    filename: photoUrl,
+    thumbFilename: thumbUrl,
+    originalFilename: (originalFilename || '').trim(),
+    width,
+    height,
+  };
+}
+
+// Apaga uma foto de seleção — mesma lógica de deleteDeliveryPhotoFiles (tenta R2 primeiro, depois
+// Vercel Blob/disco), só separada por clareza (são pastas/tabelas diferentes).
+export async function deleteSelectionPhotoFiles(filename, thumbFilename) {
+  const r2Base = (process.env.R2_PUBLIC_URL_BASE || '').replace(/\/$/, '');
+  const tryDelete = async (value) => {
+    if (!value) return;
+    if (r2Base && value.startsWith(r2Base)) {
+      try {
+        await deleteR2Object(value.slice(r2Base.length + 1));
+      } catch {
+        // já pode não existir mais; ignora
+      }
+      return;
+    }
+    return deletePhotoFiles(value, null);
+  };
+  await tryDelete(filename);
+  await tryDelete(thumbFilename);
+}
+
 export async function saveMiscImage(dataUrl) {
   const buffer = decodeDataUrl(dataUrl);
   if (!buffer) throw new Error('Formato de imagem inválido.');
