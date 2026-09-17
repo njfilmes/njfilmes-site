@@ -142,6 +142,16 @@ color: var(--a-muted); margin-bottom: 22px; cursor: pointer; transition: border-
 .video-item .vi-info b { display: block; font-size: 0.85rem; }
 .video-item .vi-info span { font-size: 0.76rem; color: var(--a-muted); word-break: break-all; }
 
+/* Vídeo de entrega com formulário de editar embutido (título/texto de cima/link de download) —
+   pedido do usuário em 17/09/2026. Precisa empilhar em coluna em vez da linha única de sempre,
+   já que agora carrega um formulário inteiro dentro de cada item, não só um botão de excluir. */
+.video-item-edit { flex-direction: column; align-items: stretch; }
+.video-item-edit .vi-info { margin-bottom: 4px; }
+.video-item-edit input[type=text] { width: 100%; margin-bottom: 6px; font-size: 0.78rem; padding: 6px 8px; background: var(--a-bg); border: 1px solid var(--a-border); border-radius: 4px; color: var(--a-fg); }
+.video-item-edit .form-row { display: flex; gap: 8px; }
+.video-item-edit .form-row input { flex: 1; }
+.video-item-edit .form-actions { margin-top: 0; }
+
 .empty-hint { color: var(--a-muted); font-size: 0.88rem; padding: 20px 0; }
 
 /* Comentários */
