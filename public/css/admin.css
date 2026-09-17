@@ -152,6 +152,10 @@ color: var(--a-muted); margin-bottom: 22px; cursor: pointer; transition: border-
 .video-item-edit .form-row input { flex: 1; }
 .video-item-edit .form-actions { margin-top: 0; }
 
+/* Posição combinada (foto+vídeo intercalados) mostrada nas duas abas — pedido do usuário em
+   17/09/2026 pra tirar a dúvida de como a ordem funciona quando os dois se misturam. */
+.vi-pos { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: .02em; color: var(--a-muted); background: var(--a-bg); border: 1px solid var(--a-border); border-radius: 10px; padding: 2px 8px; margin-bottom: 6px; }
+
 .empty-hint { color: var(--a-muted); font-size: 0.88rem; padding: 20px 0; }
 
 /* Comentários */
