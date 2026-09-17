@@ -63,6 +63,13 @@ const CASE_CSS = `
   .dc-slide{scroll-snap-align:start;scroll-snap-stop:always;position:relative;}
   .dc-slide-media{height:100vh;height:100dvh;position:relative;overflow:hidden;background:#151319;}
   .dc-slide-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;}
+  /* Foto horizontal (paisagem) dentro do formato vertical em tela cheia: em vez de cortar as
+     laterais pra preencher a tela toda (object-fit:cover), mostra ela inteira (contain) com um
+     fundo desfocado da própria foto atrás — pedido do usuário em 17/09/2026 ("a foto horizontal
+     tá ficando vertical e cortando as laterais"). Foto vertical/quadrada continua exatamente
+     como antes (cover, tela cheia, sem essa camada de fundo). */
+  .dc-slide-media-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55);transform:scale(1.15);}
+  .dc-slide-media.is-landscape img{object-fit:contain;}
   .dc-slide-media .dc-story-video{position:absolute;inset:0;background:#000;}
   .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
   .dc-slide-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;}
@@ -264,8 +271,10 @@ function renderMediaSlides(videos, photos) {
         </div>`;
       }
       const p = item.data;
+      const isLandscape = Number(p.width) > 0 && Number(p.height) > 0 && Number(p.width) > Number(p.height);
       return `<div class="dc-slide reveal">
-        <div class="dc-slide-media">
+        <div class="dc-slide-media${isLandscape ? ' is-landscape' : ''}">
+          ${isLandscape ? `<div class="dc-slide-media-bg" style="background-image:url('${escapeHtml(p.filename)}')"></div>` : ''}
           <img src="${escapeHtml(p.filename)}" loading="lazy" alt="${escapeHtml(p.caption || '')}" data-lightbox-src="${escapeHtml(p.filename)}">
           ${p.top_text ? `<div class="dc-slide-top-text reveal"><p>${escapeHtml(p.top_text)}</p></div>` : ''}
           <span class="dc-slide-number">${number}</span>

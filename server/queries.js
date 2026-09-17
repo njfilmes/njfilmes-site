@@ -710,6 +710,12 @@ export async function setDeliveryPhotoAsCover(caseId, photoId) {
 export async function setDeliveryPhotoOrder(id, sortOrder) {
   await query('UPDATE delivery_photos SET sort_order = $1 WHERE id = $2', [sortOrder, id]);
 }
+// 17/09/2026: pedido do usuário — agora dá pra mover vídeo de posição também (antes só foto
+// tinha as setinhas), usando a mesma numeração combinada de foto+vídeo (ver deliveryMediaMove
+// em server/routes/admin.js).
+export async function setDeliveryVideoOrder(id, sortOrder) {
+  await query('UPDATE delivery_videos SET sort_order = $1 WHERE id = $2', [sortOrder, id]);
+}
 // Mesma ideia do vídeo acima, só que pra foto da entrega.
 export async function incrementDeliveryPhotoLikesIfPublished(id) {
   const row = await queryOne(

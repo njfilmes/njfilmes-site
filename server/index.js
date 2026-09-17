@@ -406,7 +406,8 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryPhotoDelete(req, res, Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/capa$/)) && method === 'POST') return Admin.deliveryPhotoSetCover(req, res, Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/legenda$/)) && method === 'POST') return Admin.deliveryPhotoCaption(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
-    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.deliveryPhotoMove(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/(\d+)\/mover$/)) && method === 'POST') return Admin.deliveryMediaMove(req, res, await parseBody(req), Number(m[1]), 'foto', Number(m[2]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/(\d+)\/mover$/)) && method === 'POST') return Admin.deliveryMediaMove(req, res, await parseBody(req), Number(m[1]), 'video', Number(m[2]));
 
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/responder$/)) && method === 'POST') return Admin.deliveryCommentReply(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/comentarios\/(\d+)\/remover$/)) && method === 'POST') return Admin.deliveryCommentDelete(req, res, Number(m[1]), Number(m[2]));
