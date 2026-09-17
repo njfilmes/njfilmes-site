@@ -744,9 +744,10 @@ export async function deliveryCasePage(req, res) {
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     return res.end('<h1>Entrega não encontrada.</h1>');
   }
+  const settings = await getSettings();
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.setHeader('X-Robots-Tag', 'noindex, nofollow');
-  res.end(renderDeliveryCasePage(deliveryCase));
+  res.end(renderDeliveryCasePage(deliveryCase, settings));
 }
 
 export async function getDeliveryComments(req, res, slug) {
