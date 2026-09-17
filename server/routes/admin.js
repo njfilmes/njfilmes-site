@@ -2093,6 +2093,18 @@ export async function deliveryCaseUpdate(req, res, body, id) {
 }
 
 export async function deliveryCaseDelete(req, res, id) {
+  // Antes de excluir a entrega, apaga os arquivos de cada foto (R2/Vercel Blob/disco) — sem isso,
+  // excluir a entrega no painel apagava só as linhas do banco, e as imagens em si ficavam
+  // esquecidas ocupando espaço de armazenamento pra sempre. Pedido do usuário em 17/09/2026: se o
+  // R2 encher, excluir entregas antigas precisa de fato liberar espaço.
+  const photos = await Q.listDeliveryPhotosForCase(id);
+  for (const photo of photos) {
+    try {
+      await deleteDeliveryPhotoFiles(photo.filename, photo.thumb_filename);
+    } catch (err) {
+      console.error('Erro ao apagar arquivo de foto da entrega:', err.message);
+    }
+  }
   await Q.deleteDeliveryCase(id);
   redirect(res, '/admin/entregas' + withFlash(res, 'success', 'Entrega excluída.'));
 }
