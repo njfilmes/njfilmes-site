@@ -466,7 +466,8 @@ export async function initSchema() {
         url TEXT NOT NULL,
         title TEXT DEFAULT '',
         download_url TEXT DEFAULT '',
-        sort_order INTEGER NOT NULL DEFAULT 0
+        sort_order INTEGER NOT NULL DEFAULT 0,
+        likes INTEGER NOT NULL DEFAULT 0
       );
   `);
 
@@ -481,6 +482,7 @@ export async function initSchema() {
         sort_order INTEGER NOT NULL DEFAULT 0,
         width INTEGER,
         height INTEGER,
+        likes INTEGER NOT NULL DEFAULT 0,
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
   `);
@@ -800,6 +802,22 @@ export async function initSchema() {
     // de curtir (coração) que já existe no vídeo principal, só que por foto individual.
     if (!photoCols.includes('likes')) {
           await query('ALTER TABLE photos ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
+    }
+
+    // 17/09/2026: pedido do usuário — o cliente também poder curtir cada foto/vídeo da página de
+    // entrega (mesmo botão de coração da página de entrega em si, só que por item), igual já
+    // existe na galeria do portfólio acima.
+    const deliveryPhotoCols = (
+      await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'delivery_photos'")
+    ).map((c) => c.column_name);
+    if (!deliveryPhotoCols.includes('likes')) {
+      await query('ALTER TABLE delivery_photos ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
+    }
+    const deliveryVideoCols = (
+      await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'delivery_videos'")
+    ).map((c) => c.column_name);
+    if (!deliveryVideoCols.includes('likes')) {
+      await query('ALTER TABLE delivery_videos ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
     }
 
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).

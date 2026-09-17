@@ -67,6 +67,14 @@ const CASE_CSS = `
   .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
   .dc-slide-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;}
   .dc-slide-number{position:absolute;left:22px;bottom:18px;z-index:2;font-family:'Fraunces',serif;font-size:.85rem;letter-spacing:.08em;color:rgba(241,237,228,.8);}
+  .dc-like-btn{position:absolute;right:16px;bottom:16px;z-index:3;display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#f1ede4;border-radius:999px;padding:9px 16px;font-family:inherit;font-size:.88rem;cursor:pointer;transition:border-color .25s ease,color .25s ease,transform .15s ease;}
+  .dc-like-btn:hover{border-color:#c9a227;color:#c9a227;}
+  .dc-like-btn:active{transform:scale(.94);}
+  .dc-like-btn.liked{border-color:#c9a227;color:#c9a227;background:rgba(201,162,39,.22);}
+  .dc-like-btn .heart{font-size:1rem;line-height:1;}
+  .dc-like-btn .heart::before{content:'♡';}
+  .dc-like-btn.liked .heart::before{content:'♥';}
+  .dc-like-btn--video{right:64px;}
   .video-embed-fullscreen{position:absolute;right:16px;bottom:16px;z-index:2;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:15px;}
   .video-embed-fallback{position:relative;z-index:2;margin:0;padding:10px 16px;font-size:.8rem;color:rgba(241,237,228,.7);background:#0b0a0d;}
 
@@ -149,6 +157,41 @@ function pageScript(slug) {
       });
     }
 
+    // Curtir foto/vídeo da entrega (pedido do usuário em 17/09/2026) — mesmo botão de coração já
+    // usado no portfólio, guardando "já curtiu" no localStorage do próprio navegador do cliente
+    // pra não deixar curtir a mesma foto/vídeo várias vezes clicando repetido.
+    document.querySelectorAll('[data-dc-like-btn]').forEach(function(btn){
+      var kind = btn.getAttribute('data-dc-like-kind');
+      var id = btn.getAttribute('data-dc-like-id');
+      if (!id) return;
+      var storageKey = 'nj_liked_entrega_' + kind + '_' + id;
+      var already = false;
+      try { already = !!window.localStorage.getItem(storageKey); } catch (e) { already = false; }
+      if (already) btn.classList.add('liked');
+
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var liked = false;
+        try { liked = !!window.localStorage.getItem(storageKey); } catch (e) { liked = false; }
+        if (liked || btn.disabled) return;
+        btn.disabled = true;
+        var endpoint = kind === 'video' ? 'entrega-curtir-video' : 'entrega-curtir-foto';
+        fetch((window.NJFILMES_API_BASE || '') + '/api/' + endpoint + '/' + encodeURIComponent(id), { method: 'POST' })
+          .then(function(r){ return r.json(); })
+          .then(function(data){
+            if (data && typeof data.likes === 'number') {
+              var countEl = btn.querySelector('[data-dc-like-count]');
+              if (countEl) countEl.textContent = data.likes;
+              btn.classList.add('liked');
+              try { window.localStorage.setItem(storageKey, '1'); } catch (e) { /* localStorage indisponível, sem problema */ }
+            }
+          })
+          .catch(function(){ /* falha de rede: apenas destrava o botão pra tentar de novo */ })
+          .finally(function(){ btn.disabled = false; });
+      });
+    });
+
     var form = document.getElementById('dc-comment-form');
     if (form) {
       form.addEventListener('submit', function(e){
@@ -207,6 +250,9 @@ function renderMediaSlides(videos, photos) {
           <div class="dc-slide-media">
             ${videoEmbedHtml(v, { className: 'dc-story-video' })}
             <span class="dc-slide-number">${number}</span>
+            <button type="button" class="dc-like-btn dc-like-btn--video" data-dc-like-btn data-dc-like-kind="video" data-dc-like-id="${v.id}">
+              <span class="heart"></span> <span data-dc-like-count>${v.likes || 0}</span>
+            </button>
           </div>
           ${hasCaption ? `<div class="dc-slide-caption">
             ${v.title ? `<p>${escapeHtml(v.title)}</p>` : ''}
@@ -219,6 +265,9 @@ function renderMediaSlides(videos, photos) {
         <div class="dc-slide-media">
           <img src="${escapeHtml(p.filename)}" loading="lazy" alt="${escapeHtml(p.caption || '')}" data-lightbox-src="${escapeHtml(p.filename)}">
           <span class="dc-slide-number">${number}</span>
+          <button type="button" class="dc-like-btn" data-dc-like-btn data-dc-like-kind="photo" data-dc-like-id="${p.id}">
+            <span class="heart"></span> <span data-dc-like-count>${p.likes || 0}</span>
+          </button>
         </div>
         ${p.caption ? `<div class="dc-slide-caption"><p>${escapeHtml(p.caption)}</p></div>` : ''}
       </div>`;

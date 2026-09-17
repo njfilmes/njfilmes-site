@@ -190,7 +190,11 @@ async function router(req, res) {
   // pelo navegador ao carregar a página do projeto — necessário porque a página em si passa a
   // ser HTML estático). As duas aceitam chamadas de outra origem (o site estático), por isso o
   // CORS é aplicado antes de tudo, inclusive respondendo ao preflight OPTIONS do navegador.
-  if (pathname.match(/^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios)\/[a-z0-9-]+$/)) {
+  if (
+    pathname.match(
+      /^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios|entrega-curtir-foto|entrega-curtir-video)\/[a-z0-9-]+$/
+    )
+  ) {
     applyCors(req, res);
     if (method === 'OPTIONS') {
       res.statusCode = 204;
@@ -224,6 +228,14 @@ async function router(req, res) {
   }
   if ((m = pathname.match(/^\/api\/entrega-comentarios\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.postDeliveryComment(req, res, m[1], await parseBody(req));
+  }
+  // Curtir foto/vídeo de uma entrega — mesmo mecanismo de curtir-foto do portfólio acima, pedido
+  // do usuário em 17/09/2026 pro cliente poder curtir cada item da página de entrega.
+  if ((m = pathname.match(/^\/api\/entrega-curtir-foto\/(\d+)$/)) && method === 'POST') {
+    return Pub.likeDeliveryPhoto(req, res, m[1]);
+  }
+  if ((m = pathname.match(/^\/api\/entrega-curtir-video\/(\d+)$/)) && method === 'POST') {
+    return Pub.likeDeliveryVideo(req, res, m[1]);
   }
 
   // ---------------- Admin ----------------

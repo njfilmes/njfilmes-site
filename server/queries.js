@@ -638,6 +638,19 @@ export async function addDeliveryVideo(caseId, { provider, video_id, url, title,
 export async function deleteDeliveryVideo(id) {
   await query('DELETE FROM delivery_videos WHERE id = $1', [id]);
 }
+// Soma 1 na curtida de um vídeo da entrega (botão de coração na página de entrega, pedido do
+// usuário em 17/09/2026). Só soma se o vídeo pertencer a uma entrega já publicada, pra um ID
+// "adivinhado" não conseguir curtir nada de uma entrega ainda em rascunho (mesma proteção que já
+// existe pra fotos do portfólio — ver incrementPhotoLikesIfPublished).
+export async function incrementDeliveryVideoLikesIfPublished(id) {
+  const row = await queryOne(
+    `UPDATE delivery_videos SET likes = likes + 1
+     WHERE id = $1 AND case_id IN (SELECT id FROM delivery_cases WHERE published = 1)
+     RETURNING likes`,
+    [id]
+  );
+  return row ? row.likes : null;
+}
 
 // ---------- Fotos da entrega ----------
 export async function addDeliveryPhoto(caseId, { filename, thumbFilename, caption = '', sort_order = 0, is_cover = 0, width = null, height = null }) {
@@ -664,6 +677,16 @@ export async function setDeliveryPhotoAsCover(caseId, photoId) {
 }
 export async function setDeliveryPhotoOrder(id, sortOrder) {
   await query('UPDATE delivery_photos SET sort_order = $1 WHERE id = $2', [sortOrder, id]);
+}
+// Mesma ideia do vídeo acima, só que pra foto da entrega.
+export async function incrementDeliveryPhotoLikesIfPublished(id) {
+  const row = await queryOne(
+    `UPDATE delivery_photos SET likes = likes + 1
+     WHERE id = $1 AND case_id IN (SELECT id FROM delivery_cases WHERE published = 1)
+     RETURNING likes`,
+    [id]
+  );
+  return row ? row.likes : null;
 }
 
 // ---------- Comentários da entrega ----------
