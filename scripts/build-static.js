@@ -143,7 +143,7 @@ async function buildSitemapAndRobots(categories, projects) {
   // atualizado. Páginas fixas (home, portfólio, categorias) usam o horário desta publicação;
   // páginas de projeto usam a data real da última edição de cada um (updated_at).
   const buildTime = sitemapLastmod(new Date());
-  const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
+  const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato', '/links'];
   const tags = [
     ...staticPaths.map((p) => sitemapUrlTag(`${base}${p}`, buildTime)),
     ...categories.map((c) => sitemapUrlTag(`${base}/portfolio/${c.slug}`, buildTime)),
@@ -225,6 +225,12 @@ async function main() {
     const { html } = await renderPage(Pub.contactPage, {});
     await writePage('contato', html);
   }
+  // "Link na bio" (estilo Linktree) — pedido do usuário em 17/09/2026, pra colar na bio do
+  // Instagram e juntar site/WhatsApp/Instagram/Google num link só.
+  {
+    const { html } = await renderPage(Pub.linksPage, {});
+    await writePage('links', html);
+  }
 
   // Páginas de Entregas (/entregas/:slug) — uma por entrega marcada como "Publicada" no painel
   // (/admin/entregas). Não usa renderPage()/layout() como as páginas acima: a página de entrega
@@ -253,7 +259,7 @@ async function main() {
   await buildSitemapAndRobots(categories, allProjects);
   await copyStaticAssets();
 
-  console.log(`\nPronto! ${1 + 1 + categories.length + allProjects.length + deliveryCases.length + selectionCases.length + 3} páginas geradas em dist/.`);
+  console.log(`\nPronto! ${1 + 1 + 1 + categories.length + allProjects.length + deliveryCases.length + selectionCases.length + 3} páginas geradas em dist/.`);
   console.log('Esse diretório é o que deve ser publicado no Render Static Site (Publish directory: dist).');
 }
 
