@@ -28,8 +28,13 @@ import {
   createDeliveryComment,
   incrementDeliveryPhotoLikesIfPublished,
   incrementDeliveryVideoLikesIfPublished,
+  getSelectionCaseBySlug,
+  getSelectionPhoto,
+  toggleSelectionPhotoSelected,
+  markSelectionSubmitted,
 } from '../queries.js';
 import { renderDeliveryCasePage } from '../deliveryPage.js';
+import { renderSelectionCasePage } from '../selectionPage.js';
 
 function coverUrl(project) {
   return project.cover_photo || (project.photos && project.photos[0] && project.photos[0].filename) || '/img/placeholder.svg';
@@ -845,6 +850,64 @@ export async function postDeliveryComment(req, res, slug, body) {
     ok: true,
     comment: { id: comment.id, author_name: comment.author_name, content: comment.content, admin_reply: '', admin_reply_at: null, created_at: comment.created_at },
   }));
+}
+
+// ---------------- Seleção de fotos (/selecao/:slug) ----------------
+// Aba separada de "Entregas" (ver acima) — pedido do usuário em 17/09/2026 inspirado no site
+// Alboom: cliente marca as fotos favoritas (em baixa resolução + marca d'água, ver
+// server/upload.js) e envia; o fotógrafo edita só as escolhidas depois. status "preparo" ainda
+// não está liberado pro cliente (equivalente ao "published" da entrega).
+export async function selectionCasePage(req, res) {
+  const slug = req.params.slug;
+  const selectionCase = await getSelectionCaseBySlug(slug);
+  if (!selectionCase || selectionCase.status === 'preparo') {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.end('<h1>Página não encontrada.</h1>');
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.end(renderSelectionCasePage(selectionCase, await getSettings()));
+}
+
+// Cliente marca/desmarca uma foto na grade (POST /api/selecao-marcar/:photoId). A query já confere
+// que o projeto ainda está "andamento" — depois de enviado (revisao/finalizado) fica travado até
+// o fotógrafo reativar (ver toggleSelectionPhotoSelected em server/queries.js).
+export async function toggleSelectionPhoto(req, res, id, body) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ ok: false, error: 'Muitas ações em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const photoId = Number(id);
+  if (!Number.isInteger(photoId) || photoId <= 0) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ ok: false, error: 'Foto inválida.' }));
+  }
+  const photo = await getSelectionPhoto(photoId);
+  if (!photo) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ ok: false, error: 'Foto não encontrada.' }));
+  }
+  const ok = await toggleSelectionPhotoSelected(photoId, photo.case_id, Boolean(body.selected));
+  if (!ok) {
+    res.statusCode = 409;
+    return res.end(JSON.stringify({ ok: false, error: 'Essa seleção já foi enviada — não dá mais pra mudar.' }));
+  }
+  res.end(JSON.stringify({ ok: true }));
+}
+
+// Cliente clica em "Enviar seleção" (POST /api/selecao-enviar/:slug) — trava a galeria (status
+// "andamento" -> "revisao") até o fotógrafo revisar ou reativar.
+export async function submitSelection(req, res, slug) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const selectionCase = await getSelectionCaseBySlug(slug);
+  if (!selectionCase || selectionCase.status !== 'andamento') {
+    res.statusCode = 409;
+    return res.end(JSON.stringify({ ok: false, error: 'Essa seleção não está disponível pra envio no momento.' }));
+  }
+  await markSelectionSubmitted(selectionCase.id);
+  res.end(JSON.stringify({ ok: true }));
 }
 
 function projectPage(req, res, project, settings, categories, navLinks) {

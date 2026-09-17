@@ -26,6 +26,8 @@ import {
   deleteDeliveryPhotoFiles,
   saveDeliveryVideoFile,
   deleteDeliveryVideoFile,
+  saveSelectionPhoto,
+  deleteSelectionPhotoFiles,
 } from '../upload.js';
 import * as Q from '../queries.js';
 
@@ -2377,4 +2379,370 @@ export async function recoverSubmit(req, res, body) {
     await createAdminUser({ email, password, name: 'Administrador' });
   }
   return redirect(res, '/admin/login' + withFlash(res, 'success', 'Acesso atualizado! Entre com o novo e-mail e senha.'));
+}
+
+// ==================== Seleção de fotos ====================
+// Aba separada de "Entregas", pedido do usuário em 17/09/2026 inspirado no site Alboom: antes de
+// editar de verdade, o cliente vê as fotos em baixa resolução + marca d'água, marca as favoritas
+// e envia — o fotógrafo edita só as escolhidas depois. status percorre: preparo (só o fotógrafo
+// vê) -> andamento (link liberado, cliente marca/envia) -> revisao (cliente enviou, fotógrafo
+// confere) -> finalizado. "Reativar" volta pra andamento se o cliente precisar mudar algo.
+const SELECTION_STATUSES = [
+  ['preparo', 'Em preparação'],
+  ['andamento', 'Em andamento'],
+  ['revisao', 'Em revisão'],
+  ['finalizado', 'Finalizado'],
+];
+
+function selectionStatusLabel(status) {
+  const found = SELECTION_STATUSES.find(([key]) => key === status);
+  return found ? found[1] : status;
+}
+
+export async function selectionCasesListPage(req, res, admin) {
+  const flash = readFlash(req);
+  const cases = await Q.listSelectionCases();
+  const columns = SELECTION_STATUSES.map(([key, label]) => {
+    const items = cases.filter((c) => c.status === key);
+    const cards = items.length
+      ? items
+          .map(
+            (c) => `
+        <div class="sel-card">
+          <a href="/admin/selecao/${c.id}"><b>${escapeHtml(c.client_name)}</b></a>
+          ${c.photo_limit ? `<span class="muted" style="font-size:.78rem;display:block;">Limite: ${c.photo_limit} fotos</span>` : ''}
+          <form method="post" action="/admin/selecao/${c.id}/mover-etapa" class="sel-move-form">
+            <select name="status" onchange="this.form.submit()">
+              ${SELECTION_STATUSES.map(([k, l]) => `<option value="${k}" ${k === c.status ? 'selected' : ''}>${l}</option>`).join('')}
+            </select>
+          </form>
+        </div>`
+          )
+          .join('')
+      : '<p class="empty-hint">Nenhum projeto aqui.</p>';
+    return `<div class="sel-column">
+      <div class="sel-column-head"><h3>${label}</h3><span class="sel-count">${items.length}</span></div>
+      <div class="sel-column-body">${cards}</div>
+    </div>`;
+  }).join('');
+
+  const content = `
+  <div class="panel-head" style="margin-bottom:18px;">
+    <h2 style="margin:0;">Seleção de fotos</h2>
+    <a class="btn-a btn-a-primary" href="/admin/selecao/novo">+ Novo projeto</a>
+  </div>
+  <div class="panel"><p class="muted" style="margin-top:0;">O cliente vê as fotos em baixa resolução com marca d'água, marca as favoritas e envia — você edita só as escolhidas depois. Mude a etapa pelo menu de cada card conforme o projeto andar.</p></div>
+  <div class="sel-board">${columns}</div>`;
+  res.end(adminLayout({ title: 'Seleção de fotos', activePath: '/admin/selecao', admin, content, flash }));
+}
+
+function selectionInfoForm({ action, selectionCase = {} }) {
+  return `<form method="post" action="${action}">
+    <div class="form-row">
+      ${field({ label: 'Nome do cliente', name: 'client_name', value: selectionCase.client_name, required: true, placeholder: 'Ex: João & Maria' }).replace('<input', '<input data-slug-source')}
+      ${field({ label: 'URL (slug)', name: 'slug', value: selectionCase.slug, help: 'Endereço final: /selecao/seu-texto-aqui' }).replace('<input', '<input data-slug-target')}
+    </div>
+    ${field({ label: 'Mensagem de boas-vindas (opcional)', name: 'welcome_message', value: selectionCase.welcome_message, textarea: true, rows: 4, placeholder: 'Ex: Escolha suas fotos favoritas! Assim que você enviar, já começo a editar.' })}
+    ${field({ label: 'Limite de fotos (opcional)', name: 'photo_limit', type: 'number', value: selectionCase.photo_limit || '', help: 'Se o cliente passar desse número, ele só vê um aviso — não trava a seleção nem impede de enviar. Deixe em branco pra não ter limite.' })}
+    <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
+  </form>`;
+}
+
+export async function selectionCaseNewPage(req, res, admin) {
+  const content = `<div class="panel"><h2>Novo projeto de seleção</h2>${selectionInfoForm({ action: '/admin/selecao/criar' })}</div>`;
+  res.end(adminLayout({ title: 'Novo projeto de seleção', activePath: '/admin/selecao', admin, content }));
+}
+
+export async function selectionCaseCreate(req, res, body) {
+  const clientName = (body.client_name || '').trim();
+  if (!clientName) return redirect(res, '/admin/selecao/novo');
+  const slug = await uniqueSlug(['selection_cases'], (body.slug || '').trim() || clientName);
+  const limit = body.photo_limit ? parseInt(body.photo_limit, 10) : null;
+  const id = await Q.createSelectionCase({
+    client_name: clientName,
+    slug,
+    welcome_message: body.welcome_message,
+    photo_limit: Number.isFinite(limit) ? limit : null,
+  });
+  redirect(res, `/admin/selecao/${id}` + withFlash(res, 'success', 'Projeto criado! Agora suba as fotos.'));
+}
+
+function selectionTabs(id, active) {
+  const tabs = [
+    ['info', 'Informações'],
+    ['fotos', 'Fotos'],
+    ['revisao', 'Revisão'],
+  ];
+  return `<div class="tabs">${tabs
+    .map(([key, label]) => `<a class="tab-link ${active === key ? 'active' : ''}" href="/admin/selecao/${id}${key === 'info' ? '' : '/' + key}">${label}</a>`)
+    .join('')}</div>`;
+}
+
+// Gera o modal de exportação (igual referência do Alboom): abas por programa (só a instrução
+// muda — a lista de nomes é a mesma embaixo), quebrada em "partes" pra não ficar um bloco de texto
+// gigante de uma vez só. Os nomes vêm de original_filename (nome do arquivo tal como o fotógrafo
+// enviou, ver server/upload.js) — é o que bate com os arquivos que já estão no computador dele.
+function selectionExportModal(selectedPhotos) {
+  const names = selectedPhotos.map((p) => p.original_filename || `foto-${p.id}`).filter(Boolean);
+  const CHUNK = 40;
+  const parts = [];
+  for (let i = 0; i < names.length; i += CHUNK) parts.push(names.slice(i, i + CHUNK));
+  const partsHtml = parts
+    .map(
+      (chunk, i) => `
+    <div class="export-part">
+      <div class="export-part-head"><span>Parte ${i + 1}</span><span class="muted">${chunk.length} fotos</span></div>
+      <textarea readonly rows="3" data-export-part-text>${escapeHtml(chunk.join(', '))}</textarea>
+      <button type="button" class="btn-a btn-a-sm" data-export-copy-btn>Copiar</button>
+    </div>`
+    )
+    .join('');
+
+  const platforms = [
+    {
+      key: 'lightroom',
+      label: 'Lightroom',
+      steps: [
+        'No Lightroom, vá para o modo de Biblioteca',
+        'Em "Filtro da biblioteca", filtre por "Texto"',
+        'Selecione "Nome do arquivo" e "Contém"',
+        'Copie e cole a lista abaixo no campo de busca',
+      ],
+    },
+    {
+      key: 'finder',
+      label: 'Finder (Mac)',
+      steps: [
+        'Abra a pasta com as fotos originais no Finder',
+        'Pressione Cmd+F e configure a busca por "Nome" → "contém"',
+        'Cole os nomes da lista abaixo (um de cada vez, se o Finder não aceitar todos juntos)',
+      ],
+    },
+    {
+      key: 'win10',
+      label: 'Windows 10',
+      steps: [
+        'Abra a pasta com as fotos originais no Explorador de Arquivos',
+        'Clique na barra de busca, no canto superior direito',
+        'Cole os nomes da lista abaixo (um de cada vez, se a busca não aceitar todos juntos)',
+      ],
+    },
+    {
+      key: 'win11',
+      label: 'Windows 11',
+      steps: [
+        'Abra a pasta com as fotos originais no Explorador de Arquivos',
+        'Clique na barra de busca, no canto superior direito',
+        'Cole os nomes da lista abaixo (um de cada vez, se a busca não aceitar todos juntos)',
+      ],
+    },
+  ];
+  const tabsHtml = platforms
+    .map((p, i) => `<button type="button" class="export-tab ${i === 0 ? 'active' : ''}" data-export-tab="${p.key}">${escapeHtml(p.label)}</button>`)
+    .join('');
+  const contentHtml = platforms
+    .map(
+      (p, i) => `
+    <div class="export-tab-content" data-export-tab-content="${p.key}" ${i === 0 ? '' : 'hidden'}>
+      <h4>Lista para ${escapeHtml(p.label)}</h4>
+      <ul>${p.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join('')}</ul>
+    </div>`
+    )
+    .join('');
+
+  return `<div class="export-modal-overlay" data-export-modal-overlay hidden>
+    <div class="export-modal">
+      <div class="export-modal-head"><h3>Exportar fotos</h3><button type="button" class="export-modal-close" data-export-modal-close>×</button></div>
+      <div class="export-tabs">${tabsHtml}</div>
+      ${contentHtml}
+      <div class="export-parts">${partsHtml}</div>
+    </div>
+  </div>`;
+}
+
+export async function selectionCaseEditPage(req, res, admin, id, tab = 'info') {
+  const selectionCase = await Q.getSelectionCase(id);
+  if (!selectionCase) return redirect(res, '/admin/selecao');
+  const flash = readFlash(req);
+
+  let body;
+  if (tab === 'fotos') {
+    body = `
+    ${selectionTabs(id, 'fotos')}
+    <div class="panel">
+      <h2>Enviar fotos</h2>
+      <p class="muted" style="margin-top:-8px;">As fotos aparecem pro cliente em baixa resolução e com marca d'água — só pra ele escolher, não pra usar de verdade. O nome original de cada arquivo fica guardado por baixo dos panos pra gerar a lista de exportação depois.</p>
+      <div class="upload-drop" data-selection-upload-drop data-upload-url="/admin/selecao/${id}/fotos/upload">
+        <input type="file" accept="image/*" multiple>
+        <p>Clique aqui ou arraste as fotos para enviar</p>
+        <div id="selection-upload-preview"></div>
+        <p data-selection-upload-status style="margin-top:10px;font-size:0.82rem;"></p>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Fotos do projeto (${selectionCase.photos.length})</h2>
+      ${selectionCase.photos.length
+        ? `<div class="photo-grid">${selectionCase.photos
+            .map(
+              (p, i) => `<div class="photo-card">
+          <img src="${escapeHtml(p.thumb_filename)}" alt="">
+          <div class="pc-body">
+            ${p.selected ? '<span class="is-cover-badge">♥ Selecionada</span>' : ''}
+            <div class="pc-actions">
+              <form method="post" action="/admin/selecao/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+              <form method="post" action="/admin/selecao/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === selectionCase.photos.length - 1 ? 'disabled' : ''}>↓</button></form>
+              <form method="post" action="/admin/selecao/${id}/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+            </div>
+          </div>
+        </div>`
+            )
+            .join('')}</div>`
+        : '<p class="empty-hint">Nenhuma foto enviada ainda.</p>'}
+    </div>`;
+  } else if (tab === 'revisao') {
+    const selected = selectionCase.photos.filter((p) => p.selected);
+    const hasSubmission = selectionCase.status === 'revisao' || selectionCase.status === 'finalizado';
+    body = `
+    ${selectionTabs(id, 'revisao')}
+    ${!hasSubmission
+      ? '<div class="panel"><p class="empty-hint">O cliente ainda não enviou a seleção. Assim que enviar, as fotos escolhidas aparecem aqui.</p></div>'
+      : `
+    <div class="panel">
+      <div class="panel-head" style="margin-bottom:14px;">
+        <h2 style="margin:0;">Fotos selecionadas (${selected.length}${selectionCase.photo_limit ? ` de ${selectionCase.photo_limit}` : ''})</h2>
+        ${selected.length ? '<button type="button" class="btn-a btn-a-primary" data-export-modal-open>Exportar</button>' : ''}
+      </div>
+      ${selectionCase.submitted_at ? `<p class="muted" style="margin-top:0;">Enviada em ${escapeHtml(formatDateTimePtBr(selectionCase.submitted_at))}.</p>` : ''}
+      ${selectionCase.photo_limit && selected.length > selectionCase.photo_limit ? `<p style="color:#d0503a;">Atenção: passou do limite combinado em ${selected.length - selectionCase.photo_limit} foto(s).</p>` : ''}
+      ${selected.length ? `<div class="photo-grid">${selected.map((p) => `<div class="photo-card"><img src="${escapeHtml(p.thumb_filename)}" alt=""></div>`).join('')}</div>` : '<p class="empty-hint">O cliente enviou sem marcar nenhuma foto.</p>'}
+    </div>
+    <div class="panel">
+      <h3>Etapa do projeto</h3>
+      ${selectionCase.status === 'revisao'
+        ? `<p class="muted">Revise as fotos selecionadas. Se estiver tudo certo, clique em finalizar. Caso seja necessária alguma alteração, você pode reativar a galeria para o cliente.</p>
+        <div class="form-actions">
+          <form method="post" action="/admin/selecao/${id}/mover-etapa" style="display:inline;"><input type="hidden" name="status" value="finalizado"><button class="btn-a btn-a-primary" type="submit">Finalizar</button></form>
+          <form method="post" action="/admin/selecao/${id}/mover-etapa" style="display:inline;"><input type="hidden" name="status" value="andamento"><button class="btn-a" type="submit">Reativar galeria pro cliente</button></form>
+        </div>`
+        : `<p class="muted">Projeto finalizado ${selectionCase.finalized_at ? `em ${escapeHtml(formatDateTimePtBr(selectionCase.finalized_at))}` : ''}.</p>
+        <form method="post" action="/admin/selecao/${id}/mover-etapa"><input type="hidden" name="status" value="andamento"><button class="btn-a" type="submit">Reativar galeria pro cliente</button></form>`}
+    </div>
+    ${selected.length ? selectionExportModal(selected) : ''}`}`;
+  } else {
+    body = `${selectionTabs(id, 'info')}<div class="panel"><h2>Informações</h2>${selectionInfoForm({ action: `/admin/selecao/${id}/atualizar`, selectionCase })}</div>
+    <div class="panel">
+      <h3>Etapa atual: ${escapeHtml(selectionStatusLabel(selectionCase.status))}</h3>
+      <form method="post" action="/admin/selecao/${id}/mover-etapa">
+        <div class="form-field">
+          <label>Mudar etapa</label>
+          <select name="status" onchange="this.form.submit()">
+            ${SELECTION_STATUSES.map(([k, l]) => `<option value="${k}" ${k === selectionCase.status ? 'selected' : ''}>${l}</option>`).join('')}
+          </select>
+        </div>
+      </form>
+      ${selectionCase.status !== 'preparo'
+        ? `<p><a href="${SITE_URL}/selecao/${escapeHtml(selectionCase.slug)}" target="_blank">${SITE_URL}/selecao/${escapeHtml(selectionCase.slug)}</a></p><p class="muted">Depois de mudar aqui, o site leva alguns instantes pra republicar antes do link refletir a mudança.</p>`
+        : '<p class="muted">Assim que mudar a etapa pra "Em andamento", o link fica disponível pro cliente.</p>'}
+    </div>
+    <div class="panel">
+      <h3>Excluir projeto</h3>
+      <p class="muted">Essa ação remove o projeto e as fotos permanentemente.</p>
+      <form method="post" action="/admin/selecao/${id}/excluir" data-confirm="Excluir o projeto de seleção de &quot;${escapeHtml(selectionCase.client_name)}&quot;?"><button class="btn-a btn-a-danger" type="submit">Excluir projeto</button></form>
+    </div>`;
+  }
+
+  res.end(adminLayout({ title: selectionCase.client_name, activePath: '/admin/selecao', admin, content: body, flash }));
+}
+
+export async function selectionCaseUpdate(req, res, body, id) {
+  const selectionCase = await Q.getSelectionCase(id);
+  if (!selectionCase) return redirect(res, '/admin/selecao');
+  const clientName = (body.client_name || selectionCase.client_name).trim();
+  const slug = (body.slug || '').trim() ? await uniqueSlug(['selection_cases'], body.slug, id) : selectionCase.slug;
+  const limit = body.photo_limit ? parseInt(body.photo_limit, 10) : null;
+  await Q.updateSelectionCase(id, {
+    client_name: clientName,
+    slug,
+    welcome_message: body.welcome_message,
+    photo_limit: Number.isFinite(limit) ? limit : null,
+  });
+  redirect(res, `/admin/selecao/${id}` + withFlash(res, 'success', 'Projeto atualizado.'));
+}
+
+export async function selectionCaseMoveStatus(req, res, body, id) {
+  const status = (body.status || '').trim();
+  const valid = SELECTION_STATUSES.map(([k]) => k);
+  if (!valid.includes(status)) return redirect(res, '/admin/selecao');
+  if (status === 'revisao') await Q.markSelectionSubmitted(id);
+  else if (status === 'finalizado') await Q.markSelectionFinalized(id);
+  else if (status === 'andamento') await Q.reactivateSelectionCase(id);
+  else await Q.setSelectionCaseStatus(id, status);
+  redirect(res, `/admin/selecao/${id}`);
+}
+
+export async function selectionCaseDelete(req, res, id) {
+  const photos = await Q.listSelectionPhotosForCase(id);
+  for (const photo of photos) {
+    try {
+      await deleteSelectionPhotoFiles(photo.filename, photo.thumb_filename);
+    } catch (err) {
+      console.error('Erro ao apagar arquivo de foto de seleção:', err.message);
+    }
+  }
+  await Q.deleteSelectionCase(id);
+  redirect(res, '/admin/selecao' + withFlash(res, 'success', 'Projeto excluído.'));
+}
+
+export async function selectionPhotosUpload(req, res, body, id) {
+  const selectionCase = await Q.getSelectionCase(id);
+  if (!selectionCase) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Projeto não encontrado.' }));
+  }
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let order = await maxSortOrder('selection_photos', 'case_id', id);
+  let saved = 0;
+  for (const item of photos) {
+    try {
+      const dataUrl = typeof item === 'string' ? item : item.data;
+      const originalName = item && typeof item === 'object' ? item.name || '' : '';
+      const { filename, thumbFilename, originalFilename, width, height } = await saveSelectionPhoto(dataUrl, originalName);
+      order += 1;
+      await Q.addSelectionPhoto(id, { filename, thumbFilename, originalFilename, sort_order: order, width, height });
+      saved += 1;
+    } catch (err) {
+      console.error('Erro ao salvar foto de seleção:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export async function selectionPhotoDelete(req, res, id, photoId) {
+  const photo = await Q.getSelectionPhoto(photoId);
+  if (photo) {
+    await deleteSelectionPhotoFiles(photo.filename, photo.thumb_filename);
+    await Q.deleteSelectionPhoto(photoId);
+  }
+  redirect(res, `/admin/selecao/${id}/fotos`);
+}
+
+export async function selectionPhotoMove(req, res, body, id, photoId) {
+  const selectionCase = await Q.getSelectionCase(id);
+  if (!selectionCase) return redirect(res, '/admin/selecao');
+  const photos = selectionCase.photos;
+  const idx = photos.findIndex((p) => p.id === photoId);
+  if (idx === -1) return redirect(res, `/admin/selecao/${id}/fotos`);
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= photos.length) return redirect(res, `/admin/selecao/${id}/fotos`);
+  const a = photos[idx], b = photos[swapWith];
+  await Q.setSelectionPhotoOrder(a.id, b.sort_order);
+  await Q.setSelectionPhotoOrder(b.id, a.sort_order);
+  redirect(res, `/admin/selecao/${id}/fotos`);
 }
