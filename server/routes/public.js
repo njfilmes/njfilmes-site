@@ -1292,3 +1292,86 @@ export async function contactPage(req, res) {
     })
   );
 }
+
+// Página "link na bio" (estilo Linktree) — pedido do usuário em 17/09/2026 pra ter um lugar só
+// juntando site, Instagram, WhatsApp, Google etc, pra colar na bio do Instagram e deixar tudo
+// "alinhado" (mesmo nome/links em todo canto ajuda o próprio Google a confiar mais no negócio).
+// Não precisou de nenhuma tabela nova no banco: reaproveita "settings" (whatsapp, instagram,
+// youtube, avaliação do Google...) e a tabela "links" que já existe e já é editável em
+// /admin/links (usada também na lista "Outros canais" da página Contato) — qualquer link extra
+// que o usuário cadastrar lá aparece aqui sozinho, sem precisar mexer em código de novo.
+function linksIconWhatsapp() {
+  return `<svg width="18" height="18" viewBox="0 0 32 32" fill="currentColor" style="flex-shrink:0;"><path d="M16.001 3C9.373 3 4 8.373 4 15c0 2.42.71 4.673 1.936 6.573L4 29l7.627-1.906A11.94 11.94 0 0 0 16.001 27C22.628 27 28 21.627 28 15S22.628 3 16.001 3zm0 21.6c-1.98 0-3.822-.58-5.373-1.578l-.385-.243-4.53 1.132 1.16-4.415-.253-.397A9.55 9.55 0 0 1 5.4 15c0-5.85 4.75-10.6 10.6-10.6S26.6 9.15 26.6 15 21.85 24.6 16.001 24.6zm5.815-7.94c-.318-.16-1.883-.93-2.175-1.036-.292-.106-.505-.16-.717.16-.212.318-.823 1.036-1.01 1.248-.186.212-.372.24-.69.08-.318-.16-1.343-.495-2.558-1.578-.945-.842-1.583-1.883-1.768-2.2-.186-.318-.02-.49.14-.65.144-.143.318-.372.478-.558.16-.186.212-.318.318-.53.106-.212.053-.398-.027-.558-.08-.16-.717-1.727-.983-2.365-.259-.622-.522-.538-.717-.548-.186-.01-.398-.012-.61-.012-.212 0-.558.08-.85.398-.292.318-1.114 1.09-1.114 2.657 0 1.567 1.14 3.08 1.3 3.293.159.212 2.243 3.425 5.435 4.803.76.328 1.353.524 1.815.671.762.242 1.456.208 2.005.126.612-.091 1.883-.77 2.148-1.514.265-.743.265-1.38.186-1.514-.08-.133-.292-.212-.61-.372z"/></svg>`;
+}
+function linksIconInstagram() {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" style="flex-shrink:0;"><defs><radialGradient id="igGradLinks" cx="30%" cy="107%" r="150%"><stop offset="0" stop-color="#fdf497"/><stop offset="0.05" stop-color="#fdf497"/><stop offset="0.45" stop-color="#fd5949"/><stop offset="0.6" stop-color="#d6249f"/><stop offset="0.9" stop-color="#285AEB"/></radialGradient></defs><path fill="url(#igGradLinks)" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.012-3.584.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 5.838a6.162 6.162 0 1 0 0 12.324 6.162 6.162 0 0 0 0-12.324zm0 10.162a4 4 0 1 1 0-8 4 4 0 0 1 0 8zm6.406-11.845a1.44 1.44 0 1 0 0 2.88 1.44 1.44 0 0 0 0-2.88z"/></svg>`;
+}
+function linksIconYoutube() {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="#FF0000" style="flex-shrink:0;"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12Z"/></svg>`;
+}
+function linksIconGoogle() {
+  return `<svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0;"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>`;
+}
+function linksIconPlay() {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`;
+}
+function linksIconGeneric() {
+  return `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>`;
+}
+
+export async function linksPage(req, res) {
+  const settings = await getSettings();
+  const categories = await listCategoriesWithProjects();
+  const navLinks = await listNavLinks();
+  const bio = await getBio();
+  const extraLinks = await listLinks();
+
+  const digits = String(settings.whatsapp_number || '').replace(/\D/g, '');
+  const waUrl = digits
+    ? `https://wa.me/${digits}?text=${encodeURIComponent(settings.whatsapp_message || 'Olá! Vim pelo link do Instagram.')}`
+    : null;
+
+  // Ordem pensada pro objetivo do usuário ("mais clientes"): primeiro o portfólio (prova do
+  // trabalho) e o WhatsApp (contato direto), depois redes sociais e avaliação do Google.
+  const buttons = [
+    { label: 'Ver portfólio completo', url: '/portfolio', icon: linksIconPlay(), primary: true },
+    waUrl ? { label: 'Falar no WhatsApp', url: waUrl, icon: linksIconWhatsapp(), primary: true, external: true } : null,
+    settings.instagram_url ? { label: 'Seguir no Instagram', url: settings.instagram_url, icon: linksIconInstagram(), external: true } : null,
+    settings.google_review_url ? { label: 'Avaliar no Google', url: settings.google_review_url, icon: linksIconGoogle(), external: true } : null,
+    settings.youtube_url ? { label: 'Inscrever no YouTube', url: settings.youtube_url, icon: linksIconYoutube(), external: true } : null,
+    settings.facebook_url ? { label: 'Facebook', url: settings.facebook_url, icon: linksIconGeneric(), external: true } : null,
+    settings.tiktok_url ? { label: 'TikTok', url: settings.tiktok_url, icon: linksIconGeneric(), external: true } : null,
+    settings.vimeo_url ? { label: 'Vimeo', url: settings.vimeo_url, icon: linksIconGeneric(), external: true } : null,
+    { label: 'Pedir orçamento', url: '/contato', icon: linksIconGeneric() },
+    ...extraLinks.map((l) => ({ label: l.name, url: l.url, icon: linksIconGeneric(), external: true })),
+  ].filter(Boolean);
+
+  const buttonsHtml = buttons
+    .map(
+      (b) => `<a href="${escapeHtml(b.url)}" class="link-btn${b.primary ? ' link-btn-primary' : ''}"${b.external ? ' target="_blank" rel="noopener noreferrer"' : ''}>${b.icon}<span>${escapeHtml(b.label)}</span></a>`
+    )
+    .join('');
+
+  const content = `
+  <section class="links-page">
+    <div class="container links-container">
+      <img class="links-avatar reveal" src="${escapeHtml(bio.profile_photo || `/img/about-placeholder.webp?v=${ASSET_VERSION}`)}" alt="${escapeHtml(bio.name || settings.site_name || 'NJFILMES')}">
+      <h1 class="links-name reveal">${escapeHtml(settings.site_name || 'NJFILMES')}</h1>
+      <p class="links-tagline reveal">${escapeHtml(settings.links_tagline || 'Vídeo, fotografia e drone em Salvador, Bahia')}</p>
+      <div class="links-buttons reveal">${buttonsHtml}</div>
+    </div>
+  </section>`;
+
+  res.end(
+    layout({
+      title: 'Links',
+      description: `Todos os links da ${settings.site_name || 'NJFILMES'}: portfólio, WhatsApp, Instagram e mais, num lugar só.`,
+      path: '/links',
+      settings,
+      categories,
+      navLinks,
+      bodyClass: 'links-body',
+      content,
+    })
+  );
+}
