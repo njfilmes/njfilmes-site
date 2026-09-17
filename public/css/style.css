@@ -407,6 +407,28 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
   animation: heroZoom 14s ease-in-out infinite alternate;
 }
 @keyframes heroZoom { from { transform: scale(0.98);} to { transform: scale(1.07);} }
+/* Vídeo de fundo da Home vindo de um link do YouTube/Vimeo (pedido do usuário em 17/09/2026 —
+   antes só um arquivo de vídeo direto (.mp4 etc.) funcionava nesse campo, um link colado do
+   YouTube simplesmente não tocava). Diferente do <video> nativo ali em cima, que já ganha
+   object-fit:cover de graça, um iframe de player não aceita object-fit (o vídeo lá dentro é
+   controlado pelo player do YouTube/Vimeo, não pelo nosso CSS) — pra preencher a tela inteira
+   cortando as bordas, o iframe nasce bem maior que a tela e centralizado (mesmo esquema já usado
+   nas prévias em vídeo dos cards do portfólio, .work-card-video iframe, só que com mais folga
+   porque o hero cobre a tela toda — pode ter proporções bem mais extremas que um card). Sem
+   nenhum controle visível (já vem assim na própria URL do embed) e pointer-events:none evita
+   qualquer clique acidental nele. */
+.hero-video-embed {
+  position: absolute; inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero-video-embed iframe {
+  position: absolute; top: 50%; left: 50%;
+  width: 100vw; height: 56.25vw; /* 16:9 */
+  min-height: 100vh; min-width: 177.78vh; /* 16:9 */
+  transform: translate(-50%, -50%);
+  border: 0;
+}
 .hero-photo-split {
   position: absolute; inset: 0;
   width: 100%; height: 100%;
@@ -441,8 +463,12 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
      ajuste separado, mais abaixo no arquivo).
      Ajustado em seguida (12/09/2026): "degrade na foto, escureca mais, deixa bem mais escuro, ta
      no cel tanto no pc" - escurecido bem mais uma vez (pedido explicito de "bem mais escuro"),
-     em todos os pontos do degrade. */
-  background: linear-gradient(180deg, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.78) 22%, rgba(0,0,0,0.7) 45%, rgba(2,2,3,0.98) 100%);
+     em todos os pontos do degrade.
+     Ajustado em seguida (17/09/2026): "deixa o degrade do vídeo que rola atrás menos intenso
+     tanto no cel tanto no pc" - clareado de volta em todos os pontos (pedido oposto ao de
+     12/09, dessa vez pra ficar mais leve), mantendo a mesma forma do degrade (mais escuro no
+     topo pro título e no rodapé). */
+  background: linear-gradient(180deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.48) 22%, rgba(0,0,0,0.4) 45%, rgba(2,2,3,0.72) 100%);
 }
 .hero-content {
   position: relative; z-index: 2;
@@ -2259,8 +2285,10 @@ html.no-intro .cine-intro { display: none; }
        mais leve que o PC) que ja existia.
        Ajustado em seguida (12/09/2026): "degrade na foto, escureca mais, deixa bem mais escuro,
        ta no cel tanto no pc" - escurecido bem mais uma vez, praticamente igualando ao PC (o
-       pedido foi explicito pros dois). */
-    background: linear-gradient(180deg, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.74) 22%, rgba(0,0,0,0.66) 40%, rgba(1,1,2,0.97) 100%);
+       pedido foi explicito pros dois).
+       Ajustado em seguida (17/09/2026): "deixa o degrade do vídeo que rola atrás menos intenso
+       tanto no cel tanto no pc" - clareado de volta aqui tambem, na mesma proporcao do PC. */
+    background: linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.46) 22%, rgba(0,0,0,0.38) 40%, rgba(1,1,2,0.7) 100%);
   }
   .hero { align-items: center; }
   .hero-content { padding-bottom: 0; }
