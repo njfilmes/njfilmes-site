@@ -398,6 +398,8 @@ async function router(req, res) {
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryCaseDelete(req, res, Number(m[1]));
 
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/criar$/)) && method === 'POST') return Admin.deliveryVideoCreate(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/upload$/)) && method === 'POST') return Admin.deliveryVideoUploadFile(req, res, await parseBody(req), Number(m[1]));
+    if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/(\d+)\/editar$/)) && method === 'POST') return Admin.deliveryVideoUpdate(req, res, await parseBody(req), Number(m[1]), Number(m[2]));
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/videos\/(\d+)\/excluir$/)) && method === 'POST') return Admin.deliveryVideoDelete(req, res, Number(m[1]), Number(m[2]));
 
     if ((m = pathname.match(/^\/admin\/entregas\/(\d+)\/fotos\/upload$/)) && method === 'POST') return Admin.deliveryPhotosUpload(req, res, await parseBody(req), Number(m[1]));

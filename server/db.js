@@ -465,6 +465,7 @@ export async function initSchema() {
         video_id TEXT DEFAULT '',
         url TEXT NOT NULL,
         title TEXT DEFAULT '',
+        top_text TEXT DEFAULT '',
         download_url TEXT DEFAULT '',
         sort_order INTEGER NOT NULL DEFAULT 0,
         likes INTEGER NOT NULL DEFAULT 0
@@ -478,6 +479,7 @@ export async function initSchema() {
         filename TEXT NOT NULL,
         thumb_filename TEXT NOT NULL,
         caption TEXT DEFAULT '',
+        top_text TEXT DEFAULT '',
         is_cover INTEGER NOT NULL DEFAULT 0,
         sort_order INTEGER NOT NULL DEFAULT 0,
         width INTEGER,
@@ -818,6 +820,14 @@ export async function initSchema() {
     ).map((c) => c.column_name);
     if (!deliveryVideoCols.includes('likes')) {
       await query('ALTER TABLE delivery_videos ADD COLUMN likes INTEGER NOT NULL DEFAULT 0');
+    }
+    // 17/09/2026: pedido do usuário — texto editável que aparece ACIMA da foto/vídeo na página de
+    // entrega (além da legenda que já existia embaixo), seguindo a referência que ele mandou.
+    if (!deliveryPhotoCols.includes('top_text')) {
+      await query("ALTER TABLE delivery_photos ADD COLUMN top_text TEXT DEFAULT ''");
+    }
+    if (!deliveryVideoCols.includes('top_text')) {
+      await query("ALTER TABLE delivery_videos ADD COLUMN top_text TEXT DEFAULT ''");
     }
 
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).

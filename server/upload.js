@@ -126,6 +126,46 @@ async function storeDeliveryBuffer(buffer, relPath, contentType = 'image/webp') 
   return storeBuffer(buffer, relPath);
 }
 
+// Igual storeDeliveryBuffer acima, mas pra vídeo: precisa passar o contentType de verdade pro
+// Vercel Blob/disco também (ao contrário de storeBuffer, que sempre grava como "image/webp" —
+// certo pra foto, errado pra vídeo, o que faria o navegador não tocar o arquivo direito quando o
+// R2 não estivesse configurado). Pedido do usuário em 17/09/2026: além do link (YouTube/Mega/
+// Drive), poder arrastar o arquivo de vídeo direto na aba de vídeos da entrega.
+async function storeDeliveryVideoBuffer(buffer, relPath, contentType) {
+  if (useR2()) {
+    return putR2Object(buffer, `entregas/${relPath}`, contentType);
+  }
+  if (useBlob()) {
+    const { put } = await import('@vercel/blob');
+    const { url } = await put(`uploads/${relPath}`, buffer, {
+      access: 'public',
+      addRandomSuffix: false,
+      contentType,
+      token: process.env.BLOB_READ_WRITE_TOKEN,
+    });
+    return url;
+  }
+  const abs = path.join(UPLOADS_DIR, relPath);
+  await fs.mkdir(path.dirname(abs), { recursive: true });
+  await fs.writeFile(abs, buffer);
+  return `/uploads/${relPath}`;
+}
+
+// Mesma ideia de saveVideoFile (vídeo de fundo da Home), só que pra vídeo de entrega — sem
+// transcodificação, salvo do jeito que veio, por isso o limite mais apertado (MAX_VIDEO_BYTES).
+export async function saveDeliveryVideoFile(dataUrl) {
+  const decoded = decodeVideoDataUrl(dataUrl);
+  if (!decoded) throw new Error('Formato de vídeo inválido. Envie um arquivo .mp4, .webm ou .mov.');
+  if (decoded.buffer.length > MAX_VIDEO_BYTES) {
+    throw new Error('Vídeo muito grande. O limite é 25MB — prefira um clipe curto e já comprimido.');
+  }
+  const ext = (decoded.mime.split('/')[1] || 'mp4').replace(/[^a-z0-9]/gi, '') || 'mp4';
+  const id = crypto.randomBytes(8).toString('hex');
+  const relPath = `videos/${id}.${ext}`;
+  const url = await storeDeliveryVideoBuffer(decoded.buffer, relPath, decoded.mime);
+  return url;
+}
+
 // Mesmo processamento de saveProjectPhoto (redimensiona, gera thumbnail), só muda pra onde o
 // resultado é enviado (ver storeDeliveryBuffer acima).
 export async function saveDeliveryPhoto(dataUrl) {
@@ -179,6 +219,25 @@ export async function deleteDeliveryPhotoFiles(filename, thumbFilename) {
   };
   await tryDelete(filename);
   await tryDelete(thumbFilename);
+}
+
+// Igual a deleteDeliveryPhotoFiles acima, só que pra um único arquivo de vídeo de entrega enviado
+// direto (provider "file") — um vídeo que seja só um link (YouTube/Mega/Drive/etc) não tem
+// arquivo nenhum aqui pra apagar, então quem chama essa função decide antes se o vídeo era um
+// arquivo enviado ou só um link (ver deliveryVideoDelete e deliveryCaseDelete em
+// server/routes/admin.js).
+export async function deleteDeliveryVideoFile(url) {
+  if (!url) return;
+  const r2Base = (process.env.R2_PUBLIC_URL_BASE || '').replace(/\/$/, '');
+  if (r2Base && url.startsWith(r2Base)) {
+    try {
+      await deleteR2Object(url.slice(r2Base.length + 1));
+    } catch {
+      // já pode não existir mais; ignora
+    }
+    return;
+  }
+  return deletePhotoFiles(url, null);
 }
 
 export async function saveMiscImage(dataUrl) {

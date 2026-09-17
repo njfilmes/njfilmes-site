@@ -66,6 +66,8 @@ const CASE_CSS = `
   .dc-slide-media .dc-story-video{position:absolute;inset:0;background:#000;}
   .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
   .dc-slide-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;}
+  .dc-slide-top-text{position:absolute;top:0;left:0;right:0;z-index:2;padding:34px 24px 70px;text-align:center;background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 100%);pointer-events:none;}
+  .dc-slide-top-text p{margin:0;font-family:'Fraunces',serif;font-weight:500;font-style:italic;font-size:1.2rem;color:#f1ede4;text-shadow:0 2px 10px rgba(0,0,0,.5);max-width:600px;margin:0 auto;}
   .dc-slide-number{position:absolute;left:22px;bottom:18px;z-index:2;font-family:'Fraunces',serif;font-size:.85rem;letter-spacing:.08em;color:rgba(241,237,228,.8);}
   .dc-like-btn{position:absolute;right:16px;bottom:16px;z-index:3;display:inline-flex;align-items:center;gap:7px;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#f1ede4;border-radius:999px;padding:9px 16px;font-family:inherit;font-size:.88rem;cursor:pointer;transition:border-color .25s ease,color .25s ease,transform .15s ease;}
   .dc-like-btn:hover{border-color:#c9a227;color:#c9a227;}
@@ -249,6 +251,7 @@ function renderMediaSlides(videos, photos) {
         return `<div class="dc-slide reveal">
           <div class="dc-slide-media">
             ${videoEmbedHtml(v, { className: 'dc-story-video' })}
+            ${v.top_text ? `<div class="dc-slide-top-text reveal"><p>${escapeHtml(v.top_text)}</p></div>` : ''}
             <span class="dc-slide-number">${number}</span>
             <button type="button" class="dc-like-btn dc-like-btn--video" data-dc-like-btn data-dc-like-kind="video" data-dc-like-id="${v.id}">
               <span class="heart"></span> <span data-dc-like-count>${v.likes || 0}</span>
@@ -264,6 +267,7 @@ function renderMediaSlides(videos, photos) {
       return `<div class="dc-slide reveal">
         <div class="dc-slide-media">
           <img src="${escapeHtml(p.filename)}" loading="lazy" alt="${escapeHtml(p.caption || '')}" data-lightbox-src="${escapeHtml(p.filename)}">
+          ${p.top_text ? `<div class="dc-slide-top-text reveal"><p>${escapeHtml(p.top_text)}</p></div>` : ''}
           <span class="dc-slide-number">${number}</span>
           <button type="button" class="dc-like-btn" data-dc-like-btn data-dc-like-kind="photo" data-dc-like-id="${p.id}">
             <span class="heart"></span> <span data-dc-like-count>${p.likes || 0}</span>

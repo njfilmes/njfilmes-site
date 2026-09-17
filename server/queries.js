@@ -631,18 +631,36 @@ export async function deleteDeliveryCase(id) {
 export async function listDeliveryPhotosForCase(caseId) {
   return queryRows('SELECT * FROM delivery_photos WHERE case_id = $1', [caseId]);
 }
+// Mesma ideia, pra vídeo — usada junto com a de foto acima antes de excluir uma entrega inteira,
+// pra também apagar o arquivo de vídeos enviados direto (provider "file"), não só os de link.
+export async function listDeliveryVideosForCase(caseId) {
+  return queryRows('SELECT * FROM delivery_videos WHERE case_id = $1', [caseId]);
+}
 
 export async function incrementDeliveryCaseViews(id) {
   await query('UPDATE delivery_cases SET views = views + 1 WHERE id = $1', [id]);
 }
 
 // ---------- Vídeos da entrega ----------
-export async function addDeliveryVideo(caseId, { provider, video_id, url, title, download_url, sort_order = 0 }) {
+export async function addDeliveryVideo(caseId, { provider, video_id, url, title, top_text = '', download_url, sort_order = 0 }) {
   const row = await queryOne(
-    'INSERT INTO delivery_videos (case_id, provider, video_id, url, title, download_url, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id',
-    [caseId, provider, video_id || '', url, title || '', download_url || '', sort_order]
+    'INSERT INTO delivery_videos (case_id, provider, video_id, url, title, top_text, download_url, sort_order) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+    [caseId, provider, video_id || '', url, title || '', top_text || '', download_url || '', sort_order]
   );
   return row.id;
+}
+export async function getDeliveryVideo(id) {
+  return queryOne('SELECT * FROM delivery_videos WHERE id = $1', [id]);
+}
+// 17/09/2026: pedido do usuário pra poder editar um vídeo já adicionado (título, texto de cima e
+// link de download) sem precisar excluir e recriar — mesma ideia de setDeliveryPhotoTexts acima.
+export async function updateDeliveryVideo(id, { title, top_text, download_url }) {
+  await query('UPDATE delivery_videos SET title = $1, top_text = $2, download_url = $3 WHERE id = $4', [
+    title || '',
+    top_text || '',
+    download_url || '',
+    id,
+  ]);
 }
 export async function deleteDeliveryVideo(id) {
   await query('DELETE FROM delivery_videos WHERE id = $1', [id]);
@@ -677,6 +695,11 @@ export async function deleteDeliveryPhoto(id) {
 }
 export async function setDeliveryPhotoCaption(id, caption) {
   await query('UPDATE delivery_photos SET caption = $1 WHERE id = $2', [caption, id]);
+}
+// 17/09/2026: texto editável que aparece ACIMA da foto na página de entrega (junto com a legenda
+// de baixo, que já existia) — mesma tela/formulário, atualiza os dois de uma vez.
+export async function setDeliveryPhotoTexts(id, { caption, top_text }) {
+  await query('UPDATE delivery_photos SET caption = $1, top_text = $2 WHERE id = $3', [caption, top_text, id]);
 }
 export async function setDeliveryPhotoAsCover(caseId, photoId) {
   await query('UPDATE delivery_photos SET is_cover = 0 WHERE case_id = $1', [caseId]);
