@@ -991,10 +991,41 @@ export async function bioPage(req, res, admin) {
         <img data-preview src="${escapeHtml(bio.profile_photo || '')}" style="max-width:160px;border-radius:6px;margin-top:8px;display:${bio.profile_photo ? 'block' : 'none'};">
       </div>
       ${field({ label: 'Texto do botão de contato', name: 'cta_text', value: bio.cta_text })}
+      <h2 style="margin-top:32px;">Textos da página Sobre</h2>
+      <p class="muted" style="margin-top:-8px;">Títulos que apareciam fixos no código — pedido do usuário em 17/09/2026 pra deixar tudo editável por aqui. Deixando em branco, volta pro texto padrão.</p>
       <div class="form-row">
+        ${field({ label: 'Legenda acima do seu nome', name: 'about_eyebrow', value: bio.about_eyebrow, placeholder: 'Sobre a NJFILMES' })}
+        ${field({ label: 'Ano de fundação (mostrado em "Desde")', name: 'founded_year', value: bio.founded_year, placeholder: '2015' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Estado (sigla, mostrado grande)', name: 'location_state', value: bio.location_state, placeholder: 'BA' })}
+        ${field({ label: 'Cidade (mostrada embaixo do estado)', name: 'location_city', value: bio.location_city, placeholder: 'Salvador' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da seção de vídeos', name: 'videos_eyebrow', value: bio.videos_eyebrow, placeholder: 'Vídeos' })}
+        ${field({ label: 'Título da seção de vídeos', name: 'videos_title', value: bio.videos_title, placeholder: 'Conheça um pouco mais' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da galeria de bastidores', name: 'gallery_eyebrow', value: bio.gallery_eyebrow, placeholder: 'Bastidores' })}
         ${field({ label: 'Título da galeria de bastidores', name: 'gallery_title', value: bio.gallery_title, placeholder: 'Ex: No set com a NJFILMES', help: 'Aparece acima da faixa de fotos "Bastidores", na página Sobre.' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da seção Trajetória', name: 'trajectory_eyebrow', value: bio.trajectory_eyebrow, placeholder: 'Trajetória' })}
         ${field({ label: 'Título da seção Trajetória', name: 'trajectory_title', value: bio.trajectory_title, placeholder: 'Ex: Uma jornada pela imagem', help: 'Aparece acima do texto de trajetória, na página Sobre.' })}
       </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da seção Equipamentos', name: 'equipment_eyebrow', value: bio.equipment_eyebrow, placeholder: 'Estrutura' })}
+        ${field({ label: 'Título da seção Equipamentos', name: 'equipment_title', value: bio.equipment_title, placeholder: 'Equipamentos' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da seção "Pessoas"', name: 'people_eyebrow', value: bio.people_eyebrow, placeholder: 'Quem já passou pela câmera' })}
+        ${field({ label: 'Título da seção "Pessoas"', name: 'people_title', value: bio.people_title, placeholder: 'Pessoas que já trabalhei' })}
+      </div>
+      <div class="form-row">
+        ${field({ label: 'Legenda da seção Marcas', name: 'brands_eyebrow', value: bio.brands_eyebrow, placeholder: 'Quem confia no meu trabalho' })}
+        ${field({ label: 'Título da seção Marcas', name: 'brands_title', value: bio.brands_title, placeholder: 'Marcas' })}
+      </div>
+      ${field({ label: 'Título da seção de contato no fim da página', name: 'bottom_cta_title', value: bio.bottom_cta_title, placeholder: 'Fale agora com a NJFILMES' })}
       <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar biografia</button></div>
     </form>
   </div>
@@ -1081,6 +1112,22 @@ export async function bioUpdate(req, res, body) {
     cta_text: body.cta_text || '',
     gallery_title: body.gallery_title || 'No set com a NJFILMES',
     trajectory_title: body.trajectory_title || 'Uma jornada pela imagem',
+    // 17/09/2026: rodada de "quero todo o site com textos editáveis" (ver server/db.js).
+    about_eyebrow: body.about_eyebrow || '',
+    founded_year: body.founded_year || '',
+    location_city: body.location_city || '',
+    location_state: body.location_state || '',
+    videos_eyebrow: body.videos_eyebrow || '',
+    videos_title: body.videos_title || '',
+    gallery_eyebrow: body.gallery_eyebrow || '',
+    trajectory_eyebrow: body.trajectory_eyebrow || '',
+    equipment_eyebrow: body.equipment_eyebrow || '',
+    equipment_title: body.equipment_title || '',
+    people_eyebrow: body.people_eyebrow || '',
+    people_title: body.people_title || '',
+    brands_eyebrow: body.brands_eyebrow || '',
+    brands_title: body.brands_title || '',
+    bottom_cta_title: body.bottom_cta_title || '',
   });
   redirect(res, '/admin/bio' + withFlash(res, photoFailed ? 'error' : 'success', photoFailed ? 'Biografia atualizada, mas a nova foto de perfil não pôde ser salva (a antiga foi mantida).' : 'Biografia atualizada.'));
 }
@@ -1314,15 +1361,43 @@ export async function settingsPage(req, res, admin) {
       </div>
       ${field({ label: 'Texto do rodapé', name: 'footer_text', value: s.footer_text })}
       <h2 style="margin-top:32px;">Textos das seções da Home</h2>
-      <p class="muted" style="margin-top:-8px;">Títulos que apareciam fixos no código — pedido do usuário em 10/09/2026 pra deixar tudo editável por aqui. Deixando em branco, volta pro texto padrão.</p>
+      <p class="muted" style="margin-top:-8px;">Títulos que apareciam fixos no código — pedido do usuário em 10/09/2026 (e numa rodada maior em 17/09/2026, cobrindo o resto do site) pra deixar tudo editável por aqui. Deixando em branco, volta pro texto padrão.</p>
+      ${field({ label: 'Botão "Ver portfólio" do topo da Home', name: 'hero_cta_primary_text', value: s.hero_cta_primary_text, placeholder: 'Ver portfólio' })}
+      ${field({ label: 'Botão "Entrar em contato" do topo da Home', name: 'hero_cta_secondary_text', value: s.hero_cta_secondary_text, placeholder: 'Entrar em contato' })}
+      ${field({ label: 'Legenda da seção "Projeto em destaque"', name: 'featured_eyebrow', value: s.featured_eyebrow, placeholder: 'Projeto em destaque' })}
+      ${field({ label: 'Botão do projeto em destaque', name: 'featured_cta_text', value: s.featured_cta_text, placeholder: 'Assistir projeto' })}
+      ${field({ label: 'Legenda da vitrine de projetos recentes', name: 'recent_eyebrow', value: s.recent_eyebrow, placeholder: 'Trabalhos recentes' })}
+      ${field({ label: 'Título da vitrine de projetos recentes', name: 'recent_title', value: s.recent_title, placeholder: 'Portfólio selecionado' })}
+      ${field({ label: 'Botão "Ver tudo" da vitrine', name: 'recent_cta_text', value: s.recent_cta_text, placeholder: 'Ver tudo' })}
+      ${field({ label: 'Texto quando ainda não há projetos', name: 'recent_empty_text', value: s.recent_empty_text, placeholder: 'Novos projetos em breve.' })}
+      ${field({ label: 'Legenda da seção de categorias', name: 'categories_eyebrow', value: s.categories_eyebrow, placeholder: 'Explore' })}
+      ${field({ label: 'Título da seção de categorias', name: 'categories_title', value: s.categories_title, placeholder: 'Categorias' })}
+      ${field({ label: 'Legenda da seção "sobre" da Home', name: 'intro_eyebrow', value: s.intro_eyebrow, placeholder: 'A NJFILMES' })}
+      ${field({ label: 'Título da seção "sobre" da Home', name: 'intro_title', value: s.intro_title, placeholder: 'Cinema, no seu momento mais importante' })}
+      ${field({ label: 'Texto da seção "sobre" da Home', name: 'intro_text', value: s.intro_text, textarea: true, rows: 3 })}
+      ${field({ label: 'Botão "Conheça a história"', name: 'intro_cta_text', value: s.intro_cta_text, placeholder: 'Conheça a história' })}
       ${field({ label: 'Legenda da seção Serviços', name: 'services_eyebrow', value: s.services_eyebrow, placeholder: 'O que fazemos' })}
       ${field({ label: 'Título da seção Serviços', name: 'services_title', value: s.services_title, placeholder: 'Serviços' })}
       ${field({ label: 'Subtítulo da página Serviços', name: 'services_subtitle', value: s.services_subtitle, textarea: true, rows: 2, help: 'Aparece só no topo da página /servicos, embaixo do título.' })}
+      ${field({ label: 'Título da seção de orçamento no fim da página Serviços', name: 'services_cta_title', value: s.services_cta_title, placeholder: 'Pronto para começar seu projeto?' })}
       ${field({ label: 'Legenda da seção Clientes', name: 'clients_eyebrow', value: s.clients_eyebrow, placeholder: 'Conheça alguns' })}
       ${field({ label: 'Título da seção Clientes', name: 'clients_title', value: s.clients_title, placeholder: 'Clientes' })}
+      ${field({ label: 'Legenda da seção de depoimentos', name: 'testimonials_eyebrow', value: s.testimonials_eyebrow, placeholder: 'O que dizem' })}
+      ${field({ label: 'Título da seção de depoimentos', name: 'testimonials_title', value: s.testimonials_title, placeholder: 'Feedback de clientes' })}
       ${field({ label: 'Legenda da seção de orçamento', name: 'cta_eyebrow', value: s.cta_eyebrow, placeholder: 'Vamos gravar sua história?' })}
       ${field({ label: 'Título da seção de orçamento', name: 'cta_title', value: s.cta_title, placeholder: 'Solicite um orçamento sem compromisso' })}
+      ${field({ label: 'Botão "Pedir orçamento" da Home', name: 'cta_button_text', value: s.cta_button_text, placeholder: 'Pedir orçamento' })}
+      <h2 style="margin-top:32px;">Portfólio</h2>
+      ${field({ label: 'Legenda das páginas de Portfólio', name: 'portfolio_eyebrow', value: s.portfolio_eyebrow, placeholder: 'Portfólio' })}
+      ${field({ label: 'Título da página Portfólio', name: 'portfolio_title', value: s.portfolio_title, placeholder: 'Trabalhos NJFILMES' })}
+      ${field({ label: 'Subtítulo da página Portfólio', name: 'portfolio_subtitle', value: s.portfolio_subtitle, textarea: true, rows: 2 })}
+      <h2 style="margin-top:32px;">Página de cada projeto</h2>
+      <p class="muted" style="margin-top:-8px;">Textos que aparecem em toda página de projeto (o mesmo texto, não muda de projeto pra projeto).</p>
+      ${field({ label: 'Título "Mais vídeos"', name: 'project_more_videos_title', value: s.project_more_videos_title, placeholder: 'Mais vídeos' })}
+      ${field({ label: 'Título "Comentários"', name: 'project_comments_title', value: s.project_comments_title, placeholder: 'Comentários' })}
+      ${field({ label: 'Título da seção de orçamento no fim da página do projeto', name: 'project_cta_title', value: s.project_cta_title, placeholder: 'Gostou? Vamos criar o seu projeto' })}
       <h2 style="margin-top:32px;">Contato</h2>
+      ${field({ label: 'Legenda da página de Contato', name: 'contact_eyebrow', value: s.contact_eyebrow, placeholder: 'Contato' })}
       ${field({ label: 'Título da página de Contato', name: 'contact_headline', value: s.contact_headline, help: 'Aparece grande no topo da página de Contato.' })}
       ${field({ label: 'E-mail de contato', name: 'contact_email', value: s.contact_email, type: 'email', placeholder: 'contato@njfilmes.com.br', help: 'Aparece na página de Contato do site.' })}
       ${field({ label: 'Número do WhatsApp', name: 'whatsapp_number', value: s.whatsapp_number, placeholder: 'Ex: 5571986817816 (DDI+DDD+número, só números)' })}
@@ -1466,6 +1541,32 @@ export async function settingsUpdate(req, res, body) {
     site_font_preset: body.site_font_preset || '',
     site_font_weight: body.site_font_weight || '',
     site_font_scale: body.site_font_scale || '',
+    // 17/09/2026: rodada de "quero todo o site com textos editáveis" (ver server/db.js).
+    featured_eyebrow: body.featured_eyebrow || '',
+    featured_cta_text: body.featured_cta_text || '',
+    recent_eyebrow: body.recent_eyebrow || '',
+    recent_title: body.recent_title || '',
+    recent_cta_text: body.recent_cta_text || '',
+    recent_empty_text: body.recent_empty_text || '',
+    categories_eyebrow: body.categories_eyebrow || '',
+    categories_title: body.categories_title || '',
+    intro_eyebrow: body.intro_eyebrow || '',
+    intro_title: body.intro_title || '',
+    intro_text: body.intro_text || '',
+    intro_cta_text: body.intro_cta_text || '',
+    testimonials_eyebrow: body.testimonials_eyebrow || '',
+    testimonials_title: body.testimonials_title || '',
+    hero_cta_primary_text: body.hero_cta_primary_text || '',
+    hero_cta_secondary_text: body.hero_cta_secondary_text || '',
+    cta_button_text: body.cta_button_text || '',
+    portfolio_eyebrow: body.portfolio_eyebrow || '',
+    portfolio_title: body.portfolio_title || '',
+    portfolio_subtitle: body.portfolio_subtitle || '',
+    project_more_videos_title: body.project_more_videos_title || '',
+    project_comments_title: body.project_comments_title || '',
+    project_cta_title: body.project_cta_title || '',
+    services_cta_title: body.services_cta_title || '',
+    contact_eyebrow: body.contact_eyebrow || '',
   });
   redirect(res, '/admin/configuracoes' + withFlash(
     res,

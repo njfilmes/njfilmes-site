@@ -305,8 +305,8 @@ export async function homePage(req, res) {
       <span class="eyebrow reveal hero-eyebrow-lower">${escapeHtml(settings.hero_eyebrow || 'Produção Audiovisual · Salvador, BA')}</span>
       <h1 class="reveal reveal-delay-1">${heroHeadlineHtml(settings.hero_headline)}</h1>
       <div class="btn-row reveal reveal-delay-3">
-        <a href="/portfolio" class="btn btn-solid btn-hero-cta">Ver portfólio<span class="btn-arrow-icon" aria-hidden="true">${playCursorHtml()}</span></a>
-        <a href="/contato" class="btn btn-outline">Entrar em contato</a>
+        <a href="/portfolio" class="btn btn-solid btn-hero-cta">${escapeHtml(settings.hero_cta_primary_text || 'Ver portfólio')}<span class="btn-arrow-icon" aria-hidden="true">${playCursorHtml()}</span></a>
+        <a href="/contato" class="btn btn-outline">${escapeHtml(settings.hero_cta_secondary_text || 'Entrar em contato')}</a>
       </div>
     </div>
     <div class="hero-scroll"><span>Role</span><span class="line"></span></div>
@@ -315,10 +315,10 @@ export async function homePage(req, res) {
   ${featured ? `
   <section>
     <div class="container">
-      <span class="eyebrow reveal">Projeto em destaque</span>
+      <span class="eyebrow reveal">${escapeHtml(settings.featured_eyebrow || 'Projeto em destaque')}</span>
       <div class="section-head reveal">
         <h2>${escapeHtml(featured.title)}</h2>
-        <a href="/portfolio/${escapeHtml(featured.slug)}" class="btn btn-accent">Assistir projeto</a>
+        <a href="/portfolio/${escapeHtml(featured.slug)}" class="btn btn-accent">${escapeHtml(settings.featured_cta_text || 'Assistir projeto')}</a>
       </div>
       <a href="/portfolio/${escapeHtml(featured.slug)}" class="work-card home-featured-card reveal ${featuredPreview ? 'has-preview-video' : ''}" data-work-card>
         <img class="work-card-cover" src="${escapeHtml(coverUrl(featured))}" alt="${escapeHtml(featured.title)}" loading="lazy">
@@ -335,20 +335,20 @@ export async function homePage(req, res) {
     <div class="container">
       <div class="section-head reveal">
         <div>
-          <span class="eyebrow">Trabalhos recentes</span>
-          <h2>Portfólio selecionado</h2>
+          <span class="eyebrow">${escapeHtml(settings.recent_eyebrow || 'Trabalhos recentes')}</span>
+          <h2>${escapeHtml(settings.recent_title || 'Portfólio selecionado')}</h2>
         </div>
-        <a href="/portfolio" class="btn btn-outline">Ver tudo</a>
+        <a href="/portfolio" class="btn btn-outline">${escapeHtml(settings.recent_cta_text || 'Ver tudo')}</a>
       </div>
       ${recent.length ? `<div class="work-grid">${recent.map((p, i) => workCard(p, { tall: i === 0 })).join('')}</div>`
-        : `<div class="empty-state">Novos projetos em breve.</div>`}
+        : `<div class="empty-state">${escapeHtml(settings.recent_empty_text || 'Novos projetos em breve.')}</div>`}
     </div>
   </section>
 
   ${categories.length ? `
   <section>
     <div class="container">
-      <div class="section-head reveal"><div><span class="eyebrow">Explore</span><h2>Categorias</h2></div></div>
+      <div class="section-head reveal"><div><span class="eyebrow">${escapeHtml(settings.categories_eyebrow || 'Explore')}</span><h2>${escapeHtml(settings.categories_title || 'Categorias')}</h2></div></div>
       <div class="filter-bar reveal">
         ${categories.map((c) => `<a href="/portfolio/${escapeHtml(c.slug)}" class="filter-pill">${escapeHtml(c.name)}</a>`).join('')}
       </div>
@@ -364,10 +364,10 @@ export async function homePage(req, res) {
            exemplo de sempre (mesmo padrão usado na página Sobre, ver aboutPhotoUrls). -->
       <img class="reveal" src="${escapeHtml(bio.profile_photo || `/img/about-placeholder.webp?v=${ASSET_VERSION}`)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">
       <div class="reveal">
-        <span class="eyebrow">A NJFILMES</span>
-        <h2>Cinema, no seu momento mais importante</h2>
-        <p>Produzimos vídeos, fotografia e cobertura de eventos com um olhar autoral — do casamento ao clipe, do institucional ao conteúdo para redes sociais. Cada projeto é tratado como uma produção própria, do roteiro à entrega final.</p>
-        <a href="/sobre" class="btn btn-accent">Conheça a história</a>
+        <span class="eyebrow">${escapeHtml(settings.intro_eyebrow || 'A NJFILMES')}</span>
+        <h2>${escapeHtml(settings.intro_title || 'Cinema, no seu momento mais importante')}</h2>
+        <p>${escapeHtml(settings.intro_text || 'Produzimos vídeos, fotografia e cobertura de eventos com um olhar autoral — do casamento ao clipe, do institucional ao conteúdo para redes sociais. Cada projeto é tratado como uma produção própria, do roteiro à entrega final.')}</p>
+        <a href="/sobre" class="btn btn-accent">${escapeHtml(settings.intro_cta_text || 'Conheça a história')}</a>
       </div>
     </div>
   </section>
@@ -402,8 +402,8 @@ export async function homePage(req, res) {
   ${testimonialCards.length ? `
   <section>
     <div class="container">
-      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">O que dizem</span>
-      <h2 class="reveal text-center">Feedback de clientes</h2>
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">${escapeHtml(settings.testimonials_eyebrow || 'O que dizem')}</span>
+      <h2 class="reveal text-center">${escapeHtml(settings.testimonials_title || 'Feedback de clientes')}</h2>
       <div class="testimonials-scroll">
         ${testimonialCards.join('')}
       </div>
@@ -415,7 +415,7 @@ export async function homePage(req, res) {
       <span class="eyebrow reveal">${escapeHtml(settings.cta_eyebrow || 'Vamos gravar sua história?')}</span>
       <h2 class="reveal">${escapeHtml(settings.cta_title || 'Solicite um orçamento sem compromisso')}</h2>
       <div class="btn-row reveal">
-        <a href="/contato" class="btn btn-solid">Pedir orçamento</a>
+        <a href="/contato" class="btn btn-solid">${escapeHtml(settings.cta_button_text || 'Pedir orçamento')}</a>
       </div>
     </div>
   </section>
@@ -470,9 +470,9 @@ export async function portfolioIndexPage(req, res) {
   const content = `
   <section class="simple-hero">
     <div class="container">
-      <span class="eyebrow reveal">Portfólio</span>
-      <h1 class="reveal">Trabalhos NJFILMES</h1>
-      <p class="lead reveal">Filtre por categoria para ver casamentos, eventos, videoclipes, drone e muito mais.</p>
+      <span class="eyebrow reveal">${escapeHtml(settings.portfolio_eyebrow || 'Portfólio')}</span>
+      <h1 class="reveal">${escapeHtml(settings.portfolio_title || 'Trabalhos NJFILMES')}</h1>
+      <p class="lead reveal">${escapeHtml(settings.portfolio_subtitle || 'Filtre por categoria para ver casamentos, eventos, videoclipes, drone e muito mais.')}</p>
     </div>
   </section>
   <section style="padding-top:0;">
@@ -511,7 +511,7 @@ export async function categoryOrProjectPage(req, res) {
     const content = `
     <section class="simple-hero">
       <div class="container">
-        <span class="eyebrow reveal">Portfólio</span>
+        <span class="eyebrow reveal">${escapeHtml(settings.portfolio_eyebrow || 'Portfólio')}</span>
         <h1 class="reveal">${escapeHtml(category.name)}</h1>
       </div>
     </section>
@@ -832,7 +832,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
   ${project.description ? `<section style="padding-top:0;"><div class="container reveal" style="max-width:820px;"><p style="font-size:1.05rem;">${nl2br(project.description)}</p></div></section>` : ''}
 
   ${project.videos.length > 1 ? `<section class="alt-bg"><div class="container">
-    <h3 class="reveal">Mais vídeos</h3>
+    <h3 class="reveal">${escapeHtml(settings.project_more_videos_title || 'Mais vídeos')}</h3>
     <div class="work-grid">${project.videos.slice(1).map((v) => `<div class="reveal">${videoEmbedHtml(v)}</div>`).join('')}</div>
   </div></section>` : ''}
 
@@ -878,7 +878,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
 
   <section class="comments-section" id="comentarios" data-comments data-project="${escapeHtml(project.slug)}">
     <div class="container" style="max-width:820px;">
-      <h3 class="reveal">Comentários</h3>
+      <h3 class="reveal">${escapeHtml(settings.project_comments_title || 'Comentários')}</h3>
       <div class="comments-list" data-comments-list>
         <p class="muted" data-comments-loading>Carregando comentários...</p>
       </div>
@@ -896,7 +896,7 @@ function projectPage(req, res, project, settings, categories, navLinks) {
 
   <section class="cta-section alt-bg">
     <div class="container">
-      <h2 class="reveal">Gostou? Vamos criar o seu projeto</h2>
+      <h2 class="reveal">${escapeHtml(settings.project_cta_title || 'Gostou? Vamos criar o seu projeto')}</h2>
       <div class="btn-row reveal"><a href="/contato" class="btn btn-solid">Solicitar orçamento</a><a href="/portfolio" class="btn btn-outline">Ver mais trabalhos</a></div>
     </div>
   </section>
@@ -981,14 +981,14 @@ export async function aboutPage(req, res) {
     <div class="container about-split">
       <div class="about-photos reveal">${aboutPhotoUrls.map((src, i) => `<img class="about-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="${escapeHtml(bio.name || 'NJFILMES')}">`).join('')}</div>
       <div class="reveal">
-        <span class="eyebrow">Sobre a NJFILMES</span>
+        <span class="eyebrow">${escapeHtml(bio.about_eyebrow || 'Sobre a NJFILMES')}</span>
         <h1>${escapeHtml(bio.name || 'NJFILMES')}</h1>
         ${bio.professional_title ? `<p class="lead">${escapeHtml(bio.professional_title)}</p>` : ''}
         ${bio.biography ? `<p>${nl2br(bio.biography)}</p>` : ''}
         <div class="stats-row">
           <div class="stat"><b>${totalProjects}+</b><span>Projetos</span></div>
-          <div class="stat"><b>2015</b><span>Desde</span></div>
-          <div class="stat"><b>BA</b><span>Salvador</span></div>
+          <div class="stat"><b>${escapeHtml(bio.founded_year || '2015')}</b><span>Desde</span></div>
+          <div class="stat"><b>${escapeHtml(bio.location_state || 'BA')}</b><span>${escapeHtml(bio.location_city || 'Salvador')}</span></div>
         </div>
         ${specialties.length ? `<div class="specialties-list">${specialties.map((s) => `<span>${escapeHtml(s)}</span>`).join('')}</div>` : ''}
         <div class="btn-row" style="margin-top:32px;"><a href="/contato" class="btn btn-solid">${escapeHtml(bio.cta_text || 'Vamos criar algo juntos?')}</a></div>
@@ -1001,14 +1001,14 @@ export async function aboutPage(req, res) {
   </section>
 
   ${bioVideos.length ? `<section><div class="container">
-    <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Vídeos</span>
-    <h2 class="reveal text-center">Conheça um pouco mais</h2>
+    <span class="eyebrow reveal text-center" style="display:block;text-align:center;">${escapeHtml(bio.videos_eyebrow || 'Vídeos')}</span>
+    <h2 class="reveal text-center">${escapeHtml(bio.videos_title || 'Conheça um pouco mais')}</h2>
     <div class="work-grid">${bioVideos.map((v) => `<div class="reveal">${videoEmbedHtml(v)}</div>`).join('')}</div>
   </div></section>` : ''}
 
   ${bioGalleryImages.length ? `<section class="alt-bg">
     <div class="container">
-      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Bastidores</span>
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">${escapeHtml(bio.gallery_eyebrow || 'Bastidores')}</span>
       <h2 class="reveal text-center">${escapeHtml(bio.gallery_title || 'No set com a NJFILMES')}</h2>
       <div class="bio-gallery reveal" data-drag-scroll>
         <div class="bio-gallery-track" data-drag-scroll-track>
@@ -1026,21 +1026,21 @@ export async function aboutPage(req, res) {
   </div>` : ''}
 
   ${bio.trajectory ? `<section><div class="container" style="max-width:820px;">
-    <span class="eyebrow reveal">Trajetória</span>
+    <span class="eyebrow reveal">${escapeHtml(bio.trajectory_eyebrow || 'Trajetória')}</span>
     <h2 class="reveal">${escapeHtml(bio.trajectory_title || 'Uma jornada pela imagem')}</h2>
     <p class="reveal">${nl2br(bio.trajectory)}</p>
   </div></section>` : ''}
 
   ${bio.equipment ? `<section class="${bio.trajectory ? 'alt-bg' : ''}"><div class="container" style="max-width:820px;">
-    <span class="eyebrow reveal">Estrutura</span>
-    <h2 class="reveal">Equipamentos</h2>
+    <span class="eyebrow reveal">${escapeHtml(bio.equipment_eyebrow || 'Estrutura')}</span>
+    <h2 class="reveal">${escapeHtml(bio.equipment_title || 'Equipamentos')}</h2>
     <p class="reveal">${nl2br(bio.equipment)}</p>
   </div></section>` : ''}
 
   ${people.length ? `<section id="pessoas" class="${(bio.trajectory ? 1 : 0) + (bio.equipment ? 1 : 0) === 1 ? 'alt-bg' : ''}">
     <div class="container">
-      <span class="eyebrow reveal">Quem já passou pela câmera</span>
-      <h2 class="reveal">Pessoas que já trabalhei</h2>
+      <span class="eyebrow reveal">${escapeHtml(bio.people_eyebrow || 'Quem já passou pela câmera')}</span>
+      <h2 class="reveal">${escapeHtml(bio.people_title || 'Pessoas que já trabalhei')}</h2>
       <div class="people-grid">
         ${people.map((p) => `<div class="person-card reveal">
           <img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" loading="lazy">
@@ -1055,8 +1055,8 @@ export async function aboutPage(req, res) {
 
   ${brands.length ? `<section class="${brandsAltBg ? 'alt-bg' : ''}">
     <div class="container">
-      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Quem confia no meu trabalho</span>
-      <h2 class="reveal text-center">Marcas</h2>
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">${escapeHtml(bio.brands_eyebrow || 'Quem confia no meu trabalho')}</span>
+      <h2 class="reveal text-center">${escapeHtml(bio.brands_title || 'Marcas')}</h2>
       <div class="marquee reveal" data-drag-scroll>
         <div class="marquee-track" data-drag-scroll-track>
           ${[...brands, ...brands].map((b) => {
@@ -1070,7 +1070,7 @@ export async function aboutPage(req, res) {
 
   <section class="cta-section alt-bg">
     <div class="container">
-      <h2 class="reveal">Fale agora com a NJFILMES</h2>
+      <h2 class="reveal">${escapeHtml(bio.bottom_cta_title || 'Fale agora com a NJFILMES')}</h2>
       <div class="btn-row reveal"><a href="/contato" class="btn btn-solid">Entrar em contato</a></div>
     </div>
   </section>`;
@@ -1117,7 +1117,7 @@ export async function servicesPage(req, res) {
   </section>
   <section class="cta-section alt-bg">
     <div class="container">
-      <h2 class="reveal">Pronto para começar seu projeto?</h2>
+      <h2 class="reveal">${escapeHtml(settings.services_cta_title || 'Pronto para começar seu projeto?')}</h2>
       <div class="btn-row reveal"><a href="/contato" class="btn btn-solid">Solicitar orçamento</a></div>
     </div>
   </section>`;
@@ -1146,7 +1146,7 @@ export async function contactPage(req, res) {
   const content = `
   <section class="simple-hero">
     <div class="container">
-      <span class="eyebrow reveal">Contato</span>
+      <span class="eyebrow reveal">${escapeHtml(settings.contact_eyebrow || 'Contato')}</span>
       <h1 class="reveal">${escapeHtml(settings.contact_headline || 'Vamos conversar sobre seu projeto')}</h1>
     </div>
   </section>
