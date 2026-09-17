@@ -2617,6 +2617,7 @@ export async function selectionCaseEditPage(req, res, admin, id, tab = 'info') {
         ${selected.length ? '<button type="button" class="btn-a btn-a-primary" data-export-modal-open>Exportar</button>' : ''}
       </div>
       ${selectionCase.submitted_at ? `<p class="muted" style="margin-top:0;">Enviada em ${escapeHtml(formatDateTimePtBr(selectionCase.submitted_at))}.</p>` : ''}
+      ${selectionCase.client_note ? `<div class="panel" style="background:var(--a-panel-2);margin:0 0 14px;"><h3 style="margin-top:0;">Recado do cliente</h3><p style="white-space:pre-line;margin-bottom:0;">${escapeHtml(selectionCase.client_note)}</p></div>` : ''}
       ${selectionCase.photo_limit && selected.length > selectionCase.photo_limit ? `<p style="color:#d0503a;">Atenção: passou do limite combinado em ${selected.length - selectionCase.photo_limit} foto(s).</p>` : ''}
       ${selected.length ? `<div class="photo-grid">${selected.map((p) => `<div class="photo-card"><img src="${escapeHtml(p.thumb_filename)}" alt=""></div>`).join('')}</div>` : '<p class="empty-hint">O cliente enviou sem marcar nenhuma foto.</p>'}
     </div>

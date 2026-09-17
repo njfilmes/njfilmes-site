@@ -898,15 +898,17 @@ export async function toggleSelectionPhoto(req, res, id, body) {
 }
 
 // Cliente clica em "Enviar seleção" (POST /api/selecao-enviar/:slug) — trava a galeria (status
-// "andamento" -> "revisao") até o fotógrafo revisar ou reativar.
-export async function submitSelection(req, res, slug) {
+// "andamento" -> "revisao") até o fotógrafo revisar ou reativar. Body opcional { note } — recado
+// que o cliente deixou junto da seleção (ver server/selectionPage.js e admin.js aba "Revisão").
+export async function submitSelection(req, res, slug, body = {}) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   const selectionCase = await getSelectionCaseBySlug(slug);
   if (!selectionCase || selectionCase.status !== 'andamento') {
     res.statusCode = 409;
     return res.end(JSON.stringify({ ok: false, error: 'Essa seleção não está disponível pra envio no momento.' }));
   }
-  await markSelectionSubmitted(selectionCase.id);
+  const note = typeof body.note === 'string' ? body.note.slice(0, 2000) : '';
+  await markSelectionSubmitted(selectionCase.id, note);
   res.end(JSON.stringify({ ok: true }));
 }
 
