@@ -17,7 +17,7 @@ import {
   recoveryGuard,
   getClientIp,
 } from '../auth.js';
-import { saveProjectPhoto, saveMiscImage, saveVideoFile, deletePhotoFiles } from '../upload.js';
+import { saveProjectPhoto, saveMiscImage, saveVideoFile, deletePhotoFiles, saveDeliveryPhoto, deleteDeliveryPhotoFiles } from '../upload.js';
 import * as Q from '../queries.js';
 
 function redirect(res, location) {
@@ -1763,6 +1763,307 @@ export async function projectPhotoMove(req, res, body, id, photoId) {
   await Q.setPhotoOrder(a.id, b.sort_order);
   await Q.setPhotoOrder(b.id, a.sort_order);
   redirect(res, `/admin/projetos/${id}/fotos`);
+}
+
+// ---------------- Entregas (página individual pra cada cliente) ----------------
+// Mesmo padrão de Projetos acima (abas Informações/Vídeos/Fotos), com uma aba a mais
+// (Comentários) e sem categoria — pedido do usuário em 12/09/2026 pra parar de depender da
+// ferramenta separada (Claude) pra montar a entrega de cada cliente. A página pública fica em
+// /entregas/:slug (ver server/routes/public.js e server/deliveryPage.js) e só existe de verdade
+// (no site publicado) quando "published" está marcado E o site estático for republicado — a
+// mesma regra de "published" que os projetos já seguem.
+const SITE_URL = process.env.SITE_URL || 'https://njfilmes.com.br';
+
+function renderDeliveryCasesTable(cases) {
+  if (!cases.length) return '<p class="empty-hint">Nenhuma entrega ainda. Clique em "Nova entrega" para criar a primeira.</p>';
+  const rows = cases
+    .map(
+      (c) => `<tr>
+      <td><img class="thumb-sm" src="${escapeHtml(c.cover_photo || '/img/project-placeholder.jpg')}" alt=""></td>
+      <td><a href="/admin/entregas/${c.id}">${escapeHtml(c.client_name)}</a></td>
+      <td>${c.published ? `<span class="tag tag-published">Publicada</span> <a href="${SITE_URL}/entregas/${escapeHtml(c.slug)}" target="_blank" style="font-size:.8rem;">Ver link ↗</a>` : '<span class="tag tag-draft">Rascunho</span>'}</td>
+      <td class="row-actions">
+        <a class="btn-a btn-a-sm" href="/admin/entregas/${c.id}">Editar</a>
+        <form method="post" action="/admin/entregas/${c.id}/excluir" data-confirm="Excluir a entrega de &quot;${escapeHtml(c.client_name)}&quot;? Isso remove também as fotos e vídeos dela."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+      </td>
+    </tr>`
+    )
+    .join('');
+  return `<table class="admin-table"><thead><tr><th>Capa</th><th>Cliente</th><th>Status</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+
+export async function deliveryCasesListPage(req, res, admin) {
+  const flash = readFlash(req);
+  const cases = await Q.listDeliveryCases();
+  const content = `
+  <div class="panel-head" style="margin-bottom:18px;">
+    <h2 style="margin:0;">Entregas (${cases.length})</h2>
+    <a class="btn-a btn-a-primary" href="/admin/entregas/novo">+ Nova entrega</a>
+  </div>
+  <div class="panel"><p class="muted" style="margin-top:0;">Monte a página de entrega de cada cliente (fotos, vídeos e link de download) e mande o link direto no WhatsApp. Enquanto estiver "Rascunho", a página não aparece pra ninguém.</p></div>
+  <div class="panel">${renderDeliveryCasesTable(cases)}</div>`;
+  res.end(adminLayout({ title: 'Entregas', activePath: '/admin/entregas', admin, content, flash }));
+}
+
+function deliveryInfoForm({ action, deliveryCase = {} }) {
+  return `<form method="post" action="${action}">
+    <div class="form-row">
+      ${field({ label: 'Nome do cliente', name: 'client_name', value: deliveryCase.client_name, required: true, placeholder: 'Ex: João & Maria' }).replace('<input', '<input data-slug-source')}
+      ${field({ label: 'URL (slug)', name: 'slug', value: deliveryCase.slug, help: 'Endereço final: /entregas/seu-texto-aqui' }).replace('<input', '<input data-slug-target')}
+    </div>
+    ${field({ label: 'Mensagem de boas-vindas (opcional)', name: 'welcome_message', value: deliveryCase.welcome_message, textarea: true, rows: 4, placeholder: 'Ex: Ficou pronto o seu ensaio! Deu uma olhadinha, saiu lindo...' })}
+    <div class="form-row">
+      ${field({ label: 'Link pra baixar as fotos em alta (Mega, Drive, WeTransfer...)', name: 'photos_download_url', value: deliveryCase.photos_download_url, placeholder: 'https://...' })}
+      ${field({ label: 'Texto do botão de download das fotos', name: 'photos_download_label', value: deliveryCase.photos_download_label || 'Baixar fotos em alta' })}
+    </div>
+    ${field({ label: 'WhatsApp do cliente (opcional, só de referência sua)', name: 'whatsapp_number', value: deliveryCase.whatsapp_number, placeholder: 'Ex: 5511999999999' })}
+    ${checkboxField({ label: 'Publicada (a página fica acessível pelo link assim que o site republicar)', name: 'published', checked: !!deliveryCase.published })}
+    <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar</button></div>
+  </form>`;
+}
+
+export async function deliveryCaseNewPage(req, res, admin) {
+  const content = `<div class="panel"><h2>Nova entrega</h2>${deliveryInfoForm({ action: '/admin/entregas/criar' })}</div>`;
+  res.end(adminLayout({ title: 'Nova entrega', activePath: '/admin/entregas', admin, content }));
+}
+
+export async function deliveryCaseCreate(req, res, body) {
+  const clientName = (body.client_name || '').trim();
+  if (!clientName) return redirect(res, '/admin/entregas/novo');
+  const slug = await uniqueSlug(['delivery_cases'], (body.slug || '').trim() || clientName);
+  const id = await Q.createDeliveryCase({ client_name: clientName, slug, welcome_message: body.welcome_message });
+  redirect(res, `/admin/entregas/${id}` + withFlash(res, 'success', 'Entrega criada! Agora adicione fotos e vídeos.'));
+}
+
+function deliveryTabs(id, active) {
+  const tabs = [
+    ['info', 'Informações'],
+    ['videos', 'Vídeos'],
+    ['fotos', 'Fotos'],
+    ['comentarios', 'Comentários'],
+  ];
+  return `<div class="tabs">${tabs
+    .map(([key, label]) => `<a class="tab-link ${active === key ? 'active' : ''}" href="/admin/entregas/${id}${key === 'info' ? '' : '/' + key}">${label}</a>`)
+    .join('')}</div>`;
+}
+
+export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) return redirect(res, '/admin/entregas');
+  const flash = readFlash(req);
+
+  let body;
+  if (tab === 'videos') {
+    body = `
+    ${deliveryTabs(id, 'videos')}
+    <div class="panel">
+      <h2>Adicionar vídeo (prévia)</h2>
+      <p class="muted" style="margin-top:-8px;">Cole o link do YouTube, Vimeo, Mega ou Google Drive — toca direto na página (Mega e Drive precisam estar compartilhados como "qualquer pessoa com o link"). O campo "link pra baixar o arquivo completo" é opcional e separado — use quando a prévia mostra só um trecho e o arquivo de verdade é maior.</p>
+      <form method="post" action="/admin/entregas/${id}/videos/criar">
+        <div class="form-row">
+          ${field({ label: 'URL do vídeo (prévia)', name: 'url', required: true, placeholder: 'https://www.youtube.com/watch?v=...' })}
+          ${field({ label: 'Título (opcional)', name: 'title', placeholder: 'Ex: Making of' })}
+        </div>
+        ${field({ label: 'Link pra baixar o vídeo completo (opcional)', name: 'download_url', placeholder: 'https://...' })}
+        <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Adicionar vídeo</button></div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Vídeos (${deliveryCase.videos.length})</h2>
+      ${deliveryCase.videos.length ? deliveryCase.videos.map((v) => `
+        <div class="video-item">
+          <div class="vi-info"><b>${escapeHtml(v.title || v.provider)}</b><span>${escapeHtml(v.url)}</span>${v.download_url ? `<span> · download: ${escapeHtml(v.download_url)}</span>` : ''}</div>
+          <form method="post" action="/admin/entregas/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger">Remover</button></form>
+        </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
+    </div>`;
+  } else if (tab === 'fotos') {
+    body = `
+    ${deliveryTabs(id, 'fotos')}
+    <div class="panel">
+      <h2>Enviar fotos</h2>
+      <p class="muted" style="margin-top:-8px;">Selecione várias fotos de uma vez. Elas são otimizadas e uma miniatura é gerada automaticamente — a primeira foto enviada vira a capa da página.</p>
+      <div class="upload-drop" data-upload-drop data-upload-url="/admin/entregas/${id}/fotos/upload">
+        <input type="file" accept="image/*" multiple>
+        <p>Clique aqui ou arraste as fotos para enviar</p>
+        <div id="upload-preview"></div>
+        <p data-upload-status style="margin-top:10px;font-size:0.82rem;"></p>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Fotos da entrega (${deliveryCase.photos.length})</h2>
+      ${deliveryCase.photos.length ? `<div class="photo-grid">${deliveryCase.photos
+        .map(
+          (p, i) => `<div class="photo-card">
+          <img src="${escapeHtml(p.thumb_filename)}" alt="">
+          <div class="pc-body">
+            ${p.is_cover ? '<span class="is-cover-badge">Capa</span>' : ''}
+            <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/legenda">
+              <input type="text" name="caption" value="${escapeHtml(p.caption || '')}" placeholder="Legenda (opcional)">
+              <button class="btn-a btn-a-sm" type="submit">Salvar legenda</button>
+            </form>
+            <div class="pc-actions">
+              ${!p.is_cover ? `<form method="post" action="/admin/entregas/${id}/fotos/${p.id}/capa"><button class="btn-a btn-a-sm">Definir capa</button></form>` : ''}
+              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
+              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === deliveryCase.photos.length - 1 ? 'disabled' : ''}>↓</button></form>
+              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
+            </div>
+          </div>
+        </div>`
+        )
+        .join('')}</div>` : '<p class="empty-hint">Nenhuma foto enviada ainda.</p>'}
+    </div>`;
+  } else if (tab === 'comentarios') {
+    const comments = deliveryCase.comments || [];
+    body = `
+    ${deliveryTabs(id, 'comentarios')}
+    <div class="panel">
+      <h2>Comentários (${comments.length})</h2>
+      <p class="muted" style="margin-top:-8px;">O que o cliente escreveu na página dele. Você pode responder publicamente (aparece logo abaixo do comentário) ou excluir.</p>
+    </div>
+    ${comments.length ? comments.map((c) => `
+      <div class="panel comment-admin-item">
+        <div class="comment-admin-head">
+          <div><b>${escapeHtml(c.author_name)}</b><span class="muted"> · ${escapeHtml(formatDateTimePtBr(c.created_at))}</span></div>
+          <form method="post" action="/admin/entregas/${id}/comentarios/${c.id}/remover" data-confirm="Excluir este comentário?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
+        </div>
+        <p class="comment-admin-content">${escapeHtml(c.content)}</p>
+        <form method="post" action="/admin/entregas/${id}/comentarios/${c.id}/responder" class="comment-admin-reply-form">
+          ${field({ label: 'Sua resposta (aparece publicamente)', name: 'admin_reply', value: c.admin_reply || '', textarea: true, rows: 2 })}
+          <div class="form-actions"><button class="btn-a btn-a-primary btn-a-sm" type="submit">Salvar resposta</button></div>
+        </form>
+      </div>`).join('') : '<div class="panel"><p class="empty-hint">Nenhum comentário ainda.</p></div>'}`;
+  } else {
+    body = `${deliveryTabs(id, 'info')}<div class="panel"><h2>Informações</h2>${deliveryInfoForm({ action: `/admin/entregas/${id}/atualizar`, deliveryCase })}</div>
+    ${deliveryCase.published ? `<div class="panel"><h3>Link da entrega</h3><p><a href="${SITE_URL}/entregas/${escapeHtml(deliveryCase.slug)}" target="_blank">${SITE_URL}/entregas/${escapeHtml(deliveryCase.slug)}</a></p><p class="muted">Depois de publicar/atualizar aqui, o site leva alguns instantes pra republicar antes do link refletir a mudança.</p></div>` : ''}
+    <div class="panel">
+      <h3>Excluir entrega</h3>
+      <p class="muted">Essa ação remove a entrega, suas fotos, vídeos e comentários permanentemente.</p>
+      <form method="post" action="/admin/entregas/${id}/excluir" data-confirm="Excluir a entrega de &quot;${escapeHtml(deliveryCase.client_name)}&quot; e todo o seu conteúdo?"><button class="btn-a btn-a-danger" type="submit">Excluir entrega</button></form>
+    </div>`;
+  }
+
+  res.end(adminLayout({ title: deliveryCase.client_name, activePath: '/admin/entregas', admin, content: body, flash }));
+}
+
+export async function deliveryCaseUpdate(req, res, body, id) {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) return redirect(res, '/admin/entregas');
+  const clientName = (body.client_name || deliveryCase.client_name).trim();
+  const slug = (body.slug || '').trim() ? await uniqueSlug(['delivery_cases'], body.slug, id) : deliveryCase.slug;
+  await Q.updateDeliveryCase(id, {
+    client_name: clientName,
+    slug,
+    welcome_message: body.welcome_message,
+    cover_photo: deliveryCase.cover_photo,
+    photos_download_url: body.photos_download_url,
+    photos_download_label: body.photos_download_label,
+    whatsapp_number: body.whatsapp_number,
+    published: !!body.published,
+  });
+  redirect(res, `/admin/entregas/${id}` + withFlash(res, 'success', 'Entrega atualizada.'));
+}
+
+export async function deliveryCaseDelete(req, res, id) {
+  await Q.deleteDeliveryCase(id);
+  redirect(res, '/admin/entregas' + withFlash(res, 'success', 'Entrega excluída.'));
+}
+
+export async function deliveryVideoCreate(req, res, body, id) {
+  const parsed = parseVideoUrl(body.url);
+  if (!parsed) return redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'error', 'Link de vídeo inválido.'));
+  const maxOrder = await maxSortOrder('delivery_videos', 'case_id', id);
+  await Q.addDeliveryVideo(id, { provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: body.title, download_url: (body.download_url || '').trim(), sort_order: maxOrder + 1 });
+  redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'success', 'Vídeo adicionado.'));
+}
+
+export async function deliveryVideoDelete(req, res, id, videoId) {
+  await Q.deleteDeliveryVideo(videoId);
+  redirect(res, `/admin/entregas/${id}/videos`);
+}
+
+export async function deliveryPhotosUpload(req, res, body, id) {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Entrega não encontrada.' }));
+  }
+  const photos = Array.isArray(body.photos) ? body.photos : [];
+  if (!photos.length) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
+  }
+  let order = await maxSortOrder('delivery_photos', 'case_id', id);
+  let saved = 0;
+  const isFirstBatch = deliveryCase.photos.length === 0;
+  for (const dataUrl of photos) {
+    try {
+      const { filename, thumbFilename, width, height } = await saveDeliveryPhoto(dataUrl);
+      order += 1;
+      await Q.addDeliveryPhoto(id, { filename, thumbFilename, sort_order: order, is_cover: isFirstBatch && saved === 0 ? 1 : 0, width, height });
+      if (isFirstBatch && saved === 0) {
+        await query('UPDATE delivery_cases SET cover_photo = $1 WHERE id = $2', [filename, id]);
+      }
+      saved += 1;
+    } catch (err) {
+      console.error('Erro ao salvar foto de entrega:', err.message);
+    }
+  }
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify({ ok: true, saved }));
+}
+
+export async function deliveryPhotoDelete(req, res, id, photoId) {
+  const photo = await Q.getDeliveryPhoto(photoId);
+  if (photo) {
+    await deleteDeliveryPhotoFiles(photo.filename, photo.thumb_filename);
+    await Q.deleteDeliveryPhoto(photoId);
+    if (photo.is_cover) {
+      const next = await queryOne('SELECT * FROM delivery_photos WHERE case_id = $1 ORDER BY sort_order ASC LIMIT 1', [id]);
+      if (next) {
+        await query('UPDATE delivery_photos SET is_cover = 1 WHERE id = $1', [next.id]);
+        await query('UPDATE delivery_cases SET cover_photo = $1 WHERE id = $2', [next.filename, id]);
+      } else {
+        await query('UPDATE delivery_cases SET cover_photo = $1 WHERE id = $2', ['', id]);
+      }
+    }
+  }
+  redirect(res, `/admin/entregas/${id}/fotos`);
+}
+
+export async function deliveryPhotoSetCover(req, res, id, photoId) {
+  await Q.setDeliveryPhotoAsCover(id, photoId);
+  redirect(res, `/admin/entregas/${id}/fotos`);
+}
+
+export async function deliveryPhotoCaption(req, res, body, id, photoId) {
+  await Q.setDeliveryPhotoCaption(photoId, body.caption || '');
+  redirect(res, `/admin/entregas/${id}/fotos`);
+}
+
+export async function deliveryPhotoMove(req, res, body, id, photoId) {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) return redirect(res, '/admin/entregas');
+  const photos = deliveryCase.photos;
+  const idx = photos.findIndex((p) => p.id === photoId);
+  if (idx === -1) return redirect(res, `/admin/entregas/${id}/fotos`);
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= photos.length) return redirect(res, `/admin/entregas/${id}/fotos`);
+  const a = photos[idx], b = photos[swapWith];
+  await Q.setDeliveryPhotoOrder(a.id, b.sort_order);
+  await Q.setDeliveryPhotoOrder(b.id, a.sort_order);
+  redirect(res, `/admin/entregas/${id}/fotos`);
+}
+
+export async function deliveryCommentReply(req, res, body, id, commentId) {
+  await Q.updateDeliveryCommentReply(commentId, (body.admin_reply || '').trim());
+  redirect(res, `/admin/entregas/${id}/comentarios` + withFlash(res, 'success', 'Resposta salva.'));
+}
+
+export async function deliveryCommentDelete(req, res, id, commentId) {
+  await Q.deleteDeliveryComment(commentId);
+  redirect(res, `/admin/entregas/${id}/comentarios` + withFlash(res, 'success', 'Comentário excluído.'));
 }
 
 // ---------------- Recuperação de acesso ----------------

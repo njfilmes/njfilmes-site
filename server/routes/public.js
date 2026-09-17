@@ -23,7 +23,11 @@ import {
   incrementPhotoLikesIfPublished,
   listCommentsForProject,
   createComment,
+  getDeliveryCaseBySlug,
+  listCommentsForDeliveryCase,
+  createDeliveryComment,
 } from '../queries.js';
+import { renderDeliveryCasePage } from '../deliveryPage.js';
 
 function coverUrl(project) {
   return project.cover_photo || (project.photos && project.photos[0] && project.photos[0].filename) || '/img/placeholder.svg';
@@ -706,6 +710,77 @@ export async function postComment(req, res, slug, body) {
     return res.end(JSON.stringify({ ok: false, error: 'Muitos comentários em pouco tempo. Tente novamente em alguns minutos.' }));
   }
   const comment = await createComment({ project_id: project.id, author_name: authorName, content });
+  res.statusCode = 201;
+  res.end(JSON.stringify({
+    ok: true,
+    comment: { id: comment.id, author_name: comment.author_name, content: comment.content, admin_reply: '', admin_reply_at: null, created_at: comment.created_at },
+  }));
+}
+
+// ---------- Página de entrega do cliente (/entregas/:slug) ----------
+// Não usa layout()/header/footer do site (ver server/deliveryPage.js) — é uma página própria,
+// só a apresentação daquela entrega específica. Mesma proteção de "só existe se published"
+// que os projetos já têm, e mesmo limitador de comentários (commentRateLimitOk acima).
+export async function deliveryCasePage(req, res) {
+  const slug = req.params.slug;
+  const deliveryCase = await getDeliveryCaseBySlug(slug);
+  if (!deliveryCase || !deliveryCase.published) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    return res.end('<h1>Entrega não encontrada.</h1>');
+  }
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  res.end(renderDeliveryCasePage(deliveryCase));
+}
+
+export async function getDeliveryComments(req, res, slug) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const deliveryCase = await getDeliveryCaseBySlug(slug);
+  if (!deliveryCase || !deliveryCase.published) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Entrega não encontrada.' }));
+  }
+  const comments = await listCommentsForDeliveryCase(deliveryCase.id);
+  res.end(JSON.stringify({
+    comments: comments.map((c) => ({
+      id: c.id,
+      author_name: c.author_name,
+      content: c.content,
+      admin_reply: c.admin_reply || '',
+      admin_reply_at: c.admin_reply_at || null,
+      created_at: c.created_at,
+    })),
+  }));
+}
+
+export async function postDeliveryComment(req, res, slug, body) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  const deliveryCase = await getDeliveryCaseBySlug(slug);
+  if (!deliveryCase || !deliveryCase.published) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Entrega não encontrada.' }));
+  }
+  if (body.empresa) {
+    // honeypot: finge sucesso, não grava nada (mesma proteção usada nos comentários de projeto)
+    res.statusCode = 201;
+    return res.end(JSON.stringify({
+      ok: true,
+      comment: { id: 0, author_name: body.author_name || '', content: body.content || '', admin_reply: '', admin_reply_at: null, created_at: new Date().toISOString() },
+    }));
+  }
+  const authorName = String(body.author_name || '').trim().slice(0, 80);
+  const content = String(body.content || '').trim().slice(0, 1000);
+  if (!authorName || !content) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ ok: false, error: 'Preencha seu nome e o comentário.' }));
+  }
+  const ip = getClientIp(req);
+  if (!commentRateLimitOk(ip)) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ ok: false, error: 'Muitos comentários em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const comment = await createDeliveryComment({ case_id: deliveryCase.id, author_name: authorName, content });
   res.statusCode = 201;
   res.end(JSON.stringify({
     ok: true,
