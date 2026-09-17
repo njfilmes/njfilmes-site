@@ -160,6 +160,16 @@ function pageScript(slug) {
             if (r.top < viewH && r.bottom > 0) el.classList.add('is-visible');
           });
         }, 500);
+        // 17/09/2026: rede de segurança extra - relato de cliente que a seção de download não
+        // aparecia no final da entrega. A checagem de 500ms ali em cima só revela quem já está
+        // visível na tela logo no início (útil pra capa), mas uma seção mais pra baixo (como o
+        // download, que fica perto do fim) só vira visível quando o IntersectionObserver dispara
+        // ao rolar até ela - e em alguns navegadores/celulares isso pode falhar silenciosamente
+        // dentro desse container de scroll próprio (".dc-story"), deixando o elemento preso em
+        // opacity:0 pra sempre. Igual já existe no site principal (site.js), força TODO mundo a
+        // aparecer depois de alguns segundos, não importa se rolou até lá ou não - melhor perder
+        // a animação de entrada do que sumir com conteúdo (e o download) de vez.
+        setTimeout(revealAll, 3000);
       } else {
         revealAll();
       }
