@@ -35,9 +35,10 @@ if (!process.env.PUBLIC_API_BASE) {
 
 const { layout } = await import('../server/render.js');
 const Pub = await import('../server/routes/public.js');
-const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions } = await import(
+const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions, listDeliveryCases, getDeliveryCaseBySlug } = await import(
   '../server/queries.js'
 );
+const { renderDeliveryCasePage } = await import('../server/deliveryPage.js');
 const { initSchema } = await import('../server/db.js');
 await initSchema();
 
@@ -150,7 +151,7 @@ async function buildSitemapAndRobots(categories, projects) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${tags.join('\n')}\n</urlset>`;
   await fsp.writeFile(path.join(DIST_DIR, 'sitemap.xml'), xml, 'utf8');
 
-  const robots = `User-agent: *\nAllow: /\nDisallow: /admin\nSitemap: ${base}/sitemap.xml\n`;
+  const robots = `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nSitemap: ${base}/sitemap.xml\n`;
   await fsp.writeFile(path.join(DIST_DIR, 'robots.txt'), robots, 'utf8');
 }
 
@@ -224,11 +225,23 @@ async function main() {
     await writePage('contato', html);
   }
 
+  // Páginas de Entregas (/entregas/:slug) — uma por entrega marcada como "Publicada" no painel
+  // (/admin/entregas). Não usa renderPage()/layout() como as páginas acima: a página de entrega
+  // é auto-contida (ver server/deliveryPage.js), então é só chamar a função de render direto.
+  // Não entra no sitemap.xml de propósito — são links privados, feitos pra mandar direto pro
+  // cliente, não pra aparecer em buscador nenhum (cada página também leva <meta robots noindex>).
+  const deliveryCases = (await listDeliveryCases()).filter((c) => c.published);
+  for (const dc of deliveryCases) {
+    const full = await getDeliveryCaseBySlug(dc.slug);
+    if (!full) continue;
+    await writePage(`entregas/${full.slug}`, renderDeliveryCasePage(full));
+  }
+
   await build404(settings, categories);
   await buildSitemapAndRobots(categories, allProjects);
   await copyStaticAssets();
 
-  console.log(`\nPronto! ${1 + 1 + categories.length + allProjects.length + 3} páginas geradas em dist/.`);
+  console.log(`\nPronto! ${1 + 1 + categories.length + allProjects.length + deliveryCases.length + 3} páginas geradas em dist/.`);
   console.log('Esse diretório é o que deve ser publicado no Render Static Site (Publish directory: dist).');
 }
 
