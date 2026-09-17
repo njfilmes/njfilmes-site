@@ -609,6 +609,86 @@ export async function initSchema() {
           await query("ALTER TABLE settings ADD COLUMN site_font_scale TEXT DEFAULT ''");
     }
 
+    // 17/09/2026: rodada de "quero todo o site com textos editáveis" - vários títulos/legendas de
+    // seções da Home, Portfólio, página de cada projeto, Serviços e Contato ainda eram fixos no
+    // código (o usuário reparou que "Portfólio selecionado" não dava pra editar). Cada um cai pro
+    // texto de sempre se ficar vazio, mesmo esquema das rodadas anteriores (ver comentários acima).
+    if (!settingsCols.includes('featured_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN featured_eyebrow TEXT DEFAULT 'Projeto em destaque'");
+    }
+    if (!settingsCols.includes('featured_cta_text')) {
+          await query("ALTER TABLE settings ADD COLUMN featured_cta_text TEXT DEFAULT 'Assistir projeto'");
+    }
+    if (!settingsCols.includes('recent_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN recent_eyebrow TEXT DEFAULT 'Trabalhos recentes'");
+    }
+    if (!settingsCols.includes('recent_title')) {
+          await query("ALTER TABLE settings ADD COLUMN recent_title TEXT DEFAULT 'Portfólio selecionado'");
+    }
+    if (!settingsCols.includes('recent_cta_text')) {
+          await query("ALTER TABLE settings ADD COLUMN recent_cta_text TEXT DEFAULT 'Ver tudo'");
+    }
+    if (!settingsCols.includes('recent_empty_text')) {
+          await query("ALTER TABLE settings ADD COLUMN recent_empty_text TEXT DEFAULT 'Novos projetos em breve.'");
+    }
+    if (!settingsCols.includes('categories_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN categories_eyebrow TEXT DEFAULT 'Explore'");
+    }
+    if (!settingsCols.includes('categories_title')) {
+          await query("ALTER TABLE settings ADD COLUMN categories_title TEXT DEFAULT 'Categorias'");
+    }
+    if (!settingsCols.includes('intro_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN intro_eyebrow TEXT DEFAULT 'A NJFILMES'");
+    }
+    if (!settingsCols.includes('intro_title')) {
+          await query("ALTER TABLE settings ADD COLUMN intro_title TEXT DEFAULT 'Cinema, no seu momento mais importante'");
+    }
+    if (!settingsCols.includes('intro_text')) {
+          await query("ALTER TABLE settings ADD COLUMN intro_text TEXT DEFAULT 'Produzimos vídeos, fotografia e cobertura de eventos com um olhar autoral — do casamento ao clipe, do institucional ao conteúdo para redes sociais. Cada projeto é tratado como uma produção própria, do roteiro à entrega final.'");
+    }
+    if (!settingsCols.includes('intro_cta_text')) {
+          await query("ALTER TABLE settings ADD COLUMN intro_cta_text TEXT DEFAULT 'Conheça a história'");
+    }
+    if (!settingsCols.includes('testimonials_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN testimonials_eyebrow TEXT DEFAULT 'O que dizem'");
+    }
+    if (!settingsCols.includes('testimonials_title')) {
+          await query("ALTER TABLE settings ADD COLUMN testimonials_title TEXT DEFAULT 'Feedback de clientes'");
+    }
+    if (!settingsCols.includes('hero_cta_primary_text')) {
+          await query("ALTER TABLE settings ADD COLUMN hero_cta_primary_text TEXT DEFAULT 'Ver portfólio'");
+    }
+    if (!settingsCols.includes('hero_cta_secondary_text')) {
+          await query("ALTER TABLE settings ADD COLUMN hero_cta_secondary_text TEXT DEFAULT 'Entrar em contato'");
+    }
+    if (!settingsCols.includes('cta_button_text')) {
+          await query("ALTER TABLE settings ADD COLUMN cta_button_text TEXT DEFAULT 'Pedir orçamento'");
+    }
+    if (!settingsCols.includes('portfolio_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN portfolio_eyebrow TEXT DEFAULT 'Portfólio'");
+    }
+    if (!settingsCols.includes('portfolio_title')) {
+          await query("ALTER TABLE settings ADD COLUMN portfolio_title TEXT DEFAULT 'Trabalhos NJFILMES'");
+    }
+    if (!settingsCols.includes('portfolio_subtitle')) {
+          await query("ALTER TABLE settings ADD COLUMN portfolio_subtitle TEXT DEFAULT 'Filtre por categoria para ver casamentos, eventos, videoclipes, drone e muito mais.'");
+    }
+    if (!settingsCols.includes('project_more_videos_title')) {
+          await query("ALTER TABLE settings ADD COLUMN project_more_videos_title TEXT DEFAULT 'Mais vídeos'");
+    }
+    if (!settingsCols.includes('project_comments_title')) {
+          await query("ALTER TABLE settings ADD COLUMN project_comments_title TEXT DEFAULT 'Comentários'");
+    }
+    if (!settingsCols.includes('project_cta_title')) {
+          await query("ALTER TABLE settings ADD COLUMN project_cta_title TEXT DEFAULT 'Gostou? Vamos criar o seu projeto'");
+    }
+    if (!settingsCols.includes('services_cta_title')) {
+          await query("ALTER TABLE settings ADD COLUMN services_cta_title TEXT DEFAULT 'Pronto para começar seu projeto?'");
+    }
+    if (!settingsCols.includes('contact_eyebrow')) {
+          await query("ALTER TABLE settings ADD COLUMN contact_eyebrow TEXT DEFAULT 'Contato'");
+    }
+
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
       );
@@ -645,6 +725,54 @@ export async function initSchema() {
     }
     if (!bioCols.includes('trajectory_title')) {
           await query("ALTER TABLE bio ADD COLUMN trajectory_title TEXT DEFAULT 'Uma jornada pela imagem'");
+    }
+    // 17/09/2026: mesma rodada de "quero todo o site com textos editáveis" - títulos/legendas e os
+    // números da faixa de estatísticas (projetos/ano de fundação/cidade) da página Sobre também
+    // eram fixos no código. Cada um cai pro texto/valor de sempre se ficar vazio no painel.
+    if (!bioCols.includes('about_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN about_eyebrow TEXT DEFAULT 'Sobre a NJFILMES'");
+    }
+    if (!bioCols.includes('founded_year')) {
+          await query("ALTER TABLE bio ADD COLUMN founded_year TEXT DEFAULT '2015'");
+    }
+    if (!bioCols.includes('location_city')) {
+          await query("ALTER TABLE bio ADD COLUMN location_city TEXT DEFAULT 'Salvador'");
+    }
+    if (!bioCols.includes('location_state')) {
+          await query("ALTER TABLE bio ADD COLUMN location_state TEXT DEFAULT 'BA'");
+    }
+    if (!bioCols.includes('videos_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN videos_eyebrow TEXT DEFAULT 'Vídeos'");
+    }
+    if (!bioCols.includes('videos_title')) {
+          await query("ALTER TABLE bio ADD COLUMN videos_title TEXT DEFAULT 'Conheça um pouco mais'");
+    }
+    if (!bioCols.includes('gallery_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN gallery_eyebrow TEXT DEFAULT 'Bastidores'");
+    }
+    if (!bioCols.includes('trajectory_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN trajectory_eyebrow TEXT DEFAULT 'Trajetória'");
+    }
+    if (!bioCols.includes('equipment_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN equipment_eyebrow TEXT DEFAULT 'Estrutura'");
+    }
+    if (!bioCols.includes('equipment_title')) {
+          await query("ALTER TABLE bio ADD COLUMN equipment_title TEXT DEFAULT 'Equipamentos'");
+    }
+    if (!bioCols.includes('people_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN people_eyebrow TEXT DEFAULT 'Quem já passou pela câmera'");
+    }
+    if (!bioCols.includes('people_title')) {
+          await query("ALTER TABLE bio ADD COLUMN people_title TEXT DEFAULT 'Pessoas que já trabalhei'");
+    }
+    if (!bioCols.includes('brands_eyebrow')) {
+          await query("ALTER TABLE bio ADD COLUMN brands_eyebrow TEXT DEFAULT 'Quem confia no meu trabalho'");
+    }
+    if (!bioCols.includes('brands_title')) {
+          await query("ALTER TABLE bio ADD COLUMN brands_title TEXT DEFAULT 'Marcas'");
+    }
+    if (!bioCols.includes('bottom_cta_title')) {
+          await query("ALTER TABLE bio ADD COLUMN bottom_cta_title TEXT DEFAULT 'Fale agora com a NJFILMES'");
     }
     // Observação: uma tentativa anterior (mesma data) tinha adicionado uma coluna bio_video_url
     // pra um único vídeo. Foi substituída pela tabela bio_videos acima (vários vídeos, mesmo

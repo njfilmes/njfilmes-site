@@ -20,10 +20,22 @@ const SETTINGS_COLUMNS = new Set([
   'instagram_url', 'youtube_url', 'vimeo_url', 'tiktok_url', 'facebook_url', 'google_review_url',
   'services_eyebrow', 'services_title', 'services_subtitle', 'clients_eyebrow', 'clients_title',
   'cta_eyebrow', 'cta_title', 'site_font_preset', 'site_font_weight', 'site_font_scale',
+  // 17/09/2026: rodada de "quero todo o site com textos editáveis" (ver server/db.js pros
+  // valores padrão de cada um — o texto que já existia no código antes de virar editável).
+  'featured_eyebrow', 'featured_cta_text', 'recent_eyebrow', 'recent_title', 'recent_cta_text',
+  'recent_empty_text', 'categories_eyebrow', 'categories_title', 'intro_eyebrow', 'intro_title',
+  'intro_text', 'intro_cta_text', 'testimonials_eyebrow', 'testimonials_title',
+  'hero_cta_primary_text', 'hero_cta_secondary_text', 'cta_button_text', 'portfolio_eyebrow',
+  'portfolio_title', 'portfolio_subtitle', 'project_more_videos_title', 'project_comments_title',
+  'project_cta_title', 'services_cta_title', 'contact_eyebrow',
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',
   'profile_photo', 'cta_text', 'gallery_title', 'trajectory_title',
+  // 17/09/2026: mesma rodada de "quero todo o site com textos editáveis" (ver server/db.js).
+  'about_eyebrow', 'founded_year', 'location_city', 'location_state', 'videos_eyebrow',
+  'videos_title', 'gallery_eyebrow', 'trajectory_eyebrow', 'equipment_eyebrow', 'equipment_title',
+  'people_eyebrow', 'people_title', 'brands_eyebrow', 'brands_title', 'bottom_cta_title',
 ]);
 
 export async function updateSettings(fields) {
