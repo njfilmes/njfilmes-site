@@ -179,6 +179,125 @@
     }
   }
 
+  // -------- Upload de fotos da Seleção (igual ao de projeto/entrega, só que manda também o nome
+  // original de cada arquivo — é o que aparece na lista de exportação pro Lightroom/Finder/
+  // Explorer depois, ver server/routes/admin.js selectionPhotosUpload) --------
+  const selectionUploadDrop = document.querySelector('[data-selection-upload-drop]');
+  if (selectionUploadDrop) {
+    const input = selectionUploadDrop.querySelector('input[type=file]');
+    const preview = document.querySelector('#selection-upload-preview');
+    const statusEl = document.querySelector('[data-selection-upload-status]');
+    const uploadUrl = selectionUploadDrop.dataset.uploadUrl;
+
+    const openPicker = () => input.click();
+    selectionUploadDrop.addEventListener('click', openPicker);
+    ['dragover', 'dragenter'].forEach((evt) =>
+      selectionUploadDrop.addEventListener(evt, (e) => { e.preventDefault(); selectionUploadDrop.classList.add('dragover'); })
+    );
+    ['dragleave', 'drop'].forEach((evt) =>
+      selectionUploadDrop.addEventListener(evt, (e) => { e.preventDefault(); selectionUploadDrop.classList.remove('dragover'); })
+    );
+    selectionUploadDrop.addEventListener('drop', (e) => {
+      if (e.dataTransfer.files.length) handleSelectionFiles(e.dataTransfer.files);
+    });
+    input.addEventListener('change', () => handleSelectionFiles(input.files));
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function handleSelectionFiles(fileList) {
+      const files = Array.from(fileList).filter(isImageFile);
+      if (!files.length) {
+        if (fileList.length && statusEl) {
+          statusEl.textContent = 'Nenhum arquivo de imagem reconhecido. Tente novamente ou use o clique pra selecionar.';
+          statusEl.style.color = '#d0503a';
+        }
+        return;
+      }
+      if (preview) {
+        preview.innerHTML = '';
+        files.forEach((f) => {
+          const img = document.createElement('img');
+          img.src = URL.createObjectURL(f);
+          preview.appendChild(img);
+        });
+      }
+      statusEl.textContent = `Enviando ${files.length} foto(s)...`;
+      statusEl.style.color = '';
+      try {
+        const photos = await Promise.all(
+          files.map(async (f) => ({ data: await fileToDataUrl(f), name: f.name || '' }))
+        );
+        const res = await fetch(uploadUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ photos }),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) throw new Error(data.error || 'Falha ao enviar fotos.');
+        if (data.saved > 0) {
+          statusEl.textContent = data.saved === files.length
+            ? `${data.saved} foto(s) enviada(s) com sucesso! Atualizando...`
+            : `${data.saved} de ${files.length} foto(s) enviada(s). Algumas falharam — tente reenviar.`;
+          statusEl.style.color = '';
+          setTimeout(() => window.location.reload(), 900);
+        } else {
+          statusEl.textContent = 'Nenhuma foto foi salva. Pode ser um problema no servidor de armazenamento — avise quem cuida do site.';
+          statusEl.style.color = '#d0503a';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Erro: ' + err.message;
+        statusEl.style.color = '#d0503a';
+      }
+    }
+  }
+
+  // -------- Modal de exportação da Seleção (abas Lightroom/Finder/Windows + copiar lista de
+  // nomes) — ver selectionExportModal em server/routes/admin.js --------
+  const exportOpenBtn = document.querySelector('[data-export-modal-open]');
+  const exportOverlay = document.querySelector('[data-export-modal-overlay]');
+  if (exportOpenBtn && exportOverlay) {
+    const closeBtn = exportOverlay.querySelector('[data-export-modal-close]');
+    exportOpenBtn.addEventListener('click', () => { exportOverlay.hidden = false; });
+    if (closeBtn) closeBtn.addEventListener('click', () => { exportOverlay.hidden = true; });
+    exportOverlay.addEventListener('click', (e) => { if (e.target === exportOverlay) exportOverlay.hidden = true; });
+
+    exportOverlay.querySelectorAll('[data-export-tab]').forEach((tabBtn) => {
+      tabBtn.addEventListener('click', () => {
+        const key = tabBtn.dataset.exportTab;
+        exportOverlay.querySelectorAll('[data-export-tab]').forEach((b) => b.classList.toggle('active', b === tabBtn));
+        exportOverlay.querySelectorAll('[data-export-tab-content]').forEach((c) => {
+          c.hidden = c.dataset.exportTabContent !== key;
+        });
+      });
+    });
+
+    exportOverlay.querySelectorAll('[data-export-copy-btn]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const textarea = btn.previousElementSibling;
+        if (!textarea) return;
+        textarea.select();
+        const done = () => {
+          const original = btn.textContent;
+          btn.textContent = 'Copiado!';
+          setTimeout(() => { btn.textContent = original; }, 1500);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(textarea.value).then(done).catch(() => document.execCommand('copy') && done());
+        } else {
+          document.execCommand('copy');
+          done();
+        }
+      });
+    });
+  }
+
   // -------- Upload de fotos da página Sobre (multi-arquivo, mesmo esquema do upload de projeto) --------
   const bioUploadDrop = document.querySelector('[data-bio-photos-upload]');
   if (bioUploadDrop) {
