@@ -33,7 +33,7 @@ const PSQL_ARGS_BASE = ['-U', 'njtest', '-d', 'njtest', '-h', '127.0.0.1', '-v',
 const INT_COLUMNS = new Set([
   'id', 'admin_id', 'category_id', 'project_id', 'case_id', 'photo_id', 'video_id_num',
   'is_cover', 'published', 'featured', 'hide_from_recent', 'hide_gallery', 'sort_order',
-  'views', 'likes', 'width', 'height', 'c', 'm', 'n',
+  'views', 'likes', 'width', 'height', 'selected', 'photo_limit', 'c', 'm', 'n',
 ]);
 
 function pgEscapeString(value) {
