@@ -195,8 +195,14 @@ export function videoEmbedHtml(video, opts = {}) {
 
 export function formatDatePtBr(isoDate) {
   if (!isoDate) return '';
-  const d = new Date(isoDate + (isoDate.length === 10 ? 'T00:00:00' : ''));
-  if (Number.isNaN(d.getTime())) return isoDate;
+  // Aceita tanto string ISO (ex.: "2026-09-17", de colunas DATE) quanto objetos Date (como os
+  // que vem de colunas TIMESTAMPTZ, ex.: delivery_cases.created_at, selection_cases.created_at)
+  // - antes só funcionava por acaso com string, ja que "isoDate.length" da undefined num Date.
+  const d =
+    isoDate instanceof Date
+      ? isoDate
+      : new Date(isoDate + (isoDate.length === 10 ? 'T00:00:00' : ''));
+  if (Number.isNaN(d.getTime())) return String(isoDate);
   return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
 }
 
