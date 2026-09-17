@@ -17,7 +17,16 @@ import {
   recoveryGuard,
   getClientIp,
 } from '../auth.js';
-import { saveProjectPhoto, saveMiscImage, saveVideoFile, deletePhotoFiles, saveDeliveryPhoto, deleteDeliveryPhotoFiles } from '../upload.js';
+import {
+  saveProjectPhoto,
+  saveMiscImage,
+  saveVideoFile,
+  deletePhotoFiles,
+  saveDeliveryPhoto,
+  deleteDeliveryPhotoFiles,
+  saveDeliveryVideoFile,
+  deleteDeliveryVideoFile,
+} from '../upload.js';
 import * as Q from '../queries.js';
 
 function redirect(res, location) {
@@ -1993,16 +2002,32 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
           ${field({ label: 'URL do vídeo (prévia)', name: 'url', required: true, placeholder: 'https://www.youtube.com/watch?v=...' })}
           ${field({ label: 'Título (opcional)', name: 'title', placeholder: 'Ex: Making of' })}
         </div>
+        ${field({ label: 'Texto que aparece ACIMA do vídeo na entrega (opcional)', name: 'top_text', placeholder: 'Ex: O grande dia' })}
         ${field({ label: 'Link pra baixar o vídeo completo (opcional)', name: 'download_url', placeholder: 'https://...' })}
         <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Adicionar vídeo</button></div>
       </form>
+      <p class="muted" style="margin-top:14px;">Prefere não usar link? Também dá pra arrastar o arquivo de vídeo direto:</p>
+      <div class="upload-drop" data-video-upload-drop data-upload-url="/admin/entregas/${id}/videos/upload">
+        <input type="file" accept="video/*">
+        <p>Clique aqui ou arraste um vídeo (.mp4, .webm, .mov) para enviar</p>
+        <p data-video-upload-status style="margin-top:10px;font-size:0.82rem;"></p>
+        <small>Limite de 25MB — prefira um clipe curto e já comprimido. Depois de enviado, preencha título/texto/link de download na lista abaixo.</small>
+      </div>
     </div>
     <div class="panel">
       <h2>Vídeos (${deliveryCase.videos.length})</h2>
       ${deliveryCase.videos.length ? deliveryCase.videos.map((v) => `
-        <div class="video-item">
-          <div class="vi-info"><b>${escapeHtml(v.title || v.provider)}</b><span>${escapeHtml(v.url)}</span>${v.download_url ? `<span> · download: ${escapeHtml(v.download_url)}</span>` : ''}</div>
-          <form method="post" action="/admin/entregas/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger">Remover</button></form>
+        <div class="video-item video-item-edit">
+          <div class="vi-info"><span>${v.provider === 'file' ? 'Arquivo enviado direto' : escapeHtml(v.url)}</span></div>
+          <form method="post" action="/admin/entregas/${id}/videos/${v.id}/editar">
+            <div class="form-row">
+              <input type="text" name="title" value="${escapeHtml(v.title || '')}" placeholder="Título (opcional)">
+              <input type="text" name="top_text" value="${escapeHtml(v.top_text || '')}" placeholder="Texto de cima (opcional)">
+            </div>
+            <input type="text" name="download_url" value="${escapeHtml(v.download_url || '')}" placeholder="Link pra baixar o vídeo completo (opcional)">
+            <div class="form-actions"><button class="btn-a btn-a-sm" type="submit">Salvar</button></div>
+          </form>
+          <form method="post" action="/admin/entregas/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Remover</button></form>
         </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
     </div>`;
   } else if (tab === 'fotos') {
@@ -2027,8 +2052,9 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
           <div class="pc-body">
             ${p.is_cover ? '<span class="is-cover-badge">Capa</span>' : ''}
             <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/legenda">
-              <input type="text" name="caption" value="${escapeHtml(p.caption || '')}" placeholder="Legenda (opcional)">
-              <button class="btn-a btn-a-sm" type="submit">Salvar legenda</button>
+              <input type="text" name="top_text" value="${escapeHtml(p.top_text || '')}" placeholder="Texto de cima (opcional)">
+              <input type="text" name="caption" value="${escapeHtml(p.caption || '')}" placeholder="Legenda de baixo (opcional)">
+              <button class="btn-a btn-a-sm" type="submit">Salvar textos</button>
             </form>
             <div class="pc-actions">
               ${!p.is_cover ? `<form method="post" action="/admin/entregas/${id}/fotos/${p.id}/capa"><button class="btn-a btn-a-sm">Definir capa</button></form>` : ''}
@@ -2105,6 +2131,17 @@ export async function deliveryCaseDelete(req, res, id) {
       console.error('Erro ao apagar arquivo de foto da entrega:', err.message);
     }
   }
+  // Mesma limpeza pros vídeos enviados direto (provider "file", ver aba de vídeos) — um vídeo que
+  // seja só um link (YouTube/Mega/Drive) não tem arquivo pra apagar aqui, só a linha do banco.
+  const videos = await Q.listDeliveryVideosForCase(id);
+  for (const video of videos) {
+    if (video.provider !== 'file') continue;
+    try {
+      await deleteDeliveryVideoFile(video.url);
+    } catch (err) {
+      console.error('Erro ao apagar arquivo de vídeo da entrega:', err.message);
+    }
+  }
   await Q.deleteDeliveryCase(id);
   redirect(res, '/admin/entregas' + withFlash(res, 'success', 'Entrega excluída.'));
 }
@@ -2113,11 +2150,70 @@ export async function deliveryVideoCreate(req, res, body, id) {
   const parsed = parseVideoUrl(body.url);
   if (!parsed) return redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'error', 'Link de vídeo inválido.'));
   const maxOrder = await maxCombinedDeliverySortOrder(id);
-  await Q.addDeliveryVideo(id, { provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: body.title, download_url: (body.download_url || '').trim(), sort_order: maxOrder + 1 });
+  await Q.addDeliveryVideo(id, {
+    provider: parsed.provider,
+    video_id: parsed.videoId,
+    url: parsed.url,
+    title: body.title,
+    top_text: (body.top_text || '').trim(),
+    download_url: (body.download_url || '').trim(),
+    sort_order: maxOrder + 1,
+  });
   redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'success', 'Vídeo adicionado.'));
 }
 
+// Pedido do usuário em 17/09/2026: além de colar o link, poder arrastar o ARQUIVO de vídeo direto
+// pra aba (mesma ideia do "arraste as fotos" que já existe na aba de Fotos). O vídeo entra sem
+// título/texto/link de download — a pessoa preenche isso depois pelo formulário de editar de cada
+// vídeo (ver deliveryVideoUpdate abaixo), igual já funciona com a legenda das fotos.
+export async function deliveryVideoUploadFile(req, res, body, id) {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) {
+    res.statusCode = 404;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Entrega não encontrada.' }));
+  }
+  if (!body.video) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    return res.end(JSON.stringify({ ok: false, error: 'Nenhum vídeo recebido.' }));
+  }
+  try {
+    const url = await saveDeliveryVideoFile(body.video);
+    const maxOrder = await maxCombinedDeliverySortOrder(id);
+    await Q.addDeliveryVideo(id, { provider: 'file', video_id: '', url, title: '', top_text: '', download_url: '', sort_order: maxOrder + 1 });
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ ok: true }));
+  } catch (err) {
+    res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({ ok: false, error: err.message }));
+  }
+}
+
+// Pedido do usuário em 17/09/2026: poder editar título/texto de cima/link de download de um
+// vídeo já adicionado, sem precisar excluir e recriar — igual já era possível com a legenda das
+// fotos.
+export async function deliveryVideoUpdate(req, res, body, id, videoId) {
+  await Q.updateDeliveryVideo(videoId, {
+    title: body.title,
+    top_text: body.top_text,
+    download_url: body.download_url,
+  });
+  redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'success', 'Vídeo atualizado.'));
+}
+
 export async function deliveryVideoDelete(req, res, id, videoId) {
+  // Se o vídeo foi enviado direto (provider "file"), apaga o arquivo também — senão fica
+  // esquecido ocupando espaço, igual já foi corrigido pra foto (ver deliveryCaseDelete acima).
+  const video = await Q.getDeliveryVideo(videoId);
+  if (video && video.provider === 'file') {
+    try {
+      await deleteDeliveryVideoFile(video.url);
+    } catch (err) {
+      console.error('Erro ao apagar arquivo de vídeo da entrega:', err.message);
+    }
+  }
   await Q.deleteDeliveryVideo(videoId);
   redirect(res, `/admin/entregas/${id}/videos`);
 }
@@ -2179,7 +2275,7 @@ export async function deliveryPhotoSetCover(req, res, id, photoId) {
 }
 
 export async function deliveryPhotoCaption(req, res, body, id, photoId) {
-  await Q.setDeliveryPhotoCaption(photoId, body.caption || '');
+  await Q.setDeliveryPhotoTexts(photoId, { caption: body.caption || '', top_text: body.top_text || '' });
   redirect(res, `/admin/entregas/${id}/fotos`);
 }
 
