@@ -35,10 +35,11 @@ if (!process.env.PUBLIC_API_BASE) {
 
 const { layout } = await import('../server/render.js');
 const Pub = await import('../server/routes/public.js');
-const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions, listDeliveryCases, getDeliveryCaseBySlug } = await import(
+const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions, listDeliveryCases, getDeliveryCaseBySlug, listSelectionCases, getSelectionCaseBySlug } = await import(
   '../server/queries.js'
 );
 const { renderDeliveryCasePage } = await import('../server/deliveryPage.js');
+const { renderSelectionCasePage } = await import('../server/selectionPage.js');
 const { initSchema } = await import('../server/db.js');
 await initSchema();
 
@@ -151,7 +152,7 @@ async function buildSitemapAndRobots(categories, projects) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${tags.join('\n')}\n</urlset>`;
   await fsp.writeFile(path.join(DIST_DIR, 'sitemap.xml'), xml, 'utf8');
 
-  const robots = `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nSitemap: ${base}/sitemap.xml\n`;
+  const robots = `User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /entregas\nDisallow: /selecao\nSitemap: ${base}/sitemap.xml\n`;
   await fsp.writeFile(path.join(DIST_DIR, 'robots.txt'), robots, 'utf8');
 }
 
@@ -237,11 +238,22 @@ async function main() {
     await writePage(`entregas/${full.slug}`, renderDeliveryCasePage(full, settings));
   }
 
+  // Páginas de Seleção de fotos (/selecao/:slug) — mesma ideia das Entregas acima, uma por
+  // projeto que já saiu de "preparo" (ou seja, o link já foi liberado pro cliente em algum
+  // momento — "andamento", "revisão" ou "finalizado"). Também não entra no sitemap.xml, mesmo
+  // motivo: link privado, não é pra aparecer em buscador.
+  const selectionCases = (await listSelectionCases()).filter((c) => c.status !== 'preparo');
+  for (const sc of selectionCases) {
+    const full = await getSelectionCaseBySlug(sc.slug);
+    if (!full) continue;
+    await writePage(`selecao/${full.slug}`, renderSelectionCasePage(full, settings));
+  }
+
   await build404(settings, categories);
   await buildSitemapAndRobots(categories, allProjects);
   await copyStaticAssets();
 
-  console.log(`\nPronto! ${1 + 1 + categories.length + allProjects.length + deliveryCases.length + 3} páginas geradas em dist/.`);
+  console.log(`\nPronto! ${1 + 1 + categories.length + allProjects.length + deliveryCases.length + selectionCases.length + 3} páginas geradas em dist/.`);
   console.log('Esse diretório é o que deve ser publicado no Render Static Site (Publish directory: dist).');
 }
 
