@@ -44,6 +44,10 @@
     const preview = document.querySelector('#upload-preview');
     const statusEl = document.querySelector('[data-upload-status]');
     const projectId = uploadDrop.dataset.projectId;
+    // data-upload-url: pedido em 12/09/2026 pra reaproveitar essa mesma área de arrastar-fotos
+    // na aba "Fotos" das Entregas (server/routes/admin.js, deliveryCaseEditPage) sem duplicar
+    // esse arquivo inteiro — se não vier esse atributo, mantém o endereço de sempre (projeto).
+    const uploadUrl = uploadDrop.dataset.uploadUrl || `/admin/projetos/${projectId}/photos/upload`;
 
     const openPicker = () => input.click();
     uploadDrop.addEventListener('click', openPicker);
@@ -87,7 +91,7 @@
 
       try {
         const dataUrls = await Promise.all(files.map(fileToDataUrl));
-        const res = await fetch(`/admin/projetos/${projectId}/photos/upload`, {
+        const res = await fetch(uploadUrl, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ photos: dataUrls }),
