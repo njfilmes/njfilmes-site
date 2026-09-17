@@ -1948,12 +1948,15 @@ const SITE_URL = process.env.SITE_URL || 'https://njfilmes.com.br';
 
 function renderDeliveryCasesTable(cases) {
   if (!cases.length) return '<p class="empty-hint">Nenhuma entrega ainda. Clique em "Nova entrega" para criar a primeira.</p>';
+  // Pedido do usuario (17/09/2026): mostrar a data (dia/mes/ano) em que cada cliente foi
+  // adicionado - usa a mesma coluna "created_at" que a tabela ja tinha, so faltava exibir.
   const rows = cases
     .map(
       (c) => `<tr>
       <td><img class="thumb-sm" src="${escapeHtml(c.cover_photo || '/img/project-placeholder.jpg')}" alt=""></td>
       <td><a href="/admin/entregas/${c.id}">${escapeHtml(c.client_name)}</a></td>
       <td>${c.published ? `<span class="tag tag-published">Publicada</span> <a href="${SITE_URL}/entregas/${escapeHtml(c.slug)}" target="_blank" style="font-size:.8rem;">Ver link ↗</a>` : '<span class="tag tag-draft">Rascunho</span>'}</td>
+      <td class="muted" style="font-size:.85rem;white-space:nowrap;">${escapeHtml(formatDatePtBr(c.created_at))}</td>
       <td class="row-actions">
         <a class="btn-a btn-a-sm" href="/admin/entregas/${c.id}">Editar</a>
         <form method="post" action="/admin/entregas/${c.id}/excluir" data-confirm="Excluir a entrega de &quot;${escapeHtml(c.client_name)}&quot;? Isso remove também as fotos e vídeos dela."><button class="btn-a btn-a-sm btn-a-danger" type="submit">Excluir</button></form>
@@ -1961,7 +1964,7 @@ function renderDeliveryCasesTable(cases) {
     </tr>`
     )
     .join('');
-  return `<table class="admin-table"><thead><tr><th>Capa</th><th>Cliente</th><th>Status</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
+  return `<table class="admin-table"><thead><tr><th>Capa</th><th>Cliente</th><th>Status</th><th>Data</th><th>Ações</th></tr></thead><tbody>${rows}</tbody></table>`;
 }
 
 export async function deliveryCasesListPage(req, res, admin) {
@@ -2405,6 +2408,10 @@ function selectionStatusLabel(status) {
   return found ? found[1] : status;
 }
 
+// Pedido do usuario (17/09/2026): mostrar a data em que cada projeto de selecao foi adicionado,
+// junto do seletor de etapa de cada card - aqui com hora tambem (formatDateTimePtBr), diferente
+// da tabela de Entregas que so mostra dia/mes/ano (varios projetos de selecao podem ser criados
+// no mesmo dia, a hora ajuda a diferenciar).
 export async function selectionCasesListPage(req, res, admin) {
   const flash = readFlash(req);
   const cases = await Q.listSelectionCases();
@@ -2417,6 +2424,7 @@ export async function selectionCasesListPage(req, res, admin) {
         <div class="sel-card">
           <a href="/admin/selecao/${c.id}"><b>${escapeHtml(c.client_name)}</b></a>
           ${c.photo_limit ? `<span class="muted" style="font-size:.78rem;display:block;">Limite: ${c.photo_limit} fotos</span>` : ''}
+          <span class="muted" style="font-size:.78rem;display:block;">Adicionado em ${escapeHtml(formatDateTimePtBr(c.created_at))}</span>
           <form method="post" action="/admin/selecao/${c.id}/mover-etapa" class="sel-move-form">
             <select name="status" onchange="this.form.submit()">
               ${SELECTION_STATUSES.map(([k, l]) => `<option value="${k}" ${k === c.status ? 'selected' : ''}>${l}</option>`).join('')}
