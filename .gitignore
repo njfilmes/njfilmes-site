@@ -1,0 +1,8 @@
+# Dependências instaladas (o Render/qualquer máquina reinstala sozinho a partir do
+# package.json com "npm install" — nunca precisa ir pro repositório) e os atalhos locais de
+# teste (symlinks pra pacotes globais, usados só neste ambiente de desenvolvimento/sandbox).
+node_modules/
+
+# Saída gerada por scripts/build-static.js — é regenerada a cada deploy (ver README, seção 6.5),
+# nunca precisa ficar versionada.
+dist/
