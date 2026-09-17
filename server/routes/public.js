@@ -1,5 +1,5 @@
 import { layout, absoluteUrl } from '../render.js';
-import { escapeHtml, nl2br, videoEmbedHtml, formatDatePtBr, truncate } from '../util.js';
+import { escapeHtml, nl2br, videoEmbedHtml, parseVideoUrl, formatDatePtBr, truncate } from '../util.js';
 import { ASSET_VERSION } from '../assetVersion.js';
 import {
   getSettings,
@@ -248,11 +248,26 @@ export async function homePage(req, res) {
   const heroPhotoUrls = [heroPosterUrl, ...heroGalleryPhotos.map((p) => p.filename)].filter(
     (src, idx, arr) => src && arr.indexOf(src) === idx
   );
-  const heroVideo = settings.hero_video_url
-    ? `<video autoplay muted loop playsinline poster="${heroPosterUrl}" src="${escapeHtml(settings.hero_video_url)}"></video>`
-    : `<div class="hero-photo-split">${heroPhotoUrls
-        .map((src, i) => `<img class="hero-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="NJFILMES">`)
-        .join('')}</div>`;
+  // Vídeo de fundo por link do YouTube/Vimeo: pedido do usuário em 17/09/2026, depois de colar um
+  // link do YouTube nesse campo e o vídeo não tocar — o campo só aceitava um arquivo de vídeo de
+  // verdade (.mp4 etc.) como "src" de uma tag <video>, e um link do YouTube não é isso. A solução
+  // é a mesma já usada nas prévias em vídeo dos cards do portfólio (ver previewVideoData() logo
+  // acima): um iframe do player deles, já vindo "disfarçado" de vídeo de fundo (sem controles,
+  // mudo, em loop, tocando sozinho) — ver CSS .hero-video-embed pra como ele cobre a tela toda.
+  const heroVideoParsed = parseVideoUrl(settings.hero_video_url);
+  const heroVideoIsEmbed = heroVideoParsed && (heroVideoParsed.provider === 'youtube' || heroVideoParsed.provider === 'vimeo');
+  const heroVideoEmbedSrc = !heroVideoIsEmbed
+    ? ''
+    : heroVideoParsed.provider === 'youtube'
+      ? `https://www.youtube.com/embed/${encodeURIComponent(heroVideoParsed.videoId)}?autoplay=1&mute=1&loop=1&playlist=${encodeURIComponent(heroVideoParsed.videoId)}&controls=0&modestbranding=1&playsinline=1&rel=0&iv_load_policy=3`
+      : `https://player.vimeo.com/video/${encodeURIComponent(heroVideoParsed.videoId)}?autoplay=1&muted=1&loop=1&background=1`;
+  const heroVideo = heroVideoIsEmbed
+    ? `<div class="hero-video-embed"><iframe src="${escapeHtml(heroVideoEmbedSrc)}" title="Vídeo de fundo" frameborder="0" allow="autoplay; encrypted-media" loading="eager"></iframe></div>`
+    : settings.hero_video_url
+      ? `<video autoplay muted loop playsinline poster="${heroPosterUrl}" src="${escapeHtml(settings.hero_video_url)}"></video>`
+      : `<div class="hero-photo-split">${heroPhotoUrls
+          .map((src, i) => `<img class="hero-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="NJFILMES">`)
+          .join('')}</div>`;
 
   // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
   // sempre coloridos — sem preto e branco.

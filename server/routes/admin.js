@@ -1273,12 +1273,25 @@ export async function settingsPage(req, res, admin) {
       ${field({ label: 'Legenda acima do título da Home', name: 'hero_eyebrow', value: s.hero_eyebrow, placeholder: 'Produção Audiovisual · Salvador, BA' })}
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
-      ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4)', name: 'hero_video_url', value: s.hero_video_url, help: 'Cole aqui um link direto de vídeo (ex: Cloudinary) OU envie o arquivo direto no campo logo abaixo — os dois fazem a mesma coisa. Deixe vazio para usar imagem.' })}
+      ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4 ou link do YouTube)', name: 'hero_video_url', value: s.hero_video_url, help: 'Cole aqui um link direto de vídeo (ex: Cloudinary), um link do YouTube (adicionado em 17/09/2026 — antes só um arquivo direto funcionava aqui), OU envie o arquivo direto no campo logo abaixo (o arquivo enviado tem prioridade sobre o link, se os dois estiverem preenchidos). Deixe vazio para usar imagem.' })}
       <div class="form-field" data-single-upload>
         <label>Ou arraste/envie o vídeo direto (sem precisar de link externo)</label>
         <input type="file" accept="video/*">
         <input type="hidden" name="hero_video_data">
-        <video data-preview src="${escapeHtml(s.hero_video_url || '')}" muted controls playsinline style="max-width:280px;border-radius:6px;margin-top:8px;${s.hero_video_url ? 'display:block;' : 'display:none;'}"></video>
+        ${(() => {
+          // Prévia aqui embaixo: um link do YouTube/Vimeo não dá pra pré-visualizar numa tag
+          // <video> normal (não é um arquivo de vídeo) — mostramos o player embutido de verdade
+          // nesse caso. Ainda mantemos a tag <video data-preview> escondida por baixo pra o
+          // upload de arquivo (ver public/js/admin.js) continuar funcionando normalmente se você
+          // decidir enviar um arquivo em vez do link.
+          const parsed = parseVideoUrl(s.hero_video_url);
+          const isEmbed = parsed && (parsed.provider === 'youtube' || parsed.provider === 'vimeo');
+          if (isEmbed) {
+            return `<div style="max-width:280px;margin-top:8px;">${videoEmbedHtml(parsed)}</div>
+        <video data-preview src="" muted controls playsinline style="display:none;max-width:280px;border-radius:6px;margin-top:8px;"></video>`;
+          }
+          return `<video data-preview src="${escapeHtml(s.hero_video_url || '')}" muted controls playsinline style="max-width:280px;border-radius:6px;margin-top:8px;${s.hero_video_url ? 'display:block;' : 'display:none;'}"></video>`;
+        })()}
         <small>Limite de 25MB — prefira um clipe curto (poucos segundos) e já comprimido, pra carregar rápido. Enviando um vídeo aqui, ele substitui automaticamente o link do campo acima ao salvar.</small>
       </div>
       <div class="form-field" data-single-upload>
