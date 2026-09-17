@@ -370,7 +370,7 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
         ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
         <span class="dc-brandmark reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></span>
         <div class="container dc-cover-inner">
-          <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
+          <span class="dc-eyebrow reveal">${c.cover_label ? escapeHtml(c.cover_label) : `NJ<span class="accent">FILMES</span> · Entrega`}</span>
           <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
           ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
         </div>

@@ -441,6 +441,7 @@ export async function initSchema() {
         client_name TEXT NOT NULL,
         slug TEXT UNIQUE NOT NULL,
         cover_photo TEXT DEFAULT '',
+        cover_label TEXT DEFAULT '',
         welcome_message TEXT DEFAULT '',
         photos_download_url TEXT DEFAULT '',
         photos_download_label TEXT DEFAULT 'Baixar fotos em alta',
@@ -886,6 +887,16 @@ export async function initSchema() {
     ).map((c) => c.column_name);
     if (!selectionCaseCols.includes('client_note')) {
       await query("ALTER TABLE selection_cases ADD COLUMN client_note TEXT DEFAULT ''");
+    }
+
+    // 17/09/2026: pedido do usuário — a linha pequena que aparece em cima do nome do cliente na
+    // capa da entrega ("NJFILMES · Entrega") era fixa; agora dá pra personalizar por entrega (ex:
+    // "Ensaio", "Casamento", "Aftermovie"). Vazio continua mostrando o texto padrão de sempre.
+    const deliveryCaseCols = (
+      await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'delivery_cases'")
+    ).map((c) => c.column_name);
+    if (!deliveryCaseCols.includes('cover_label')) {
+      await query("ALTER TABLE delivery_cases ADD COLUMN cover_label TEXT DEFAULT ''");
     }
 
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).

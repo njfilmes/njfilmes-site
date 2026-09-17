@@ -602,8 +602,9 @@ export async function createDeliveryCase({ client_name, slug, welcome_message, s
 export async function updateDeliveryCase(id, data) {
   await query(
     `UPDATE delivery_cases SET client_name=$1, slug=$2, welcome_message=$3, cover_photo=$4,
-       photos_download_url=$5, photos_download_label=$6, whatsapp_number=$7, published=$8, updated_at=$9
-     WHERE id=$10`,
+       photos_download_url=$5, photos_download_label=$6, whatsapp_number=$7, published=$8, updated_at=$9,
+       cover_label=$10
+     WHERE id=$11`,
     [
       data.client_name,
       data.slug,
@@ -614,6 +615,7 @@ export async function updateDeliveryCase(id, data) {
       data.whatsapp_number || '',
       data.published ? 1 : 0,
       new Date().toISOString(),
+      data.cover_label || '',
       id,
     ]
   );
