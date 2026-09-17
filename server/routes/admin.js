@@ -89,6 +89,34 @@ async function maxCombinedDeliverySortOrder(caseId) {
   return Math.max(photoMax, videoMax);
 }
 
+// Junta fotos e vídeos numa lista só, na mesma ordem em que aparecem pro cliente na página de
+// entrega (server/deliveryPage.js faz o mesmo merge) — usada pra mostrar "posição X de N" no
+// painel e pra mover foto/vídeo de posição entre si (17/09/2026: antes só dava pra mover foto
+// entre fotos e vídeo não tinha nem seta — o usuário perguntou "como vou saber a ordem do vídeo
+// e das fotos" já que agora eles se intercalam na entrega).
+function combinedDeliveryMedia(deliveryCase) {
+  return [
+    ...(deliveryCase.videos || []).map((v) => ({ kind: 'video', id: v.id, sortOrder: Number(v.sort_order) || 0 })),
+    ...(deliveryCase.photos || []).map((p) => ({ kind: 'foto', id: p.id, sortOrder: Number(p.sort_order) || 0 })),
+  ].sort((a, b) => (a.sortOrder - b.sortOrder) || (a.id - b.id));
+}
+
+export async function deliveryMediaMove(req, res, body, id, kind, mediaId) {
+  const deliveryCase = await Q.getDeliveryCase(id);
+  if (!deliveryCase) return redirect(res, '/admin/entregas');
+  const items = combinedDeliveryMedia(deliveryCase);
+  const idx = items.findIndex((it) => it.kind === kind && it.id === mediaId);
+  const backTo = `/admin/entregas/${id}/${kind === 'video' ? 'videos' : 'fotos'}`;
+  if (idx === -1) return redirect(res, backTo);
+  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
+  if (swapWith < 0 || swapWith >= items.length) return redirect(res, backTo);
+  const a = items[idx], b = items[swapWith];
+  const setOrder = (it, sortOrder) => (it.kind === 'video' ? Q.setDeliveryVideoOrder(it.id, sortOrder) : Q.setDeliveryPhotoOrder(it.id, sortOrder));
+  await setOrder(a, b.sortOrder);
+  await setOrder(b, a.sortOrder);
+  redirect(res, backTo);
+}
+
 // ---------------- Setup / Login ----------------
 
 export async function setupPage(req, res) {
@@ -1990,6 +2018,12 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
   if (!deliveryCase) return redirect(res, '/admin/entregas');
   const flash = readFlash(req);
 
+  // Posição de cada foto/vídeo na ordem combinada que aparece pro cliente na entrega (mistura
+  // foto e vídeo) — mostrado nas duas abas pra tirar a dúvida "como eu sei a ordem" (17/09/2026).
+  const combinedMedia = combinedDeliveryMedia(deliveryCase);
+  const combinedTotal = combinedMedia.length;
+  const combinedPosition = (kind, mediaId) => combinedMedia.findIndex((it) => it.kind === kind && it.id === mediaId) + 1;
+
   let body;
   if (tab === 'videos') {
     body = `
@@ -2016,9 +2050,12 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
     </div>
     <div class="panel">
       <h2>Vídeos (${deliveryCase.videos.length})</h2>
-      ${deliveryCase.videos.length ? deliveryCase.videos.map((v) => `
+      <p class="muted" style="margin-top:-8px;">A numeração abaixo é a posição real na entrega — foto e vídeo aparecem intercalados na ordem que você montar aqui, não "vídeos primeiro".</p>
+      ${deliveryCase.videos.length ? deliveryCase.videos.map((v) => {
+        const pos = combinedPosition('video', v.id);
+        return `
         <div class="video-item video-item-edit">
-          <div class="vi-info"><span>${v.provider === 'file' ? 'Arquivo enviado direto' : escapeHtml(v.url)}</span></div>
+          <div class="vi-info"><span class="vi-pos">Posição ${pos} de ${combinedTotal}</span><span>${v.provider === 'file' ? 'Arquivo enviado direto' : escapeHtml(v.url)}</span></div>
           <form method="post" action="/admin/entregas/${id}/videos/${v.id}/editar">
             <div class="form-row">
               <input type="text" name="title" value="${escapeHtml(v.title || '')}" placeholder="Título (opcional)">
@@ -2027,8 +2064,13 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
             <input type="text" name="download_url" value="${escapeHtml(v.download_url || '')}" placeholder="Link pra baixar o vídeo completo (opcional)">
             <div class="form-actions"><button class="btn-a btn-a-sm" type="submit">Salvar</button></div>
           </form>
-          <form method="post" action="/admin/entregas/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Remover</button></form>
-        </div>`).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
+          <div class="pc-actions">
+            <form method="post" action="/admin/entregas/${id}/videos/${v.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${pos <= 1 ? 'disabled' : ''}>↑</button></form>
+            <form method="post" action="/admin/entregas/${id}/videos/${v.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${pos >= combinedTotal ? 'disabled' : ''}>↓</button></form>
+            <form method="post" action="/admin/entregas/${id}/videos/${v.id}/excluir" data-confirm="Remover este vídeo?"><button class="btn-a btn-a-sm btn-a-danger" type="submit">Remover</button></form>
+          </div>
+        </div>`;
+      }).join('') : '<p class="empty-hint">Nenhum vídeo adicionado ainda.</p>'}
     </div>`;
   } else if (tab === 'fotos') {
     body = `
@@ -2045,11 +2087,15 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
     </div>
     <div class="panel">
       <h2>Fotos da entrega (${deliveryCase.photos.length})</h2>
+      <p class="muted" style="margin-top:-8px;">A numeração abaixo é a posição real na entrega — foto e vídeo aparecem intercalados na ordem que você montar aqui, não "fotos primeiro".</p>
       ${deliveryCase.photos.length ? `<div class="photo-grid">${deliveryCase.photos
         .map(
-          (p, i) => `<div class="photo-card">
+          (p) => {
+            const pos = combinedPosition('foto', p.id);
+            return `<div class="photo-card">
           <img src="${escapeHtml(p.thumb_filename)}" alt="">
           <div class="pc-body">
+            <span class="vi-pos">Posição ${pos} de ${combinedTotal}</span>
             ${p.is_cover ? '<span class="is-cover-badge">Capa</span>' : ''}
             <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/legenda">
               <input type="text" name="top_text" value="${escapeHtml(p.top_text || '')}" placeholder="Texto de cima (opcional)">
@@ -2058,12 +2104,13 @@ export async function deliveryCaseEditPage(req, res, admin, id, tab = 'info') {
             </form>
             <div class="pc-actions">
               ${!p.is_cover ? `<form method="post" action="/admin/entregas/${id}/fotos/${p.id}/capa"><button class="btn-a btn-a-sm">Definir capa</button></form>` : ''}
-              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${i === 0 ? 'disabled' : ''}>↑</button></form>
-              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${i === deliveryCase.photos.length - 1 ? 'disabled' : ''}>↓</button></form>
+              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="up"><button class="btn-a btn-a-sm" ${pos <= 1 ? 'disabled' : ''}>↑</button></form>
+              <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/mover" style="display:inline;"><input type="hidden" name="dir" value="down"><button class="btn-a btn-a-sm" ${pos >= combinedTotal ? 'disabled' : ''}>↓</button></form>
               <form method="post" action="/admin/entregas/${id}/fotos/${p.id}/excluir" data-confirm="Excluir esta foto?"><button class="btn-a btn-a-sm btn-a-danger">Excluir</button></form>
             </div>
           </div>
-        </div>`
+        </div>`;
+          }
         )
         .join('')}</div>` : '<p class="empty-hint">Nenhuma foto enviada ainda.</p>'}
     </div>`;
@@ -2276,20 +2323,6 @@ export async function deliveryPhotoSetCover(req, res, id, photoId) {
 
 export async function deliveryPhotoCaption(req, res, body, id, photoId) {
   await Q.setDeliveryPhotoTexts(photoId, { caption: body.caption || '', top_text: body.top_text || '' });
-  redirect(res, `/admin/entregas/${id}/fotos`);
-}
-
-export async function deliveryPhotoMove(req, res, body, id, photoId) {
-  const deliveryCase = await Q.getDeliveryCase(id);
-  if (!deliveryCase) return redirect(res, '/admin/entregas');
-  const photos = deliveryCase.photos;
-  const idx = photos.findIndex((p) => p.id === photoId);
-  if (idx === -1) return redirect(res, `/admin/entregas/${id}/fotos`);
-  const swapWith = body.dir === 'up' ? idx - 1 : idx + 1;
-  if (swapWith < 0 || swapWith >= photos.length) return redirect(res, `/admin/entregas/${id}/fotos`);
-  const a = photos[idx], b = photos[swapWith];
-  await Q.setDeliveryPhotoOrder(a.id, b.sort_order);
-  await Q.setDeliveryPhotoOrder(b.id, a.sort_order);
   redirect(res, `/admin/entregas/${id}/fotos`);
 }
 
