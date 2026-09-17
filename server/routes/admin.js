@@ -1983,6 +1983,7 @@ function deliveryInfoForm({ action, deliveryCase = {} }) {
       ${field({ label: 'Nome do cliente', name: 'client_name', value: deliveryCase.client_name, required: true, placeholder: 'Ex: João & Maria' }).replace('<input', '<input data-slug-source')}
       ${field({ label: 'URL (slug)', name: 'slug', value: deliveryCase.slug, help: 'Endereço final: /entregas/seu-texto-aqui' }).replace('<input', '<input data-slug-target')}
     </div>
+    ${field({ label: 'Etiqueta acima do nome na capa (opcional)', name: 'cover_label', value: deliveryCase.cover_label, placeholder: 'Ex: Ensaio, Casamento, Aftermovie...', help: 'Se deixar em branco, aparece o padrão "NJFILMES · Entrega".' })}
     ${field({ label: 'Mensagem de boas-vindas (opcional)', name: 'welcome_message', value: deliveryCase.welcome_message, textarea: true, rows: 4, placeholder: 'Ex: Ficou pronto o seu ensaio! Deu uma olhadinha, saiu lindo...' })}
     <div class="form-row">
       ${field({ label: 'Link pra baixar as fotos em alta (Mega, Drive, WeTransfer...)', name: 'photos_download_url', value: deliveryCase.photos_download_url, placeholder: 'https://...' })}
@@ -2163,6 +2164,7 @@ export async function deliveryCaseUpdate(req, res, body, id) {
     slug,
     welcome_message: body.welcome_message,
     cover_photo: deliveryCase.cover_photo,
+    cover_label: body.cover_label,
     photos_download_url: body.photos_download_url,
     photos_download_label: body.photos_download_label,
     whatsapp_number: body.whatsapp_number,
