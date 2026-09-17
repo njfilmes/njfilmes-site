@@ -5,6 +5,15 @@
 // pro cliente — pedido do usuário em 12/09/2026 ("quero esse q fica 100% meu", depois de já ter
 // aprovado esse visual numa ferramenta separada que dependia da conta do Claude).
 //
+// Redesenhada em 17/09/2026 no formato "story" (tela cheia, uma foto/vídeo por vez, rolagem com
+// encaixe e numeração) — pedido do usuário depois de mandar como referência a entrega de outro
+// fotógrafo (GOGO Produção): cada foto/vídeo ocupa a tela toda, com legenda só quando a foto tem
+// uma (campo já existente `photos.caption`), numeração discreta no canto, e as animações de
+// entrada (`.reveal`) e o gancho de "role para ver" no topo. Continua usando os mesmos dados do
+// painel de sempre (nada mudou na hora de cadastrar fotos/vídeos/link de download) — só a
+// apresentação final ficou mais parecida com uma apresentação/convite do que com uma página de
+// site comum.
+//
 // Reaproveita as mesmas funções de vídeo/escape do resto do site (server/util.js) em vez de ter
 // uma versão própria — assim um link de Mega/Drive colado aqui tem exatamente o mesmo
 // comportamento (embed automático, fallback, botão de tela cheia) que já existe na página de
@@ -34,36 +43,41 @@ const CASE_CSS = `
   .reveal{opacity:0;transform:translateY(18px);transition:opacity .8s ease,transform .8s ease;}
   .reveal.is-visible{opacity:1;transform:none;}
 
-  .dc-hero{min-height:78vh;display:flex;align-items:flex-end;position:relative;padding:80px 0 56px;background:#0b0a0d;overflow:hidden;}
-  .dc-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;}
-  .dc-hero-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
-  .dc-hero-inner{position:relative;z-index:1;}
+  /* ---- Área "story": capa + uma foto/vídeo por tela, com rolagem que encaixa ---- */
+  .dc-story{scroll-snap-type:y mandatory;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
+
+  .dc-cover{scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-end;position:relative;padding:80px 0 64px;background:#0b0a0d;overflow:hidden;}
+  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;}
+  .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
+  .dc-cover-inner{position:relative;z-index:1;}
+  .dc-brandmark{position:absolute;top:26px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(241,237,228,.55);}
   .dc-eyebrow{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(241,237,228,.6);margin-bottom:14px;}
   .dc-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.1rem,5.5vw,3.6rem);margin:0 0 18px;letter-spacing:-.01em;}
   .dc-welcome{max-width:640px;color:rgba(241,237,228,.82);font-size:1.05rem;white-space:pre-line;}
+  .dc-scroll-hint{position:absolute;left:24px;bottom:26px;z-index:2;display:flex;align-items:center;gap:10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(241,237,228,.55);}
+  .dc-scroll-hint::before{content:'';width:1px;height:28px;background:rgba(241,237,228,.4);animation:dcScrollLine 1.8s ease-in-out infinite;}
+  @keyframes dcScrollLine{0%,100%{transform:scaleY(.4);opacity:.35;}50%{transform:scaleY(1);opacity:1;}}
 
+  .dc-slide{scroll-snap-align:start;scroll-snap-stop:always;position:relative;}
+  .dc-slide-media{height:100vh;height:100dvh;position:relative;overflow:hidden;background:#151319;}
+  .dc-slide-media img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;cursor:zoom-in;}
+  .dc-slide-media .dc-story-video{position:absolute;inset:0;background:#000;}
+  .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
+  .dc-slide-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;}
+  .dc-slide-number{position:absolute;left:22px;bottom:18px;z-index:2;font-family:'Fraunces',serif;font-size:.85rem;letter-spacing:.08em;color:rgba(241,237,228,.8);}
+  .video-embed-fullscreen{position:absolute;right:16px;bottom:16px;z-index:2;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:15px;}
+  .video-embed-fallback{position:relative;z-index:2;margin:0;padding:10px 16px;font-size:.8rem;color:rgba(241,237,228,.7);background:#0b0a0d;}
+
+  .dc-slide-caption{background:#0b0a0d;padding:38px 24px 46px;text-align:center;}
+  .dc-slide-caption p{font-family:'Fraunces',serif;font-weight:500;font-style:italic;font-size:1.35rem;max-width:560px;margin:0 auto 10px;line-height:1.4;}
+  .dc-slide-caption span{display:block;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(241,237,228,.5);}
+  .dc-slide-download{display:inline-flex;align-items:center;gap:8px;margin-top:14px;background:#c9a227;color:#171310;font-weight:600;font-size:.85rem;padding:9px 18px;border-radius:100px;text-decoration:none;white-space:nowrap;}
+  .dc-slide-download:hover{background:#dab643;}
+
+  /* ---- Depois da "story": final normal, com rolagem comum ---- */
   section{padding:64px 0;}
   .dc-section-title{font-family:'Fraunces',serif;font-weight:600;font-size:1.7rem;margin:0 0 8px;}
   .dc-section-sub{color:rgba(241,237,228,.55);font-size:.92rem;margin:0 0 34px;}
-
-  .video-grid{display:grid;gap:28px;}
-  .video-block{background:#151319;border-radius:14px;overflow:hidden;border:1px solid rgba(241,237,228,.08);}
-  .video-embed{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
-  .video-embed iframe,.video-embed video{position:absolute;inset:0;width:100%;height:100%;border:0;}
-  .video-embed-fullscreen{position:absolute;right:10px;bottom:10px;z-index:2;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:6px;width:32px;height:32px;cursor:pointer;font-size:15px;}
-  .video-embed-fallback{margin:0;padding:10px 16px;font-size:.8rem;color:rgba(241,237,228,.5);}
-  .video-embed-linkonly{display:flex;align-items:center;justify-content:center;min-height:160px;}
-  .video-block-foot{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;}
-  .video-block-title{font-weight:500;font-size:.95rem;}
-  .video-download{display:inline-flex;align-items:center;gap:8px;background:#c9a227;color:#171310;font-weight:600;font-size:.85rem;padding:9px 16px;border-radius:100px;text-decoration:none;white-space:nowrap;}
-  .video-download:hover{background:#dab643;}
-
-  .gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;}
-  .gallery-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/5;cursor:zoom-in;background:#151319;transition:transform .35s ease;}
-  .gallery-item:hover{transform:translateY(-6px);}
-  .gallery-item img{width:100%;height:100%;object-fit:cover;display:block;}
-  .gallery-item figcaption{position:absolute;left:0;right:0;bottom:0;padding:18px 12px 10px;font-size:.78rem;background:linear-gradient(0deg,rgba(0,0,0,.72),transparent);opacity:0;transition:opacity .25s ease;}
-  .gallery-item:hover figcaption{opacity:1;}
 
   .download-section{text-align:center;background:#151319;border-radius:16px;border:1px solid rgba(241,237,228,.08);padding:48px 24px;}
   .download-btn{display:inline-flex;align-items:center;gap:10px;background:#c9a227;color:#171310;font-weight:600;padding:14px 30px;border-radius:100px;text-decoration:none;font-size:1rem;margin-top:18px;}
@@ -88,9 +102,13 @@ const CASE_CSS = `
   .comment-status{font-size:.85rem;color:rgba(241,237,228,.6);min-height:1.2em;}
   .cf-hp{position:absolute;left:-9999px;opacity:0;height:0;width:0;}
 
-  .dc-footer{text-align:center;padding:40px 0 60px;color:rgba(241,237,228,.4);font-size:.8rem;}
+  .dc-footer{text-align:center;padding:16px 0 60px;color:rgba(241,237,228,.4);font-size:.8rem;}
+  .dc-footer-brand{font-family:'Fraunces',serif;font-size:1rem;color:rgba(241,237,228,.75);margin-bottom:2px;}
+  .dc-social{display:flex;justify-content:center;gap:14px;margin-top:16px;flex-wrap:wrap;}
+  .dc-social a{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(241,237,228,.25);padding:9px 18px;border-radius:100px;font-size:.82rem;text-decoration:none;color:rgba(241,237,228,.85);}
+  .dc-social a:hover{border-color:#c9a227;color:#c9a227;}
   .empty-hint{color:rgba(241,237,228,.45);font-size:.9rem;}
-  @media (max-width:640px){section{padding:44px 0;} .dc-hero{padding:64px 0 40px;}}
+  @media (max-width:640px){section{padding:44px 0;} .dc-cover{padding:64px 0 40px;} .dc-slide-caption{padding:30px 20px 38px;}}
 `;
 
 function pageScript(slug) {
@@ -161,46 +179,79 @@ function pageScript(slug) {
   `;
 }
 
-export function renderDeliveryCasePage(deliveryCase) {
+// Cada foto/vídeo vira um "slide" de tela cheia, numerado em sequência (vídeos primeiro, depois
+// fotos — mesma ordem de sempre). Só ganha o painel de legenda embaixo quando tem algo pra
+// mostrar (legenda da foto, ou título/link de download do vídeo) — senão fica só a imagem/vídeo
+// ocupando a tela toda, igual à referência que o usuário mandou (algumas fotos têm texto embaixo,
+// outras não).
+function renderMediaSlides(videos, photos) {
+  const items = [
+    ...videos.map((v) => ({ type: 'video', data: v })),
+    ...photos.map((p) => ({ type: 'photo', data: p })),
+  ];
+  return items
+    .map((item, i) => {
+      const number = String(i + 1).padStart(2, '0');
+      if (item.type === 'video') {
+        const v = item.data;
+        const hasCaption = Boolean(v.title || v.download_url);
+        return `<div class="dc-slide reveal">
+          <div class="dc-slide-media">
+            ${videoEmbedHtml(v, { className: 'dc-story-video' })}
+            <span class="dc-slide-number">${number}</span>
+          </div>
+          ${hasCaption ? `<div class="dc-slide-caption">
+            ${v.title ? `<p>${escapeHtml(v.title)}</p>` : ''}
+            ${v.download_url ? `<a class="dc-slide-download" href="${escapeHtml(v.download_url)}" target="_blank" rel="noopener noreferrer">⭳ Baixar vídeo completo</a>` : ''}
+          </div>` : ''}
+        </div>`;
+      }
+      const p = item.data;
+      return `<div class="dc-slide reveal">
+        <div class="dc-slide-media">
+          <img src="${escapeHtml(p.filename)}" loading="lazy" alt="${escapeHtml(p.caption || '')}" data-lightbox-src="${escapeHtml(p.filename)}">
+          <span class="dc-slide-number">${number}</span>
+        </div>
+        ${p.caption ? `<div class="dc-slide-caption"><p>${escapeHtml(p.caption)}</p></div>` : ''}
+      </div>`;
+    })
+    .join('');
+}
+
+export function renderDeliveryCasePage(deliveryCase, settings = {}) {
   const c = deliveryCase;
-  const otherPhotos = c.photos || [];
+  const photos = c.photos || [];
   const videos = c.videos || [];
+  const hasStoryContent = videos.length > 0 || photos.length > 0;
 
-  const videosHtml = videos.length
-    ? `<section><div class="container">
-        <h2 class="dc-section-title reveal">Vídeos</h2>
-        <p class="dc-section-sub reveal">Uma prévia de como ficou — o arquivo completo está disponível pra download logo abaixo de cada vídeo.</p>
-        <div class="video-grid">
-          ${videos.map((v) => `
-          <div class="video-block reveal">
-            ${videoEmbedHtml(v)}
-            ${v.title || v.download_url ? `<div class="video-block-foot">
-              <span class="video-block-title">${escapeHtml(v.title || '')}</span>
-              ${v.download_url ? `<a class="video-download" href="${escapeHtml(v.download_url)}" target="_blank" rel="noopener noreferrer">⭳ Baixar vídeo completo</a>` : ''}
-            </div>` : ''}
-          </div>`).join('')}
+  const storyHtml = hasStoryContent
+    ? `<div class="dc-story">
+        <div class="dc-cover">
+          ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
+          <span class="dc-brandmark reveal">NJ<span class="accent">FILMES</span></span>
+          <div class="container dc-cover-inner">
+            <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
+            <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
+            ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
+          </div>
+          <span class="dc-scroll-hint reveal">Role para ver</span>
         </div>
-      </div></section>`
-    : '';
-
-  const galleryHtml = otherPhotos.length
-    ? `<section><div class="container">
-        <h2 class="dc-section-title reveal">Fotos</h2>
-        <p class="dc-section-sub reveal">Clique numa foto pra ver em tamanho maior.</p>
-        <div class="gallery-grid">
-          ${otherPhotos.map((p) => `
-          <figure class="gallery-item reveal" data-lightbox-src="${escapeHtml(p.filename)}">
-            <img src="${escapeHtml(p.thumb_filename)}" loading="lazy" alt="${escapeHtml(p.caption || '')}">
-            ${p.caption ? `<figcaption>${escapeHtml(p.caption)}</figcaption>` : ''}
-          </figure>`).join('')}
+        ${renderMediaSlides(videos, photos)}
+      </div>`
+    : `<header class="dc-cover">
+        ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
+        <span class="dc-brandmark reveal">NJ<span class="accent">FILMES</span></span>
+        <div class="container dc-cover-inner">
+          <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
+          <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
+          ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
         </div>
-      </div></section>`
-    : '';
+      </header>`;
 
   const downloadHtml = c.photos_download_url
     ? `<section><div class="container">
         <div class="download-section reveal">
-          <h2 class="dc-section-title" style="margin:0;">Quer as fotos em alta resolução?</h2>
+          <h2 class="dc-section-title" style="margin:0;">Tem mais esperando por você</h2>
           <p class="dc-section-sub" style="margin-bottom:0;">Baixe todas as fotos originais, sem compressão.</p>
           <a class="download-btn" href="${escapeHtml(c.photos_download_url)}" target="_blank" rel="noopener noreferrer">⭳ ${escapeHtml(c.photos_download_label || 'Baixar fotos em alta')}</a>
         </div>
@@ -227,6 +278,23 @@ export function renderDeliveryCasePage(deliveryCase) {
       </form>
     </div></section>`;
 
+  // Rodapé com a marca e, se estiverem preenchidos nas Configurações do site, os mesmos botões
+  // de WhatsApp/Instagram usados no resto do site — pedido do usuário depois de ver isso na
+  // referência que mandou (o rodapé da entrega de outro fotógrafo tinha WhatsApp/Instagram dele).
+  const waHref = waLink(settings.whatsapp_number, settings.whatsapp_message || `Olá! Vi a entrega "${c.client_name}" e queria falar com vocês.`);
+  const socialLinksHtml = (waHref || settings.instagram_url)
+    ? `<div class="dc-social reveal">
+        ${waHref ? `<a href="${escapeHtml(waHref)}" target="_blank" rel="noopener noreferrer">WhatsApp</a>` : ''}
+        ${settings.instagram_url ? `<a href="${escapeHtml(settings.instagram_url)}" target="_blank" rel="noopener noreferrer">Instagram</a>` : ''}
+      </div>`
+    : '';
+
+  const footerHtml = `<div class="dc-footer">
+      <div class="dc-footer-brand reveal">NJ<span class="accent">FILMES</span></div>
+      <div class="reveal">Feito com carinho pela NJFILMES.</div>
+      ${socialLinksHtml}
+    </div>`;
+
   return `<!doctype html>
 <html lang="pt-BR">
 <head>
@@ -239,19 +307,10 @@ ${c.cover_photo ? `<meta property="og:image" content="${escapeHtml(c.cover_photo
 <style>${CASE_CSS}</style>
 </head>
 <body>
-  <header class="dc-hero">
-    ${c.cover_photo ? `<div class="dc-hero-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-hero-bg"></div>'}
-    <div class="container dc-hero-inner">
-      <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
-      <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
-      ${c.welcome_message ? `<p class="dc-welcome reveal">${escapeHtml(c.welcome_message)}</p>` : ''}
-    </div>
-  </header>
-  ${videosHtml}
-  ${galleryHtml}
+  ${storyHtml}
   ${downloadHtml}
   ${commentsHtml}
-  <div class="dc-footer">Feito com carinho pela NJFILMES.</div>
+  ${footerHtml}
   <div class="lightbox" id="dc-lightbox"><button class="lightbox-close" aria-label="Fechar">×</button><img src="" alt=""></div>
   <script>window.NJFILMES_API_BASE = ${JSON.stringify(PUBLIC_API_BASE)};</script>
   <script>${pageScript(c.slug)}</script>
