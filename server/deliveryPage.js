@@ -135,13 +135,36 @@ function pageScript(slug) {
   return `
   (function(){
     var els = document.querySelectorAll('.reveal');
-    if ('IntersectionObserver' in window) {
-      var io = new IntersectionObserver(function(entries){
-        entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); } });
-      }, { threshold: .15 });
-      els.forEach(function(el){ io.observe(el); });
-    } else {
-      els.forEach(function(el){ el.classList.add('is-visible'); });
+    function revealAll(){ els.forEach(function(el){ el.classList.add('is-visible'); }); }
+    try {
+      if ('IntersectionObserver' in window) {
+        // A página usa uma div interna com scroll próprio (".dc-story", tipo carrossel de
+        // stories) em vez do scroll da própria página — passar ela como "root" explicitamente
+        // evita que alguns navegadores (viu-se acontecer em desktop, mesmo com o mobile
+        // funcionando normal) calculem errado o que já está visível quando quem rola não é a
+        // página, e sim essa div de dentro.
+        var storyRoot = document.querySelector('.dc-story');
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('is-visible'); io.unobserve(e.target); } });
+        }, { root: storyRoot || null, threshold: .15 });
+        els.forEach(function(el){ io.observe(el); });
+        // Rede de segurança: se por qualquer motivo o observer não disparar pros elementos que
+        // já estão visíveis assim que a página carrega (ex.: nome do cliente e frase de
+        // boas-vindas na capa), força mostrar depois de meio segundo em vez de deixar invisível
+        // pra sempre — melhor perder a animação de entrada do que sumir com o conteúdo.
+        setTimeout(function(){
+          var viewH = (storyRoot ? storyRoot.clientHeight : 0) || window.innerHeight || document.documentElement.clientHeight;
+          els.forEach(function(el){
+            if (el.classList.contains('is-visible')) return;
+            var r = el.getBoundingClientRect();
+            if (r.top < viewH && r.bottom > 0) el.classList.add('is-visible');
+          });
+        }, 500);
+      } else {
+        revealAll();
+      }
+    } catch (err) {
+      revealAll();
     }
 
     document.querySelectorAll('[data-video-fullscreen]').forEach(function(btn){
@@ -271,7 +294,12 @@ function renderMediaSlides(videos, photos) {
         </div>`;
       }
       const p = item.data;
-      const isLandscape = Number(p.width) > 0 && Number(p.height) > 0 && Number(p.width) > Number(p.height);
+      // Não é só foto "deitada" (largura > altura) que fica ruim esticada num quadro alto e
+      // estreito tipo story — foto quadrada (ou quase quadrada) também fica cortada demais nas
+      // laterais com object-fit:cover. Por isso o corte pra usar "contain" + fundo desfocado é
+      // width/height > 0.92 (pega quadradas e paisagens), não só width > height.
+      const isLandscape =
+        Number(p.width) > 0 && Number(p.height) > 0 && Number(p.width) / Number(p.height) > 0.92;
       return `<div class="dc-slide reveal">
         <div class="dc-slide-media${isLandscape ? ' is-landscape' : ''}">
           ${isLandscape ? `<div class="dc-slide-media-bg" style="background-image:url('${escapeHtml(p.filename)}')"></div>` : ''}
