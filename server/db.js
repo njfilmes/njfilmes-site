@@ -878,6 +878,16 @@ export async function initSchema() {
       await query("ALTER TABLE delivery_videos ADD COLUMN top_text TEXT DEFAULT ''");
     }
 
+    // 17/09/2026: pedido do usuário — o cliente poder deixar um comentário/recado junto com a
+    // seleção de fotos (ex: "essas 3 primeiras são pra moldura", "queria essa em preto e branco").
+    // Fica salvo junto do caso e aparece pro fotógrafo na aba "Revisão" do painel.
+    const selectionCaseCols = (
+      await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'selection_cases'")
+    ).map((c) => c.column_name);
+    if (!selectionCaseCols.includes('client_note')) {
+      await query("ALTER TABLE selection_cases ADD COLUMN client_note TEXT DEFAULT ''");
+    }
+
   // Garante que exista sempre exatamente uma linha de settings e de bio (singletons).
   await query('INSERT INTO settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;');
     await query('INSERT INTO bio (id) VALUES (1) ON CONFLICT (id) DO NOTHING;');

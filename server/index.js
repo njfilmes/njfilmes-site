@@ -242,7 +242,7 @@ async function router(req, res) {
     return Pub.toggleSelectionPhoto(req, res, m[1], await parseBody(req));
   }
   if ((m = pathname.match(/^\/api\/selecao-enviar\/([a-z0-9-]+)$/)) && method === 'POST') {
-    return Pub.submitSelection(req, res, m[1]);
+    return Pub.submitSelection(req, res, m[1], await parseBody(req));
   }
 
   // ---------------- Admin ----------------

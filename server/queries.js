@@ -801,9 +801,12 @@ export async function updateSelectionCase(id, { client_name, slug, welcome_messa
 export async function setSelectionCaseStatus(id, status) {
   await query('UPDATE selection_cases SET status = $1, updated_at = $2 WHERE id = $3', [status, new Date().toISOString(), id]);
 }
-export async function markSelectionSubmitted(id) {
+export async function markSelectionSubmitted(id, clientNote = '') {
   const now = new Date().toISOString();
-  await query("UPDATE selection_cases SET status = 'revisao', submitted_at = $1, updated_at = $1 WHERE id = $2", [now, id]);
+  await query(
+    "UPDATE selection_cases SET status = 'revisao', submitted_at = $1, updated_at = $1, client_note = $2 WHERE id = $3",
+    [now, clientNote || '', id]
+  );
 }
 export async function markSelectionFinalized(id) {
   const now = new Date().toISOString();

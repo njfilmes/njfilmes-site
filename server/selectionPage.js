@@ -54,6 +54,11 @@ const CASE_CSS = `
   .sl-bar button:disabled{opacity:.5;cursor:default;}
   .sl-status{font-size:.85rem;color:rgba(241,237,228,.6);min-height:1.2em;}
 
+  .sl-note{max-width:640px;margin:0 auto 24px;padding:0 20px;}
+  .sl-note label{display:block;font-size:.85rem;color:rgba(241,237,228,.65);margin-bottom:8px;}
+  .sl-note textarea{width:100%;background:#151319;border:1px solid rgba(241,237,228,.15);border-radius:8px;color:#f1ede4;font-family:inherit;font-size:.92rem;padding:12px 14px;resize:vertical;min-height:70px;}
+  .sl-note textarea:focus{outline:none;border-color:#c9a227;}
+
   .sl-done{max-width:520px;margin:60px auto;text-align:center;padding:0 20px;}
   .sl-done h2{font-family:'Fraunces',serif;font-weight:600;font-size:1.6rem;margin:0 0 12px;}
   .sl-done p{color:rgba(241,237,228,.75);}
@@ -149,10 +154,15 @@ function pageScript(slug, limit) {
     }
 
     if (sendBtn) {
+      var noteEl = document.querySelector('[data-sl-note]');
       sendBtn.addEventListener('click', function () {
         sendBtn.disabled = true;
         if (statusEl) statusEl.textContent = 'Enviando...';
-        fetch(apiBase + '/api/selecao-enviar/' + ${JSON.stringify(slug)}, { method: 'POST' })
+        fetch(apiBase + '/api/selecao-enviar/' + ${JSON.stringify(slug)}, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ note: noteEl ? noteEl.value : '' }),
+        })
           .then(function (r) { return r.json(); })
           .then(function (data) {
             if (data && data.ok) {
@@ -194,10 +204,15 @@ export function renderSelectionCasePage(selectionCase, settings = {}) {
     ? `<div class="sl-done">
         <h2>Seleção enviada!</h2>
         <p>Você escolheu ${selected.length} foto${selected.length === 1 ? '' : 's'}. Já estamos editando — assim que ficar pronto, você recebe o link com as fotos finais.</p>
+        ${c.client_note ? `<p style="white-space:pre-line;"><em>Seu recado: "${escapeHtml(c.client_note)}"</em></p>` : ''}
       </div>
       ${selected.length ? `<div class="container"><div class="sl-grid">${gridHtml}</div></div>` : ''}`
     : `<div class="container">
         <div class="sl-grid">${gridHtml || '<p class="empty-hint" style="grid-column:1/-1;color:rgba(241,237,228,.5);">Nenhuma foto disponível ainda.</p>'}</div>
+      </div>
+      <div class="sl-note">
+        <label for="sl-note-input">Quer deixar algum recado? (opcional)</label>
+        <textarea id="sl-note-input" data-sl-note rows="3" placeholder="Ex: essas 3 primeiras são pra moldura, gostaria dessa em preto e branco..."></textarea>
       </div>
       <div class="sl-bar">
         <span class="sl-bar-count" data-sl-count></span>
