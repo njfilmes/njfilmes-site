@@ -155,10 +155,23 @@ Ou seja: **o custo esperado hoje é zero**, dentro do uso normal de um portfóli
 
 ## 9. Onde ficam as fotos e como fazer backup
 
-- Banco de dados: Postgres na Neon (não é mais um arquivo local) — o backup mais simples é usar a própria função de backup/branch da Neon no painel do projeto.
-- Fotos: Vercel Blob — pelo painel do projeto na Vercel (Storage → seu Blob Store) você vê e pode baixar todos os arquivos.
+- Banco de dados: Postgres na Neon (não é mais um arquivo local) — a própria Neon já guarda um histórico de restauração de ponto no tempo no painel do projeto (Neon → seu projeto → Backup/Restore), sem precisar configurar nada.
+- Fotos: Vercel Blob (e as Entregas mais recentes podem estar no Cloudflare R2) — pelo painel de cada um você vê e pode baixar todos os arquivos.
 
-Como os dois ficam fora do servidor, você não perde nada mesmo se recriar os serviços da Render do zero — é só reconectar as mesmas variáveis de ambiente (`DATABASE_URL` e `BLOB_READ_WRITE_TOKEN`).
+Como os dois ficam fora do servidor, você não perde nada mesmo se recriar os serviços da Render do zero — é só reconectar as mesmas variáveis de ambiente (`DATABASE_URL`, `BLOB_READ_WRITE_TOKEN` e, se estiver usando, as 5 variáveis `R2_*`).
+
+### Backup automático extra, independente de tudo isso
+
+Além do backup nativo da Neon, o repositório tem um robô (`.github/workflows/backup-db.yml`) que roda sozinho **dentro dos servidores do próprio GitHub**, todo domingo, e salva uma cópia comprimida do banco inteiro numa branch separada chamada `backups` (pasta `database/`, sem misturar com o código do site). Ele guarda as 15 cópias mais recentes (uns 3-4 meses de histórico) e apaga as mais antigas sozinho. Isso não depende do Render, da Neon continuar de pé, nem de nenhuma conversa com o Claude — uma vez configurado, continua rodando pra sempre.
+
+**Configuração (só precisa fazer uma vez):**
+
+1. No GitHub, vá em **Settings → Secrets and variables → Actions → New repository secret**.
+2. Nome: `DATABASE_URL`. Valor: cole a mesma connection string da Neon que você já usa no Render (nunca compartilhe essa chave com o Claude — cole ela só aqui, direto no GitHub).
+3. Ainda em Settings, vá em **Actions → General → Workflow permissions** e marque **"Read and write permissions"** (é o que deixa o robô salvar o backup de volta no repositório). Salve.
+4. Pronto. Pra testar na hora sem esperar até domingo: aba **Actions** do repositório → **Backup automático do banco de dados** → botão **Run workflow**.
+
+**Como restaurar um backup, se um dia precisar:** baixe o arquivo `.sql.gz` mais recente da branch `backups` (pasta `database/`), descompacte, e rode `psql "SUA_DATABASE_URL" < backup.sql` (ou peça ajuda técnica nesse momento — é um comando único, não precisa mexer em nada do site).
 
 ## 10. Trocar sua senha
 
