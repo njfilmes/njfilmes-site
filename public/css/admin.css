@@ -177,3 +177,34 @@ color: var(--a-muted); margin-bottom: 22px; cursor: pointer; transition: border-
 .admin-content { padding: 20px 16px 60px; }
 .admin-topbar { padding: 16px; }
 }
+
+/* Quadro de Seleção de fotos (aba separada de Entregas, pedido em 17/09/2026, referência: site
+   Alboom) — colunas por etapa (preparo/andamento/revisão/finalizado), cada card com um select
+   pra mudar de etapa (mais simples e confiável do que arrastar-e-soltar de verdade). */
+.sel-board { display: grid; grid-template-columns: repeat(4, minmax(220px, 1fr)); gap: 16px; align-items: start; overflow-x: auto; }
+.sel-column { background: var(--a-panel); border: 1px solid var(--a-border); border-radius: 10px; padding: 14px; min-height: 120px; }
+.sel-column-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.sel-column-head h3 { margin: 0; font-size: 0.9rem; }
+.sel-count { background: var(--a-bg); border: 1px solid var(--a-border); border-radius: 10px; padding: 1px 9px; font-size: 0.76rem; color: var(--a-muted); }
+.sel-card { background: var(--a-panel-2); border: 1px solid var(--a-border); border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.sel-card a { display: block; font-size: 0.88rem; margin-bottom: 4px; }
+.sel-card select { width: 100%; margin-top: 8px; font-size: 0.78rem; padding: 5px 6px; background: var(--a-bg); border: 1px solid var(--a-border); border-radius: 4px; color: var(--a-fg); }
+@media (max-width: 1100px) { .sel-board { grid-template-columns: repeat(2, minmax(220px, 1fr)); } }
+@media (max-width: 640px) { .sel-board { grid-template-columns: 1fr; } }
+
+/* Modal de exportação (lista de nomes originais pra colar no Lightroom/Finder/Explorer) */
+.export-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.export-modal-overlay[hidden] { display: none; }
+.export-modal { background: var(--a-panel); border: 1px solid var(--a-border); border-radius: 12px; padding: 24px; width: 560px; max-width: 100%; max-height: 86vh; overflow-y: auto; }
+.export-modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.export-modal-head h3 { margin: 0; }
+.export-modal-close { background: none; border: 0; color: var(--a-fg); font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.export-tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.export-tab { background: var(--a-bg); border: 1px solid var(--a-border); color: var(--a-muted); border-radius: 100px; padding: 6px 14px; font-size: 0.8rem; cursor: pointer; }
+.export-tab.active { background: var(--a-accent); color: #14110a; border-color: var(--a-accent); font-weight: 600; }
+.export-tab-content h4 { margin: 0 0 8px; font-size: 0.92rem; }
+.export-tab-content ul { margin: 0 0 16px; padding-left: 20px; font-size: 0.85rem; color: var(--a-muted); }
+.export-tab-content ul li { margin-bottom: 4px; }
+.export-part { margin-bottom: 14px; }
+.export-part-head { display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--a-muted); margin-bottom: 4px; }
+.export-part textarea { width: 100%; font-size: 0.8rem; padding: 8px 10px; background: var(--a-bg); border: 1px solid var(--a-border); border-radius: 6px; color: var(--a-fg); resize: vertical; margin-bottom: 6px; }
