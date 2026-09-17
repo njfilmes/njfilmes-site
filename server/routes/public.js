@@ -26,6 +26,8 @@ import {
   getDeliveryCaseBySlug,
   listCommentsForDeliveryCase,
   createDeliveryComment,
+  incrementDeliveryPhotoLikesIfPublished,
+  incrementDeliveryVideoLikesIfPublished,
 } from '../queries.js';
 import { renderDeliveryCasePage } from '../deliveryPage.js';
 
@@ -646,6 +648,47 @@ export async function likePhoto(req, res, id) {
   if (likes === null) {
     res.statusCode = 404;
     return res.end(JSON.stringify({ error: 'Foto não encontrada.' }));
+  }
+  res.end(JSON.stringify({ likes }));
+}
+
+// Mesmo botão de curtir, só que por foto/vídeo da página de entrega (pedido do usuário em
+// 17/09/2026 — "bota também forma do cliente dar like na foto ou vídeo"). Chamado pelo navegador
+// via fetch (POST /api/entrega-curtir-foto/:id e /api/entrega-curtir-video/:id).
+export async function likeDeliveryPhoto(req, res, id) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Muitas curtidas em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const photoId = Number(id);
+  if (!Number.isInteger(photoId) || photoId <= 0) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ error: 'Foto inválida.' }));
+  }
+  const likes = await incrementDeliveryPhotoLikesIfPublished(photoId);
+  if (likes === null) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Foto não encontrada.' }));
+  }
+  res.end(JSON.stringify({ likes }));
+}
+
+export async function likeDeliveryVideo(req, res, id) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (!engagementRateLimitOk(getClientIp(req))) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ error: 'Muitas curtidas em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const videoId = Number(id);
+  if (!Number.isInteger(videoId) || videoId <= 0) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ error: 'Vídeo inválido.' }));
+  }
+  const likes = await incrementDeliveryVideoLikesIfPublished(videoId);
+  if (likes === null) {
+    res.statusCode = 404;
+    return res.end(JSON.stringify({ error: 'Vídeo não encontrado.' }));
   }
   res.end(JSON.stringify({ likes }));
 }
