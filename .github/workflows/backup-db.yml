@@ -1,0 +1,70 @@
+name: Backup automático do banco de dados
+
+# Isso roda sozinho, inteiro dentro dos servidores do próprio GitHub — não depende do Render
+# estar no ar, do Neon estar disponível pro Claude, nem de nenhuma conversa com o Claude existir.
+# Uma vez configurado (ver README, seção 9), continua rodando pra sempre, todo domingo, sem
+# ninguém precisar lembrar de fazer nada.
+#
+# Também pode ser disparado manualmente a qualquer momento pela aba "Actions" do repositório no
+# GitHub (botão "Run workflow"), por exemplo antes de mexer em algo que te deixe inseguro.
+on:
+  schedule:
+    - cron: '0 9 * * 0' # todo domingo às 09:00 UTC (~06:00 no horário de Brasília)
+  workflow_dispatch: {}
+
+# Necessário pra esse robô poder salvar o resultado de volta no próprio repositório (branch
+# "backups", separada da branch "main" onde fica o código do site).
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Instalar cliente do Postgres
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
+      - name: Gerar a cópia do banco (pg_dump)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "O segredo DATABASE_URL não está configurado."
+            echo "Vá em Settings -> Secrets and variables -> Actions -> New repository secret"
+            echo "e cole ali a mesma connection string usada no Render (a da Neon)."
+            exit 1
+          fi
+          mkdir -p /tmp/backup
+          pg_dump "$DATABASE_URL" --no-owner --no-privileges | gzip > /tmp/backup/backup.sql.gz
+
+      - name: Salvar a cópia na branch "backups"
+        run: |
+          git config user.name "njfilmes-backup-bot"
+          git config user.email "actions@github.com"
+
+          git fetch origin backups 2>/dev/null || true
+          if git show-ref --verify --quiet refs/remotes/origin/backups; then
+            git checkout backups
+          else
+            git checkout --orphan backups
+            git rm -rf . > /dev/null 2>&1 || true
+          fi
+
+          mkdir -p database
+          ARQUIVO="database/backup-$(date -u +%Y-%m-%d).sql.gz"
+          mv /tmp/backup/backup.sql.gz "$ARQUIVO"
+
+          # Mantém só as 15 cópias mais recentes (uns 3-4 meses de histórico semanal), pra essa
+          # branch de backup nunca crescer sem parar.
+          cd database
+          ls -1 | sort | head -n -15 | xargs -r rm --
+          cd ..
+
+          git add database
+          git commit -m "Backup automático do banco - $(date -u +%Y-%m-%d)" || echo "Nada novo pra salvar hoje"
+          git push origin backups
