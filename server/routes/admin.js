@@ -65,6 +65,21 @@ async function maxSortOrder(table, whereCol = null, whereVal = null) {
   return Number(row.m);
 }
 
+// Igual maxSortOrder, mas olhando fotos E vídeos de uma entrega juntos — pedido do usuário em
+// 17/09/2026 pra poder "intercalar" foto e vídeo na rolagem da página de entrega (ver
+// server/deliveryPage.js), em vez de sempre mostrar todos os vídeos primeiro e todas as fotos
+// depois. Usando essa mesma numeração combinada como base pra sort_order de fotos e vídeos, a
+// ordem que aparece na página acaba sendo simplesmente a ordem em que cada foto/vídeo foi
+// adicionado no painel — se o usuário sobe 2 fotos, cola um vídeo, e sobe mais fotos, é assim
+// que aparece na rolagem, misturado.
+async function maxCombinedDeliverySortOrder(caseId) {
+  const [photoMax, videoMax] = await Promise.all([
+    maxSortOrder('delivery_photos', 'case_id', caseId),
+    maxSortOrder('delivery_videos', 'case_id', caseId),
+  ]);
+  return Math.max(photoMax, videoMax);
+}
+
 // ---------------- Setup / Login ----------------
 
 export async function setupPage(req, res) {
@@ -2085,7 +2100,7 @@ export async function deliveryCaseDelete(req, res, id) {
 export async function deliveryVideoCreate(req, res, body, id) {
   const parsed = parseVideoUrl(body.url);
   if (!parsed) return redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'error', 'Link de vídeo inválido.'));
-  const maxOrder = await maxSortOrder('delivery_videos', 'case_id', id);
+  const maxOrder = await maxCombinedDeliverySortOrder(id);
   await Q.addDeliveryVideo(id, { provider: parsed.provider, video_id: parsed.videoId, url: parsed.url, title: body.title, download_url: (body.download_url || '').trim(), sort_order: maxOrder + 1 });
   redirect(res, `/admin/entregas/${id}/videos` + withFlash(res, 'success', 'Vídeo adicionado.'));
 }
@@ -2108,7 +2123,7 @@ export async function deliveryPhotosUpload(req, res, body, id) {
     res.setHeader('Content-Type', 'application/json');
     return res.end(JSON.stringify({ ok: false, error: 'Nenhuma foto recebida.' }));
   }
-  let order = await maxSortOrder('delivery_photos', 'case_id', id);
+  let order = await maxCombinedDeliverySortOrder(id);
   let saved = 0;
   const isFirstBatch = deliveryCase.photos.length === 0;
   for (const dataUrl of photos) {
