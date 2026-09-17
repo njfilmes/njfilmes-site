@@ -96,6 +96,30 @@ const CASE_CSS = `
   .dc-scroll-hint{position:absolute;left:24px;bottom:26px;z-index:2;display:flex;align-items:center;gap:10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(241,237,228,.55);}
   .dc-scroll-hint::before{content:'';width:26px;height:1px;background:rgba(241,237,228,.6);animation:dcScrollDash 1.8s ease-in-out infinite;}
   @keyframes dcScrollDash{0%,100%{transform:scaleX(.55) translateX(0);opacity:.4;}50%{transform:scaleX(1) translateX(3px);opacity:1;}}
+  /* Pedido do usuario (17/09/2026): "coloca uma animacao de rolagem pra baixo tambem pra pessoa
+     conseguir chegar ate a parte de download" - o "role para ver" só existia na capa; quem já
+     tinha passado das fotos podia não perceber que dava pra continuar rolando pro download. Esse
+     aviso (mesmo visual do "role para ver", com uma seta pra baixo no lugar do tracinho) aparece
+     só na ÚLTIMA foto/vídeo da sequência (ver "isLast" em renderMediaSlides mais abaixo). */
+  .dc-continue-hint{position:absolute;left:0;right:0;bottom:24px;z-index:2;display:flex;justify-content:center;align-items:center;gap:8px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(241,237,228,.75);text-shadow:0 2px 8px rgba(0,0,0,.6);}
+  .dc-continue-hint::after{content:'↓';display:inline-block;animation:dcContinueBounce 1.6s ease-in-out infinite;}
+  @keyframes dcContinueBounce{0%,100%{transform:translateY(0);opacity:.5;}50%{transform:translateY(6px);opacity:1;}}
+  /* Pedido do usuario (17/09/2026): "continue com os efeitos de luz igual o site junto se
+     movimentando dourado" - mesmas manchas douradas desfocadas que já flutuam pelo site principal
+     (".parallax-bg"/".parallax-layer" em style.css), versão simplificada (2 em vez de 4) aqui na
+     entrega. "position:fixed" fica preso na tela mesmo com ".dc-story" rolando por conta própria
+     (nenhum ancestral tem transform/filter, então o "fixed" continua valendo pra janela toda, não
+     pro contêiner de rolagem) - aparece por trás de qualquer seção com fundo próprio (fotos,
+     download, comentários), então só fica visível nos respiros escuros entre elas. */
+  .dc-parallax-bg{position:fixed;inset:0;z-index:1;overflow:hidden;pointer-events:none;}
+  .dc-parallax-layer{position:absolute;border-radius:50%;filter:blur(70px);mix-blend-mode:screen;}
+  .dc-parallax-layer-1{width:46vw;height:46vw;max-width:560px;max-height:560px;top:-14%;left:-10%;background:radial-gradient(circle,rgba(201,162,39,.32),transparent 70%);animation:dcParallaxDrift1 32s ease-in-out infinite;}
+  .dc-parallax-layer-2{width:38vw;height:38vw;max-width:480px;max-height:480px;bottom:-12%;right:-10%;background:radial-gradient(circle,rgba(255,190,90,.28),transparent 70%);animation:dcParallaxDrift2 26s ease-in-out infinite;}
+  @keyframes dcParallaxDrift1{0%,100%{transform:translate(0,0);}33%{transform:translate(8vw,6vh);}66%{transform:translate(-4vw,11vh);}}
+  @keyframes dcParallaxDrift2{0%,100%{transform:translate(0,0);}33%{transform:translate(-7vw,-9vh);}66%{transform:translate(5vw,-4vh);}}
+  @media (prefers-reduced-motion: reduce){
+    .dc-parallax-layer-1, .dc-parallax-layer-2, .dc-continue-hint::after{animation:none;}
+  }
 
   .dc-slide{scroll-snap-align:start;scroll-snap-stop:always;position:relative;}
   .dc-slide-media{height:100vh;height:100dvh;position:relative;overflow:hidden;background:#151319;}
@@ -340,6 +364,10 @@ function renderMediaSlides(videos, photos) {
   return items
     .map((item, i) => {
       const number = String(i + 1).padStart(2, '0');
+      // Pedido do usuario (17/09/2026): aviso de "continuar rolando" só na última foto/vídeo, pra
+      // avisar que ainda dá pra rolar até o download/comentários (ver ".dc-continue-hint" no CSS).
+      const isLast = i === items.length - 1;
+      const continueHint = isLast ? '<span class="dc-continue-hint reveal">Continue rolando</span>' : '';
       if (item.type === 'video') {
         const v = item.data;
         const hasCaption = Boolean(v.title || v.download_url);
@@ -351,6 +379,7 @@ function renderMediaSlides(videos, photos) {
             <button type="button" class="dc-like-btn dc-like-btn--video" data-dc-like-btn data-dc-like-kind="video" data-dc-like-id="${v.id}">
               <span class="heart"></span> <span data-dc-like-count>${v.likes || 0}</span>
             </button>
+            ${continueHint}
           </div>
           ${hasCaption ? `<div class="dc-slide-caption">
             ${v.title ? `<p>${escapeHtml(v.title)}</p>` : ''}
@@ -374,6 +403,7 @@ function renderMediaSlides(videos, photos) {
           <button type="button" class="dc-like-btn" data-dc-like-btn data-dc-like-kind="photo" data-dc-like-id="${p.id}">
             <span class="heart"></span> <span data-dc-like-count>${p.likes || 0}</span>
           </button>
+          ${continueHint}
         </div>
         ${p.caption ? `<div class="dc-slide-caption"><p>${escapeHtml(p.caption)}</p></div>` : ''}
       </div>`;
@@ -484,6 +514,7 @@ ${c.cover_photo ? `<meta property="og:image" content="${escapeHtml(c.cover_photo
 <style>${CASE_CSS}</style>
 </head>
 <body${hasStoryContent ? ' class="dc-locked"' : ''}>
+  <div class="dc-parallax-bg" aria-hidden="true"><div class="dc-parallax-layer dc-parallax-layer-1"></div><div class="dc-parallax-layer dc-parallax-layer-2"></div></div>
   ${bodyContent}
   <div class="lightbox" id="dc-lightbox"><button class="lightbox-close" aria-label="Fechar">×</button><img src="" alt=""></div>
   <script>window.NJFILMES_API_BASE = ${JSON.stringify(PUBLIC_API_BASE)};</script>
