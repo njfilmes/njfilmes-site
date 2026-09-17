@@ -55,15 +55,24 @@ const CASE_CSS = `
   /* Pedido do usuario (17/09/2026): "ao fazer a rolagem ele ta subindo sem deixar aparecer o
      final aonde tem pra baixar" - com "mandatory" o navegador é obrigado a sempre parar exatamente
      em cima de um ponto de encaixe (scroll-snap-align), e o download/comentários/rodapé (que vêm
-     depois do último slide) não são pontos de encaixe - então, ao tentar rolar pra ver essas
+     depois do último slide) não eram pontos de encaixe - então, ao tentar rolar pra ver essas
      seções, o encaixe "mandatory" forçava voltar pro último slide de foto/vídeo em vez de deixar
-     ir até o final. Trocado pra "proximity": só encaixa quando a rolagem já para naturalmente
-     perto de uma foto/vídeo (mantém o efeito de "story" ao passar pelas fotos), mas não trava mais
-     quem quer continuar rolando até o download/comentários/rodapé no final. */
-  .dc-story{scroll-snap-type:y proximity;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
+     ir até o final. Primeira tentativa foi trocar pra "proximity", mas isso trouxe um problema
+     novo ("continua meio travando ao deslizar tanto no cel quanto no pc") - sem "mandatory" a
+     rolagem podia parar NO MEIO do caminho entre duas fotos (nem uma nem outra), parecendo
+     emperrada. Solução de verdade: manter "mandatory" (sempre encaixa em algum lugar, nunca fica
+     no meio) e dar um ponto de encaixe de verdade pro download/comentários/rodapé também
+     (".dc-story > section, .dc-story > .dc-footer" aqui embaixo) - assim o encaixe obrigatório
+     para NELES em vez de forçar voltar pro último slide. */
+  .dc-story{scroll-snap-type:y mandatory;overflow-y:auto;-webkit-overflow-scrolling:touch;height:100vh;height:100dvh;}
+  .dc-story > section, .dc-story > .dc-footer{scroll-snap-align:start;}
 
   .dc-cover{scroll-snap-align:start;scroll-snap-stop:always;min-height:100vh;min-height:100dvh;display:flex;align-items:flex-end;position:relative;padding:80px 0 64px;background:#0b0a0d;overflow:hidden;}
-  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;}
+  /* Pedido do usuario (17/09/2026): "os efeitos n ta aparecendo ta tudo estatico" - capa e
+     fotos/vídeos da entrega eram uma imagem 100% parada, sem nenhum movimento (diferente do hero
+     da Home, que já tem um zoom lento contínuo - ".hero-media img" em style.css). Mesma ideia
+     aqui: um zoom bem lento e suave, vai-e-volta, só pra tirar a sensação de "imagem congelada". */
+  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;transform:scale(1);animation:dcKenBurns 18s ease-in-out infinite alternate;}
   .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
   .dc-cover-inner{position:relative;z-index:1;}
   .dc-brandmark{position:absolute;top:22px;left:24px;z-index:2;display:block;}
@@ -83,8 +92,17 @@ const CASE_CSS = `
      fundo desfocado da própria foto atrás — pedido do usuário em 17/09/2026 ("a foto horizontal
      tá ficando vertical e cortando as laterais"). Foto vertical/quadrada continua exatamente
      como antes (cover, tela cheia, sem essa camada de fundo). */
-  .dc-slide-media-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55);transform:scale(1.15);}
+  .dc-slide-media-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(38px) brightness(.55);transform:scale(1.15);animation:dcSlideBgZoom 18s ease-in-out infinite alternate;}
   .dc-slide-media.is-landscape img{object-fit:contain;}
+  /* Mesmo zoom lento do ".dc-cover-bg" (ver comentário ali em cima), aplicado nas fotos verticais/
+     quadradas em tela cheia (":not(.is-landscape)" pra não mexer na foto horizontal, que usa
+     "contain" e não pode ser cortada). */
+  .dc-slide-media:not(.is-landscape) img{animation:dcKenBurns 18s ease-in-out infinite alternate;}
+  @keyframes dcKenBurns{from{transform:scale(1);}to{transform:scale(1.08);}}
+  @keyframes dcSlideBgZoom{from{transform:scale(1.15);}to{transform:scale(1.26);}}
+  @media (prefers-reduced-motion: reduce){
+    .dc-cover-bg, .dc-slide-media-bg, .dc-slide-media:not(.is-landscape) img{animation:none;}
+  }
   .dc-slide-media .dc-story-video{position:absolute;inset:0;background:#000;}
   .dc-slide-media .dc-story-video iframe,.dc-slide-media .dc-story-video video{position:absolute;top:50%;left:50%;width:100vw;height:56.25vw;min-height:100%;min-width:177.78vh;transform:translate(-50%,-50%);border:0;object-fit:cover;}
   .dc-slide-media::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 60%,rgba(0,0,0,.6) 100%);pointer-events:none;}
