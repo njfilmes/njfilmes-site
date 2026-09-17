@@ -2602,3 +2602,36 @@ html.no-intro .cine-intro { display: none; }
     100% { transform: translate(0, 0); }
   }
 }
+
+/* =========================================================
+   Página "link na bio" (/links) — estilo Linktree, pedido do usuário em 17/09/2026 pra colar
+   na bio do Instagram e juntar site/WhatsApp/Instagram/Google num lugar só. Reaproveita as
+   mesmas variáveis de cor/fonte do resto do site (--bg, --accent, --font-display etc), só com
+   um layout bem mais estreito e vertical (típico desse tipo de página, otimizado pra celular).
+   ========================================================= */
+.links-page { padding: 90px 0 60px; }
+.links-container { max-width: 440px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.links-avatar {
+  width: 96px; height: 96px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--accent); box-shadow: 0 0 0 6px var(--accent-soft);
+  margin-bottom: 18px;
+}
+.links-name {
+  font-family: var(--font-display); font-size: 1.6rem; letter-spacing: 0.02em; margin: 0 0 6px;
+}
+.links-tagline { color: var(--fg-muted); margin: 0 0 32px; font-size: 0.95rem; }
+.links-buttons { display: flex; flex-direction: column; gap: 12px; width: 100%; }
+.link-btn {
+  display: flex; align-items: center; gap: 12px; justify-content: center;
+  width: 100%; padding: 15px 20px; border-radius: 100px;
+  border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--fg);
+  font-weight: 600; font-size: 0.95rem; text-decoration: none;
+  transition: transform 0.2s var(--ease), border-color 0.2s var(--ease), background 0.2s var(--ease);
+}
+.link-btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+.link-btn-primary { background: var(--accent); color: #171310; border-color: var(--accent); }
+.link-btn-primary:hover { background: #dab643; color: #171310; }
+@media (max-width: 480px) {
+  .links-page { padding: 70px 0 40px; }
+  .link-btn { padding: 13px 16px; font-size: 0.9rem; }
+}
