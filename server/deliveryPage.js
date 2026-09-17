@@ -19,6 +19,7 @@
 // comportamento (embed automático, fallback, botão de tela cheia) que já existe na página de
 // projeto do portfólio.
 import { escapeHtml, videoEmbedHtml } from './util.js';
+import { ASSET_VERSION } from './assetVersion.js';
 
 // Mesma variável de ambiente já usada pelo resto do site público (server/render.js) pra saber
 // onde chamar a API de curtir/visualizar/comentários — o site é HTML estático, então essas
@@ -50,7 +51,8 @@ const CASE_CSS = `
   .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;}
   .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
   .dc-cover-inner{position:relative;z-index:1;}
-  .dc-brandmark{position:absolute;top:26px;left:24px;z-index:2;font-size:.72rem;letter-spacing:.16em;text-transform:uppercase;color:rgba(241,237,228,.55);}
+  .dc-brandmark{position:absolute;top:22px;left:24px;z-index:2;display:block;}
+  .dc-brandmark img{height:30px;width:auto;display:block;}
   .dc-eyebrow{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(241,237,228,.6);margin-bottom:14px;}
   .dc-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.1rem,5.5vw,3.6rem);margin:0 0 18px;letter-spacing:-.01em;}
   .dc-welcome{max-width:640px;color:rgba(241,237,228,.82);font-size:1.05rem;white-space:pre-line;}
@@ -103,7 +105,8 @@ const CASE_CSS = `
   .cf-hp{position:absolute;left:-9999px;opacity:0;height:0;width:0;}
 
   .dc-footer{text-align:center;padding:16px 0 60px;color:rgba(241,237,228,.4);font-size:.8rem;}
-  .dc-footer-brand{font-family:'Fraunces',serif;font-size:1rem;color:rgba(241,237,228,.75);margin-bottom:2px;}
+  .dc-footer-brand{margin-bottom:6px;}
+  .dc-footer-brand img{height:26px;width:auto;margin:0 auto;display:block;}
   .dc-social{display:flex;justify-content:center;gap:14px;margin-top:16px;flex-wrap:wrap;}
   .dc-social a{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(241,237,228,.25);padding:9px 18px;border-radius:100px;font-size:.82rem;text-decoration:none;color:rgba(241,237,228,.85);}
   .dc-social a:hover{border-color:#c9a227;color:#c9a227;}
@@ -179,16 +182,21 @@ function pageScript(slug) {
   `;
 }
 
-// Cada foto/vídeo vira um "slide" de tela cheia, numerado em sequência (vídeos primeiro, depois
-// fotos — mesma ordem de sempre). Só ganha o painel de legenda embaixo quando tem algo pra
-// mostrar (legenda da foto, ou título/link de download do vídeo) — senão fica só a imagem/vídeo
-// ocupando a tela toda, igual à referência que o usuário mandou (algumas fotos têm texto embaixo,
-// outras não).
+// Cada foto/vídeo vira um "slide" de tela cheia, numerado em sequência — intercalando foto e
+// vídeo na ordem em que foram adicionados no painel (ver renderMediaSlides abaixo). Só ganha o
+// painel de legenda embaixo quando tem algo pra mostrar (legenda da foto, ou título/link de
+// download do vídeo) — senão fica só a imagem/vídeo ocupando a tela toda, igual à referência que
+// o usuário mandou (algumas fotos têm texto embaixo, outras não).
 function renderMediaSlides(videos, photos) {
+  // Junta fotos e vídeos numa timeline só, ordenada por sort_order (com o id como desempate) —
+  // pedido do usuário em 17/09/2026 pra poder intercalar foto e vídeo na rolagem (não sempre
+  // "todos os vídeos primeiro"). Como fotos e vídeos agora compartilham a mesma numeração de
+  // sort_order (ver maxCombinedDeliverySortOrder em server/routes/admin.js), a ordem que aparece
+  // aqui é simplesmente a ordem em que cada um foi adicionado no painel.
   const items = [
-    ...videos.map((v) => ({ type: 'video', data: v })),
-    ...photos.map((p) => ({ type: 'photo', data: p })),
-  ];
+    ...videos.map((v) => ({ type: 'video', data: v, sortOrder: Number(v.sort_order) || 0, id: Number(v.id) || 0 })),
+    ...photos.map((p) => ({ type: 'photo', data: p, sortOrder: Number(p.sort_order) || 0, id: Number(p.id) || 0 })),
+  ].sort((a, b) => (a.sortOrder - b.sortOrder) || (a.id - b.id));
   return items
     .map((item, i) => {
       const number = String(i + 1).padStart(2, '0');
@@ -228,7 +236,7 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
     ? `<div class="dc-story">
         <div class="dc-cover">
           ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
-          <span class="dc-brandmark reveal">NJ<span class="accent">FILMES</span></span>
+          <span class="dc-brandmark reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></span>
           <div class="container dc-cover-inner">
             <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
             <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
@@ -240,7 +248,7 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
       </div>`
     : `<header class="dc-cover">
         ${c.cover_photo ? `<div class="dc-cover-bg" style="background-image:url('${escapeHtml(c.cover_photo)}')"></div>` : '<div class="dc-cover-bg"></div>'}
-        <span class="dc-brandmark reveal">NJ<span class="accent">FILMES</span></span>
+        <span class="dc-brandmark reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></span>
         <div class="container dc-cover-inner">
           <span class="dc-eyebrow reveal">NJ<span class="accent">FILMES</span> · Entrega</span>
           <h1 class="dc-title reveal">${escapeHtml(c.client_name)}</h1>
@@ -290,7 +298,7 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
     : '';
 
   const footerHtml = `<div class="dc-footer">
-      <div class="dc-footer-brand reveal">NJ<span class="accent">FILMES</span></div>
+      <div class="dc-footer-brand reveal"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES"></div>
       <div class="reveal">Feito com carinho pela NJFILMES.</div>
       ${socialLinksHtml}
     </div>`;
