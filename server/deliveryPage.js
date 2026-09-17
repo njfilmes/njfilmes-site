@@ -75,17 +75,27 @@ const CASE_CSS = `
      fotos/vídeos da entrega eram uma imagem 100% parada, sem nenhum movimento (diferente do hero
      da Home, que já tem um zoom lento contínuo - ".hero-media img" em style.css). Mesma ideia
      aqui: um zoom bem lento e suave, vai-e-volta, só pra tirar a sensação de "imagem congelada". */
-  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.55;transform:scale(1);animation:dcKenBurns 12s ease-in-out infinite alternate;}
-  .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.35) 0%,rgba(11,10,13,.65) 55%,#0b0a0d 100%);}
+  /* Pedido do usuario (17/09/2026): "e tinha animacao de zoom... e no q vc fez n tem" + referência
+     mandada (entrega da GOGO Produção) - lá a foto de fundo aparece bem viva/colorida, quase sem
+     escurecer, só um degradê suave embaixo pro texto não brigar com a foto. Aqui a foto ficava
+     "lavada" o tempo todo (opacity:.55 por cima dela inteira) - tirado isso, a foto agora aparece
+     quase 100% (opacity:.94) e quem cuida da legibilidade do texto é só o degradê (::after logo
+     abaixo, mais forte perto do topo pra não brigar com a marca/etiqueta).  */
+  .dc-cover-bg{position:absolute;inset:0;background-size:cover;background-position:center;opacity:.94;transform:scale(1);animation:dcKenBurns 12s ease-in-out infinite alternate;}
+  .dc-cover-bg::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,10,13,.45) 0%,rgba(11,10,13,.3) 30%,rgba(11,10,13,.72) 62%,#0b0a0d 100%);}
   .dc-cover-inner{position:relative;z-index:1;}
   .dc-brandmark{position:absolute;top:22px;left:24px;z-index:2;display:block;}
   .dc-brandmark img{height:30px;width:auto;display:block;}
   .dc-eyebrow{display:block;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:rgba(241,237,228,.6);margin-bottom:14px;}
   .dc-title{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(2.1rem,5.5vw,3.6rem);margin:0 0 18px;letter-spacing:-.01em;}
   .dc-welcome{max-width:640px;color:rgba(241,237,228,.82);font-size:1.05rem;white-space:pre-line;}
+  /* Pedido do usuario (17/09/2026): na referência que mandou, o "role para ver" vem com um
+     tracinho HORIZONTAL do lado ("— ROLE PARA VER"), não uma linha vertical em cima do texto como
+     estava aqui - ajustado pra bater com a referência, e o tracinho ganhou um leve deslizar de
+     lado a lado (mais uma animação, já que a ideia é ter o máximo possível). */
   .dc-scroll-hint{position:absolute;left:24px;bottom:26px;z-index:2;display:flex;align-items:center;gap:10px;font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:rgba(241,237,228,.55);}
-  .dc-scroll-hint::before{content:'';width:1px;height:28px;background:rgba(241,237,228,.4);animation:dcScrollLine 1.8s ease-in-out infinite;}
-  @keyframes dcScrollLine{0%,100%{transform:scaleY(.4);opacity:.35;}50%{transform:scaleY(1);opacity:1;}}
+  .dc-scroll-hint::before{content:'';width:26px;height:1px;background:rgba(241,237,228,.6);animation:dcScrollDash 1.8s ease-in-out infinite;}
+  @keyframes dcScrollDash{0%,100%{transform:scaleX(.55) translateX(0);opacity:.4;}50%{transform:scaleX(1) translateX(3px);opacity:1;}}
 
   .dc-slide{scroll-snap-align:start;scroll-snap-stop:always;position:relative;}
   .dc-slide-media{height:100vh;height:100dvh;position:relative;overflow:hidden;background:#151319;}
