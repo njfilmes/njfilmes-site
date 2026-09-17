@@ -126,8 +126,8 @@ color: var(--a-muted); margin-bottom: 22px; cursor: pointer; transition: border-
 }
 .upload-drop.dragover { border-color: var(--a-accent); background: rgba(201,162,39,0.06); }
 .upload-drop input { display: none; }
-#upload-preview, #bio-photos-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 14px; }
-#upload-preview img, #bio-photos-preview img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
+#upload-preview, #bio-photos-preview, #hero-photos-preview, #selection-upload-preview { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; margin-top: 14px; }
+#upload-preview img, #bio-photos-preview img, #hero-photos-preview img, #selection-upload-preview img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 6px; }
 
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 16px; margin-top: 8px; }
 .photo-card { background: var(--a-panel-2); border: 1px solid var(--a-border); border-radius: 8px; overflow: hidden; }
