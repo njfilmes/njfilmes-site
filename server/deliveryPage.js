@@ -263,18 +263,53 @@ function pageScript(slug) {
       });
     });
 
+    // Pedido do usuário (18/09/2026): "quando vou em voltar no cel ele ta fechando tudo n ta
+    // voltando pra foto menor" - no celular, o botão/gesto de "voltar" é o histórico do
+    // navegador, e abrir a foto ampliada não empilhava nada nesse histórico - então "voltar"
+    // saía da página de entrega inteira (ou até do site) em vez de só fechar a foto ampliada e
+    // mostrar a foto menor de novo. Corrigido empilhando um estado falso no histórico ao abrir
+    // (history.pushState) e fechando a foto ampliada quando esse estado é desfeito (popstate) -
+    // assim "voltar" no celular primeiro fecha a foto ampliada, só a segunda vez sai da página de
+    // verdade, do jeito que a pessoa espera.
     var lightbox = document.getElementById('dc-lightbox');
     var lightboxImg = lightbox ? lightbox.querySelector('img') : null;
+    var lightboxHistoryPushed = false;
+
+    function closeLightboxVisual() {
+      if (lightbox) lightbox.classList.remove('open');
+    }
+
+    function openLightbox(src) {
+      if (!lightbox) return;
+      lightboxImg.src = src;
+      lightbox.classList.add('open');
+      lightboxHistoryPushed = true;
+      history.pushState({ njLightbox: true }, '', '');
+    }
+
+    function requestCloseLightbox() {
+      if (lightboxHistoryPushed) {
+        history.back();
+      } else {
+        closeLightboxVisual();
+      }
+    }
+
+    window.addEventListener('popstate', function () {
+      if (lightbox && lightbox.classList.contains('open')) {
+        lightboxHistoryPushed = false;
+        closeLightboxVisual();
+      }
+    });
+
     document.querySelectorAll('[data-lightbox-src]').forEach(function(item){
       item.addEventListener('click', function(){
-        if (!lightbox) return;
-        lightboxImg.src = item.getAttribute('data-lightbox-src');
-        lightbox.classList.add('open');
+        openLightbox(item.getAttribute('data-lightbox-src'));
       });
     });
     if (lightbox) {
       lightbox.addEventListener('click', function(e){
-        if (e.target === lightbox || e.target.classList.contains('lightbox-close')) lightbox.classList.remove('open');
+        if (e.target === lightbox || e.target.classList.contains('lightbox-close')) requestCloseLightbox();
       });
     }
 
