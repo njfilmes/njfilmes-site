@@ -107,6 +107,51 @@ export function nowIso() {
   return new Date().toISOString();
 }
 
+// Recuperação de senha por e-mail — pedido do usuário em 18/09/2026, no lugar de depender só da
+// chave de recuperação fixa (ADMIN_RECOVERY_KEY, que continua existindo como reserva em
+// /admin/recuperar-senha, só não tem mais link visível). O token de verdade só existe no e-mail
+// que a pessoa recebe; o banco guarda só o hash dele (sha256), então nunca fica um valor
+// utilizável salvo em lugar nenhum. Expira sozinho e é apagado assim que usado.
+const RESET_TOKEN_MINUTES = 30;
+
+function hashResetToken(token) {
+  return crypto.createHash('sha256').update(String(token)).digest('hex');
+}
+
+export async function createPasswordResetToken(adminId) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const expires = new Date(Date.now() + RESET_TOKEN_MINUTES * 60 * 1000).toISOString();
+  // Apaga qualquer token antigo desse admin antes de criar um novo - só o link mais recente
+  // enviado por e-mail deve funcionar, pra não deixar links antigos "esquecidos" válidos por aí.
+  await query('DELETE FROM password_reset_tokens WHERE admin_id = $1', [adminId]);
+  await query('INSERT INTO password_reset_tokens (admin_id, token_hash, expires_at) VALUES ($1, $2, $3)', [
+    adminId,
+    hashResetToken(token),
+    expires,
+  ]);
+  return token;
+}
+
+// Confere o token e, se for válido e ainda não tiver expirado, retorna o admin_id correspondente
+// (sem consumir/apagar ainda - isso só acontece em consumePasswordResetToken, depois que a nova
+// senha já foi validada, pra não "queimar" um link válido por causa de um erro de digitação).
+export async function checkPasswordResetToken(token) {
+  if (!token) return null;
+  const row = await queryOne('SELECT admin_id, expires_at FROM password_reset_tokens WHERE token_hash = $1', [
+    hashResetToken(token),
+  ]);
+  if (!row) return null;
+  if (new Date(row.expires_at).getTime() < Date.now()) return null;
+  return row.admin_id;
+}
+
+export async function consumePasswordResetToken(token) {
+  const adminId = await checkPasswordResetToken(token);
+  if (!adminId) return null;
+  await query('DELETE FROM password_reset_tokens WHERE token_hash = $1', [hashResetToken(token)]);
+  return adminId;
+}
+
 export function getClientIp(req) {
   const xff = req.headers['x-forwarded-for'];
   if (xff) return String(xff).split(',')[0].trim();
@@ -158,3 +203,8 @@ function makeLoginGuard() {
 // também a recuperação de senha (e vice-versa).
 export const loginGuard = makeLoginGuard();
 export const recoveryGuard = makeLoginGuard();
+// Mesma proteção pro fluxo de recuperação por e-mail (18/09/2026): sem isso, alguém poderia
+// ficar pedindo e-mail de redefinição sem parar (gasto de envio de e-mail) ou tentando adivinhar
+// tokens na tela de redefinir senha.
+export const resetRequestGuard = makeLoginGuard();
+export const resetTokenGuard = makeLoginGuard();

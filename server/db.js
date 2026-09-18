@@ -547,6 +547,22 @@ export async function initSchema() {
       );
   `);
 
+  // Pedido do usuário (18/09/2026): recuperação de senha por e-mail em vez de depender só da
+  // chave de recuperação fixa. Guarda o HASH do token (nunca o token em si) - assim, mesmo que
+  // alguém veja o banco de dados, não consegue usar os tokens pra invadir a conta. O token de
+  // verdade só existe no e-mail que a pessoa recebe. Expira sozinho (expires_at) e é apagado
+  // assim que usado, então cada link só funciona uma vez.
+  await query(`
+      CREATE TABLE IF NOT EXISTS password_reset_tokens (
+        id SERIAL PRIMARY KEY,
+        admin_id INTEGER NOT NULL REFERENCES admin_users(id) ON DELETE CASCADE,
+        token_hash TEXT NOT NULL,
+        expires_at TIMESTAMPTZ NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+  `);
+  await query('CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_hash ON password_reset_tokens(token_hash);');
+
   await query('CREATE INDEX IF NOT EXISTS idx_comments_project ON comments(project_id);');
 
   await query('CREATE INDEX IF NOT EXISTS idx_projects_category ON projects(category_id);');

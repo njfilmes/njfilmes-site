@@ -269,6 +269,16 @@ async function router(req, res) {
       if (method === 'GET') return Admin.recoverPage(req, res);
       if (method === 'POST') return Admin.recoverSubmit(req, res, await parseBody(req));
     }
+    // Recuperação de senha por e-mail (pedido do usuário em 18/09/2026, ver server/routes/admin.js)
+    // - substituiu a chave fixa como o caminho principal linkado na tela de login.
+    if (pathname === '/admin/esqueci-senha') {
+      if (method === 'GET') return Admin.forgotPasswordPage(req, res);
+      if (method === 'POST') return Admin.forgotPasswordSubmit(req, res, await parseBody(req));
+    }
+    if (pathname === '/admin/redefinir-senha') {
+      if (method === 'GET') return Admin.resetPasswordPage(req, res);
+      if (method === 'POST') return Admin.resetPasswordSubmit(req, res, await parseBody(req));
+    }
 
     if (!admin) {
       res.statusCode = 302;
