@@ -39,7 +39,9 @@ a{color:inherit;}
 .sl-lightbox{position:fixed;inset:0;background:rgba(6,5,7,.95);display:none;align-items:center;justify-content:center;z-index:50;padding:30px;}
 .sl-lightbox.open{display:flex;}
 .sl-lightbox img{max-width:100%;max-height:88vh;border-radius:6px;}
-.sl-lightbox-close{position:absolute;top:22px;right:26px;background:none;border:0;color:#f1ede4;font-size:2rem;cursor:pointer;line-height:1;}
+.sl-lightbox-close{position:absolute;top:16px;right:18px;background:rgba(0,0,0,.55);border:2px solid rgba(255,255,255,.6);color:#f1ede4;font-size:.85rem;font-weight:600;cursor:pointer;line-height:1;display:flex;align-items:center;gap:6px;padding:9px 16px 9px 12px;border-radius:100px;}
+.sl-lightbox-close:hover{background:rgba(0,0,0,.75);}
+.sl-lightbox-close .sl-lightbox-close-icon{font-size:1.3rem;line-height:1;}
 .sl-lightbox-select{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);background:#c9a227;color:#171310;font-weight:600;font-size:.9rem;padding:11px 26px;border-radius:100px;border:0;cursor:pointer;display:flex;align-items:center;gap:8px;}
 .sl-lightbox-select:hover{background:#dab643;}
 .sl-lightbox-select.is-selected{background:#1f8a4c;color:#fff;}
@@ -134,6 +136,12 @@ lightboxSelectBtn.classList.toggle('is-selected', isSel);
 if (lightboxSelectLabel) lightboxSelectLabel.textContent = isSel ? 'Selecionada ✓' : 'Selecionar';
 }
 
+// Suporte ao botão/gesto de voltar do celular — pedido do usuário em 18/09/2026: antes,
+// só o "×" fechava a foto ampliada; apertar voltar no Android saía direto da página de
+// seleção. Agora, abrir a foto empilha um estado no histórico, e apertar voltar (ou o
+// botão "Voltar" na tela) só fecha a foto ampliada, sem sair da página.
+var lightboxHistoryPushed = false;
+
 function openLightbox(card) {
 if (!lightbox || !lightboxImg) return;
 zoomCard = card;
@@ -141,7 +149,28 @@ var img = card.querySelector('img');
 lightboxImg.src = img ? img.src : '';
 refreshLightboxSelectBtn();
 lightbox.classList.add('open');
+if (!lightboxHistoryPushed) {
+history.pushState({ slLightbox: true }, '');
+lightboxHistoryPushed = true;
 }
+}
+
+function closeLightbox() {
+lightbox.classList.remove('open');
+zoomCard = null;
+if (lightboxHistoryPushed) {
+lightboxHistoryPushed = false;
+history.back();
+}
+}
+
+window.addEventListener('popstate', function () {
+if (lightbox && lightbox.classList.contains('open')) {
+lightbox.classList.remove('open');
+zoomCard = null;
+lightboxHistoryPushed = false;
+}
+});
 
 cards.forEach(function (card) {
 card.addEventListener('click', function () {
@@ -161,8 +190,7 @@ if (card) openLightbox(card);
 if (lightbox) {
 lightbox.addEventListener('click', function (e) {
 if (e.target === lightbox || e.target.closest('[data-sl-lightbox-close]')) {
-lightbox.classList.remove('open');
-zoomCard = null;
+closeLightbox();
 }
 });
 }
@@ -264,7 +292,7 @@ ${c.welcome_message ? `<p class="sl-welcome">${escapeHtml(c.welcome_message)}</p
 </div>
 ${bodyContent}
 <div class="sl-lightbox" data-sl-lightbox>
-<button type="button" class="sl-lightbox-close" data-sl-lightbox-close aria-label="Fechar">×</button>
+<button type="button" class="sl-lightbox-close" data-sl-lightbox-close aria-label="Voltar"><span class="sl-lightbox-close-icon" aria-hidden="true">‹</span> Voltar</button>
 <img src="" alt="">
 ${isLocked ? '' : `<button type="button" class="sl-lightbox-select" data-sl-lightbox-select><span data-sl-lightbox-select-label>Selecionar</span></button>`}
 </div>
