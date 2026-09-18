@@ -186,7 +186,11 @@ export async function loginPage(req, res) {
         ${field({ label: 'E-mail', name: 'email', type: 'email', required: true })}
         ${field({ label: 'Senha', name: 'password', type: 'password', required: true })}
         <div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Entrar</button></div>
-      </form>`,
+      </form>
+      <!-- Pedido do usuário (18/09/2026): a recuperação de acesso em /admin/recuperar-senha já
+      existia (protegida pela chave ADMIN_RECOVERY_KEY no Render), mas não tinha nenhum link pra
+      ela na tela de login - então na prática ninguém achava. Só faltava isso. -->
+      <p class="sub" style="margin-top:18px;text-align:center;"><a href="/admin/recuperar-senha">Esqueci minha senha</a></p>`,
     })
   );
 }
