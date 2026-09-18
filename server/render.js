@@ -231,7 +231,12 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
 <!-- O Google Search não reconhece favicon em SVG (apenas BMP/GIF/ICO/PNG/JPEG/PPM/TIFF), por isso
      este PNG também aparece aqui, como alternativa, pra logo aparecer ao lado do site nos resultados
      de busca. URL sem versionamento de cache de propósito: o Google pede uma URL estável pro favicon. -->
-<link rel="icon" href="/img/favicon.png" type="image/png">
+<link rel="icon" href="/img/favicon.png" type="image/png" sizes="512x512">
+<!-- Pedido do usuario (18/09/2026): "na aba do celular só aparece um N" (o navegador do celular
+     caiu no ícone padrão dele, uma letra genérica, em vez do nosso logo) - faltava esse
+     "apple-touch-icon" que Safari/iOS e alguns navegadores de celular usam pra decidir o ícone do
+     site (o rel="icon" sozinho às vezes não é suficiente neles). Reaproveita o mesmo PNG. -->
+<link rel="apple-touch-icon" href="/img/favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- 10/09/2026: Outfit adicionada só pro título do hero (cantos mais arredondados/mais bonita,

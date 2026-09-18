@@ -511,6 +511,8 @@ export function renderDeliveryCasePage(deliveryCase, settings = {}) {
 <title>${escapeHtml(c.client_name)} — NJFILMES</title>
 ${c.cover_photo ? `<meta property="og:image" content="${escapeHtml(c.cover_photo)}">` : ''}
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/img/favicon.png" type="image/png" sizes="512x512">
+<link rel="apple-touch-icon" href="/img/favicon.png">
 <style>${CASE_CSS}</style>
 </head>
 <body${hasStoryContent ? ' class="dc-locked"' : ''}>
