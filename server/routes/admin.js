@@ -3,6 +3,8 @@ import { adminLayout, loginLayout, field, checkboxField, selectField } from '../
 import { escapeHtml } from '../util.js';
 import { parseVideoUrl, videoEmbedHtml, uniqueSlug, formatDatePtBr, formatDateTimePtBr } from '../util.js';
 import { query, queryOne } from '../db.js';
+import { absoluteUrl } from '../render.js';
+import { sendEmail } from '../mailer.js';
 import {
   createAdminUser,
   findAdminByEmail,
@@ -15,6 +17,11 @@ import {
   clearSessionCookie,
   loginGuard,
   recoveryGuard,
+  resetRequestGuard,
+  resetTokenGuard,
+  createPasswordResetToken,
+  checkPasswordResetToken,
+  consumePasswordResetToken,
   getClientIp,
 } from '../auth.js';
 import {
@@ -189,8 +196,12 @@ export async function loginPage(req, res) {
       </form>
       <!-- Pedido do usuário (18/09/2026): a recuperação de acesso em /admin/recuperar-senha já
       existia (protegida pela chave ADMIN_RECOVERY_KEY no Render), mas não tinha nenhum link pra
-      ela na tela de login - então na prática ninguém achava. Só faltava isso. -->
-      <p class="sub" style="margin-top:18px;text-align:center;"><a href="/admin/recuperar-senha">Esqueci minha senha</a></p>`,
+      ela na tela de login - então na prática ninguém achava. Depois, no mesmo dia, o usuário
+      preferiu recuperação por e-mail em vez de precisar da chave fixa - então o link aqui aponta
+      pro fluxo novo (/admin/esqueci-senha); o antigo continua funcionando, só ficou sem link,
+      como reserva pra caso o e-mail não esteja configurado ou não chegue.
+      -->
+      <p class="sub" style="margin-top:18px;text-align:center;"><a href="/admin/esqueci-senha">Esqueci minha senha</a></p>`,
     })
   );
 }
@@ -2392,6 +2403,107 @@ export async function recoverSubmit(req, res, body) {
     await createAdminUser({ email, password, name: 'Administrador' });
   }
   return redirect(res, '/admin/login' + withFlash(res, 'success', 'Acesso atualizado! Entre com o novo e-mail e senha.'));
+}
+
+// ---------------- Recuperação de senha por e-mail ----------------
+// Pedido do usuário em 18/09/2026, no lugar de depender só da chave de recuperação fixa (que
+// continua funcionando em /admin/recuperar-senha, só sem link visível - ver comentário na tela
+// de login). Fluxo padrão de "esqueci minha senha": pede o e-mail, manda um link com um token que
+// expira em 30 minutos (ver createPasswordResetToken em server/auth.js), a pessoa clica e define
+// uma senha nova. Precisa de RESEND_API_KEY e RESEND_FROM_EMAIL configurados no Render - ver
+// server/mailer.js.
+
+export async function forgotPasswordPage(req, res) {
+  const flash = readFlash(req);
+  res.end(
+    loginLayout({
+      title: 'Esqueci minha senha',
+      content: `<h1>Esqueci minha senha</h1><p class="sub">Digite o e-mail do seu acesso administrativo. Se ele existir, mandamos um link pra você redefinir a senha.</p>${flash ? `<div class="admin-flash admin-flash-${escapeHtml(flash.type)}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/esqueci-senha">${field({ label: 'E-mail', name: 'email', type: 'email', required: true })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Enviar link de redefinição</button></div></form><p class="sub" style="margin-top:18px;"><a href="/admin/login">Voltar para o login</a></p>`,
+    })
+  );
+}
+
+export async function forgotPasswordSubmit(req, res, body) {
+  const ip = getClientIp(req);
+  // Mesma proteção de bloqueio por IP do login/recuperação por chave (ver server/auth.js) - sem
+  // isso, alguém poderia ficar pedindo e-mail de redefinição sem parar.
+  if (resetRequestGuard.isBlocked(ip)) {
+    return redirect(res, '/admin/esqueci-senha' + withFlash(res, 'error', 'Muitas tentativas. Tente novamente em alguns minutos.'));
+  }
+  resetRequestGuard.registerFailure(ip); // conta toda tentativa (mesmo com sucesso) - ver nota abaixo
+  const email = String(body.email || '').toLowerCase().trim();
+  const admin = email ? await findAdminByEmail(email) : null;
+  // Sempre mostra a mesma mensagem, exista o e-mail ou não - se a mensagem fosse diferente pra
+  // "e-mail não encontrado", qualquer pessoa poderia usar essa tela pra descobrir se um e-mail é
+  // o do administrador do site. O e-mail só é enviado de verdade quando o admin existe.
+  const genericMessage = 'Se esse e-mail estiver cadastrado, você vai receber um link de redefinição em instantes.';
+  if (admin) {
+    const token = await createPasswordResetToken(admin.id);
+    const resetUrl = absoluteUrl(`/admin/redefinir-senha?token=${token}`);
+    const result = await sendEmail({
+      to: admin.email,
+      subject: 'Redefinir senha do painel NJFILMES',
+      html: `<p>Recebemos um pedido pra redefinir a senha do painel administrativo da NJFILMES.</p><p><a href="${resetUrl}">Clique aqui pra definir uma nova senha</a> (o link expira em 30 minutos).</p><p>Se você não pediu isso, pode ignorar este e-mail - sua senha continua a mesma.</p>`,
+    });
+    if (!result.ok) {
+      // O envio falhou (ex.: RESEND_API_KEY não configurada) - avisa com uma mensagem honesta em
+      // vez de fingir sucesso, senão a pessoa fica esperando um e-mail que nunca chega.
+      return redirect(
+        res,
+        '/admin/esqueci-senha' +
+          withFlash(res, 'error', 'Não deu pra enviar o e-mail agora (envio de e-mail não está configurado neste site). Use a chave de recuperação em /admin/recuperar-senha ou tente de novo mais tarde.')
+      );
+    }
+  }
+  return redirect(res, '/admin/esqueci-senha' + withFlash(res, 'success', genericMessage));
+}
+
+export async function resetPasswordPage(req, res) {
+  const flash = readFlash(req);
+  const token = new URL(req.url, 'http://x').searchParams.get('token') || '';
+  const adminId = await checkPasswordResetToken(token);
+  if (!adminId) {
+    return res.end(
+      loginLayout({
+        title: 'Link inválido',
+        content: `<h1>Link inválido ou expirado</h1><p class="sub">Esse link de redefinição de senha não existe mais, já foi usado ou expirou (os links duram 30 minutos). Peça um novo.</p><p class="sub" style="margin-top:18px;"><a href="/admin/esqueci-senha">Pedir novo link</a></p>`,
+      })
+    );
+  }
+  res.end(
+    loginLayout({
+      title: 'Definir nova senha',
+      content: `<h1>Definir nova senha</h1><p class="sub">Escolha a nova senha do seu acesso administrativo.</p>${flash ? `<div class="admin-flash admin-flash-${escapeHtml(flash.type)}" style="margin:0 0 18px;">${escapeHtml(flash.message)}</div>` : ''}<form method="post" action="/admin/redefinir-senha"><input type="hidden" name="token" value="${escapeHtml(token)}">${field({ label: 'Nova senha', name: 'password', type: 'password', required: true, help: 'Use pelo menos 8 caracteres.' })}${field({ label: 'Confirmar nova senha', name: 'confirm_password', type: 'password', required: true })}<div class="form-actions"><button class="btn-a btn-a-primary" type="submit">Salvar nova senha</button></div></form>`,
+    })
+  );
+}
+
+export async function resetPasswordSubmit(req, res, body) {
+  const ip = getClientIp(req);
+  if (resetTokenGuard.isBlocked(ip)) {
+    return redirect(res, '/admin/esqueci-senha' + withFlash(res, 'error', 'Muitas tentativas. Tente novamente em alguns minutos.'));
+  }
+  const token = String(body.token || '');
+  const { password, confirm_password } = body;
+  if (!password || password.length < 8) {
+    return redirect(res, `/admin/redefinir-senha?token=${encodeURIComponent(token)}` + withFlash(res, 'error', 'Use uma senha com pelo menos 8 caracteres.'));
+  }
+  if (password !== confirm_password) {
+    return redirect(res, `/admin/redefinir-senha?token=${encodeURIComponent(token)}` + withFlash(res, 'error', 'As senhas não são iguais.'));
+  }
+  const adminId = await consumePasswordResetToken(token);
+  if (!adminId) {
+    resetTokenGuard.registerFailure(ip);
+    return redirect(res, '/admin/esqueci-senha' + withFlash(res, 'error', 'Esse link não existe mais, já foi usado ou expirou. Peça um novo.'));
+  }
+  resetTokenGuard.registerSuccess(ip);
+  const { hash, salt } = hashPassword(password);
+  await query('UPDATE admin_users SET password_hash = $1, salt = $2 WHERE id = $3', [hash, salt, adminId]);
+  // Derruba todas as sessões abertas desse admin depois de trocar a senha - se alguém tinha
+  // acesso de alguma sessão antiga (ex.: um computador compartilhado), essa troca de senha já
+  // tira o acesso dela também, e não só bloqueia login novo.
+  await query('DELETE FROM sessions WHERE admin_id = $1', [adminId]);
+  return redirect(res, '/admin/login' + withFlash(res, 'success', 'Senha redefinida! Entre com a nova senha.'));
 }
 
 // ==================== Seleção de fotos ====================
