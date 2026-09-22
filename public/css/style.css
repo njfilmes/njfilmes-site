@@ -520,7 +520,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    hero (legenda de cima + palavra de destaque do título) - pedido pra deixar mais vivo/amarelado
    só aqui (o resto do site - botões, links, outros títulos - continua com o dourado padrão de
    sempre, sem mudar a marca inteira). */
-.hero-content .eyebrow { color: #f6c445; }
+.hero-content .eyebrow { color: var(--hero-accent-color, #f6c445); }
 /* Pedido do usuario (12/09/2026): "producao audiovisual salvador bahia deixa menor a letra
    tanto cel tanto pc" - reduz so essa legenda do hero (nao mexe no tamanho padrao de .eyebrow
    usado em titulos de outras secoes/paginas, tipo "Trabalhos recentes"). Vale pro desktop; o
@@ -531,7 +531,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    ja existe no titulo grande do hero (".hero-content h1 { filter: blur(1.7px) }" mais abaixo),
    so que um valor bem mais leve aqui (letra ja pequena, pediu o minimo possivel). Celular tem
    seu proprio valor ainda menor, dentro do @media (max-width: 720px). */
-.hero-content .eyebrow { filter: blur(0.3px); }
+.hero-content .eyebrow { filter: none; }
 /* Pedido do usuario (11/09/2026): "producao audio visual salvador ba nao precisa de efeito
    nenhum deixa parado" - essa legenda (.eyebrow) tinha herdado a flutuacao labelFloat que
    o site usa nos labels dourados em geral (.js .eyebrow, mais acima no arquivo). Desligada
@@ -546,7 +546,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    fundo por contraste. Primeira tentativa (#ddb03e) ficou sutil demais, usuario nao viu
    diferenca - trocado pra um dourado "de ouro" de verdade (mais metalico/encorpado, nao so
    amarelo), que contrasta bem mais com o brilho claro atras. */
-.hero-content h1 .text-accent { color: #d4af37; }
+.hero-content h1 .text-accent { color: var(--hero-accent-color, #d4af37); }
 /* 10/09/2026: a palavra flutuando (+ o brilho atrás dela) tava "batendo"/encostando na linha de
    texto de cima quando subia - pedido pra dar um respiro. Empurra a palavra um pouco pra baixo
    (margin-top) pra sobrar espaço entre ela e a linha acima. Pedido em seguida (mesma data): um
@@ -696,8 +696,8 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    peso, sombra) - so a cor muda. A piscada (heroOffAirFlicker, mais abaixo) continua funcionando
    normal por cima (ela mexe só na opacidade, não na cor). */
 .hero-content h1 .text-accent {
-  color: var(--accent);
-  font-family: 'Poppins', var(--font-body);
+  color: var(--hero-accent-color, var(--accent));
+   font-family: 'Poppins', var(--font-body);
   font-weight: 700;
   -webkit-text-stroke: 0;
   text-shadow:
@@ -921,7 +921,7 @@ p { margin: 0 0 1em; color: var(--fg-muted); }
    aumentado pra 2px. Pedido em seguida: "coloca 1.7px o desfoque" - reduzido de volta pra
    1.7px. Pedido em 17/09/2026: "deixa um pouco mais focado tanto no pc tanto no cel" -
    reduzido de 1.7px pra 1px (celular ajustado na mesma proporcao, ver @media mais abaixo). */
-.hero-content h1 { filter: blur(0.5px); }
+.hero-content h1 { filter: none; }
 /* Pedido do usuario (11/09/2026): "ver se toda frase ta com a mesma fonte e mesmo tamanho pq
    parece q o nome filmes ta mais fino quero bold igual o restante" - achado o motivo de
    verdade: existia AINDA um resto da época em que essa palavra se chamava "papel" (contorno
@@ -2301,7 +2301,7 @@ html.no-intro .cine-intro { display: none; }
   /* Pedido do usuario (12/09/2026): "coloca mais pq no cel n parece q ta com desfoque, e no
      site (PC) ta" - 0.2px nao dava pra notar no celular (fonte pequena, tela com mais densidade
      de pixels). Aumentado bem mais que o desktop pra ficar visivel de verdade. */
-  .hero-content .eyebrow { filter: blur(0.6px); }
+  .hero-content .eyebrow { filter: none; }
   .hero-content .lead { display: none; }
   .stats-row { gap: 28px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border); }
   /* Pedido de novo (11/09/2026): "ver portifolio e entra em contato abaixa mais um pouco" -
@@ -2361,7 +2361,7 @@ html.no-intro .cine-intro { display: none; }
      1.7px original intacto no PC (regra de cima, fora desse @media).
      Pedido em 17/09/2026: "deixa um pouco mais focado tanto no pc tanto no cel" - reduzido
      na mesma proporcao que o PC (de 0.7px pra 0.4px). */
-  .hero-content h1 { filter: blur(0.2px); }
+  .hero-content h1 { filter: none; }
   /* Pedido do usuario em 03/09/2026: pelicula/filtro laranja bem sutil por cima do
      site inteiro, so na versao de celular (o .grade-overlay dourado ja existe pro
      site todo, mas bem mais discreto - aqui e um toque a mais so no cel, ainda minimo).
