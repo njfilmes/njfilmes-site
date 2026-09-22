@@ -1387,7 +1387,7 @@ export async function settingsPage(req, res, admin) {
         help: 'Diminui ou aumenta o tamanho de quase todo o texto do site de uma vez só (títulos, textos, botões, menu). Útil se algum texto estiver maior ou menor do que você gostaria em geral.',
       })}
       ${field({ label: 'Legenda acima do título da Home', name: 'hero_eyebrow', value: s.hero_eyebrow, placeholder: 'Produção Audiovisual · Salvador, BA' })}
-      ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })}
+      ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })} ${field({ label: 'Cor da legenda "Produção Audiovisual" e da última palavra do título (ex: "filmes")', name: 'hero_accent_color', value: s.hero_accent_color, type: 'color', placeholder: '#f6c445', help: 'Pedido em 22/09/2026: essas duas partes (a legenda pequena acima do título e a última palavra em destaque, tipo "filmes") agora usam a mesma cor, editável por aqui. Deixando em branco, volta pro dourado de sempre.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
       ${field({ label: 'URL do vídeo de fundo da Home (opcional, .mp4 ou link do YouTube)', name: 'hero_video_url', value: s.hero_video_url, help: 'Cole aqui um link direto de vídeo (ex: Cloudinary), um link do YouTube (adicionado em 17/09/2026 — antes só um arquivo direto funcionava aqui), OU envie o arquivo direto no campo logo abaixo (o arquivo enviado tem prioridade sobre o link, se os dois estiverem preenchidos). Deixe vazio para usar imagem.' })}
       <div class="form-field" data-single-upload>
@@ -1580,7 +1580,7 @@ export async function settingsUpdate(req, res, body) {
   await Q.updateSettings({
     site_name: body.site_name || 'NJFILMES',
     tagline: body.tagline || '',
-    hero_eyebrow: body.hero_eyebrow || '',
+    hero_eyebrow: body.hero_eyebrow || '', hero_accent_color: body.hero_accent_color || '',
     hero_headline: body.hero_headline || '',
     hero_subheadline: body.hero_subheadline || '',
     hero_video_url,
