@@ -755,7 +755,7 @@ export async function initSchema() {
     // 17/09/2026: texto pequeno abaixo do nome na página /links (estilo "linktree"), pra dar pra
     // trocar pelo painel em vez de ficar fixo no código.
     if (!settingsCols.includes('links_tagline')) {
-          await query("ALTER TABLE settings ADD COLUMN links_tagline TEXT DEFAULT 'Vídeo, fotografia e drone em Salvador, Bahia'");
+          await query("ALTER TABLE settings ADD COLUMN links_tagline TEXT DEFAULT 'Vídeo, fotografia e drone em Salvador, Bahia'"); } if (!settingsCols.includes('hero_accent_color')) { await query("ALTER TABLE settings ADD COLUMN hero_accent_color TEXT DEFAULT '#f6c445'");
     }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
