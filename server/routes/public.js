@@ -308,7 +308,7 @@ export async function homePage(req, res) {
   const content = `
   <section class="hero">
     <div class="hero-media">${heroVideo}</div>
-    <div class="container hero-content">
+    <div class="container hero-content" style="--hero-accent-color:${escapeHtml(settings.hero_accent_color || '#f6c445')}">
       <span class="eyebrow reveal hero-eyebrow-lower">${escapeHtml(settings.hero_eyebrow || 'Produção Audiovisual · Salvador, BA')}</span>
       <h1 class="reveal reveal-delay-1">${heroHeadlineHtml(settings.hero_headline)}</h1>
       <div class="btn-row reveal reveal-delay-3">
