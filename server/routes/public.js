@@ -540,7 +540,7 @@ export async function categoryOrProjectPage(req, res) {
         settings,
         categories,
         navLinks,
-        content,
+        noindex: projects.length === 0, content,
       })
     );
   }
