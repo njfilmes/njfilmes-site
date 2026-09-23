@@ -10,7 +10,7 @@ import { query, initSchema } from './db.js';
 import * as Pub from './routes/public.js';
 import * as Admin from './routes/admin.js';
 import * as SeedAdmin from './routes/seedAdmin.js';
-import { listCategories, getSettings, listAllProjectsForAdmin } from './queries.js';
+import { listCategories, listCategoriesWithProjects, getSettings, listAllProjectsForAdmin } from './queries.js';
 import { layout } from './render.js';
 import { triggerStaticRebuild } from './deployHook.js';
 
@@ -117,8 +117,7 @@ async function sitemapXml(req, res) {
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
   const buildTime = sitemapLastmod(new Date());
   const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
-  const categories = await listCategories();
-  const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
+    const categories = await listCategoriesWithProjects(); // corrigido 23/09/2026: antes usava listCategories() e mandava categoria sem projeto publicado (conteudo vazio) pro sitemap, o que o Google recusa indexar como soft 404  const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
   const tags = [
     ...staticPaths.map((p) => sitemapUrlTag(`${base}${p}`, buildTime)),
     ...categories.map((c) => sitemapUrlTag(`${base}/portfolio/${c.slug}`, buildTime)),
