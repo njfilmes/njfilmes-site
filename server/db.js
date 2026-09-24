@@ -757,6 +757,13 @@ export async function initSchema() {
     if (!settingsCols.includes('links_tagline')) {
           await query("ALTER TABLE settings ADD COLUMN links_tagline TEXT DEFAULT 'Vídeo, fotografia e drone em Salvador, Bahia'"); } if (!settingsCols.includes('hero_accent_color')) { await query("ALTER TABLE settings ADD COLUMN hero_accent_color TEXT DEFAULT '#f6c445'");
     }
+    // 24/09/2026: pedido "opcao de eu mudar cores de todos os textos do site quando eu quizer" -
+    // cor principal do texto do site inteiro (--fg em public/css/style.css), editavel pelo painel
+    // (Configuracoes > Identidade e SEO). Default vazio = mantem a cor de sempre (#f5f4f0), sem
+    // mudar a aparencia de quem nunca mexer nessa opção.
+    if (!settingsCols.includes('site_text_color')) {
+            await query("ALTER TABLE settings ADD COLUMN site_text_color TEXT DEFAULT ''");
+    }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
