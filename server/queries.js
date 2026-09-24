@@ -28,6 +28,7 @@ const SETTINGS_COLUMNS = new Set([
   'hero_cta_primary_text', 'hero_cta_secondary_text', 'cta_button_text', 'portfolio_eyebrow',
   'portfolio_title', 'portfolio_subtitle', 'project_more_videos_title', 'project_comments_title',
   'project_cta_title', 'services_cta_title', 'contact_eyebrow', 'links_tagline', 'hero_accent_color',
+  'site_text_color',
 ]);
 const BIO_COLUMNS = new Set([
   'name', 'professional_title', 'biography', 'trajectory', 'specialties', 'equipment',
