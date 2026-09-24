@@ -88,16 +88,51 @@ export function loginLayout({ title, content }) {
 
 // Helper para gerar campo de formulário simples (label + input) reduzindo repetição.
 export function field({ label, name, value = '', type = 'text', required = false, textarea = false, rows = 4, placeholder = '', help = '' }) {
-  const val = escapeHtml(value);
-  const req = required ? 'required' : '';
-  const input = textarea
-    ? `<textarea name="${name}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" ${req}>${val}</textarea>`
-    : `<input type="${type}" name="${name}" value="${val}" placeholder="${escapeHtml(placeholder)}" ${req}>`;
-  return `<div class="form-field">
-    <label>${escapeHtml(label)}</label>
-    ${input}
-    ${help ? `<small>${escapeHtml(help)}</small>` : ''}
-  </div>`;
+    const val = escapeHtml(value);
+    const req = required ? 'required' : '';
+    if (type === 'color') {
+          // 24/09/2026: um <input type="color"> nativo nunca fica "vazio" - o navegador sempre manda
+          // um hex válido ao salvar o formulário, e se o campo começar em branco ele assume preto
+          // (#000000) sozinho. Sem esse cuidado, bastava salvar as Configurações uma vez (mesmo
+          // mexendo só em outro campo) pra esse preto ser gravado e apagar sem querer a cor padrão
+          // do site inteiro. Por isso o valor real (que PODE ficar vazio = "usar a cor padrão") mora
+          // num campo escondido; o seletor de cor visível só serve pra escolher uma cor nova, e o
+          // botão "Usar cor padrão" limpa o campo escondido de volta pro vazio sem mexer no resto.
+          const fallback = placeholder || '#000000';
+          const swatchValue = escapeHtml(value || fallback);
+          const input = `<div class="color-field" style="display:flex;align-items:center;gap:10px;">
+                <input type="hidden" name="${name}" value="${val}" data-color-hidden>
+                      <input type="color" value="${swatchValue}" data-color-picker aria-label="${escapeHtml(label)}">
+                            <button type="button" class="btn-a btn-a-sm" data-color-clear>Usar cor padrão</button>
+                                </div>
+                                    <script>
+                                          (function(){
+                                                  var scripts = document.getElementsByTagName('script');
+                                                          var wrap = scripts[scripts.length - 1].previousElementSibling;
+                                                                  var hidden = wrap.querySelector('[data-color-hidden]');
+                                                                          var picker = wrap.querySelector('[data-color-picker]');
+                                                                                  var clearBtn = wrap.querySelector('[data-color-clear]');
+                                                                                          picker.addEventListener('input', function () { hidden.value = picker.value; });
+                                                                                                  clearBtn.addEventListener('click', function () {
+                                                                                                            hidden.value = '';
+                                                                                                                      picker.value = ${JSON.stringify(fallback)};
+                                                                                                                              });
+                                                                                                                                    })();
+                                                                                                                                        </script>`;
+          return `<div class="form-field">
+                <label>${escapeHtml(label)}</label>
+                      ${input}
+                            ${help ? `<small>${escapeHtml(help)}</small>` : ''}
+                                </div>`;
+    }
+    const input = textarea
+      ? `<textarea name="${name}" rows="${rows}" placeholder="${escapeHtml(placeholder)}" ${req}>${val}</textarea>`
+          : `<input type="${type}" name="${name}" value="${val}" placeholder="${escapeHtml(placeholder)}" ${req}>`;
+    return `<div class="form-field">
+        <label>${escapeHtml(label)}</label>
+            ${input}
+                ${help ? `<small>${escapeHtml(help)}</small>` : ''}
+                  </div>`;
 }
 
 export function checkboxField({ label, name, checked = false, help = '' }) {
