@@ -50,6 +50,10 @@ const DEFAULT_NAV_LINKS = [
 // Pedido em seguida (12/09/2026): "adiciona mais fontes possiveis que seja populares e famosa" -
 // mais 6 opcoes, todas fontes bem conhecidas/populares do Google Fonts (Lato, Nunito,
 // Merriweather, Raleway, Rubik, Josefin Sans).
+// Pedido em seguida (24/09/2026): "adicione varios tipo de fonte pra eu mudar no futuro" - mais
+// 6 opcoes, cobrindo estilos que ainda faltavam (serifada bem refinada pra casamento, geometrica
+// "tech" nova, ultra-bold solida, manuscrita/assinatura, editorial de moda, e condensada estilo
+// pôster/urbano) - sempre fontes ja carregadas no <link> do Google Fonts logo abaixo.
 const FONT_PRESETS = {
   moderna: { display: "'Outfit', var(--font-body)" },
   impacto: { display: "'Anton', var(--font-body)" },
@@ -67,6 +71,12 @@ const FONT_PRESETS = {
   sofisticada: { display: "'Raleway', var(--font-body)" },
   divertida: { display: "'Rubik', sans-serif", body: "'Rubik', sans-serif" },
   retro: { display: "'Josefin Sans', var(--font-body)" },
+  casamento: { display: "'Cormorant Garamond', serif", body: "'Cormorant Garamond', serif" },
+  futurista: { display: "'Space Grotesk', var(--font-body)" },
+  solida: { display: "'Archivo Black', var(--font-body)" },
+  assinatura: { display: "'Caveat', cursive" },
+  moda: { display: "'Bodoni Moda', serif" },
+  urbano: { display: "'Big Shoulders Display', var(--font-body)" },
 };
 // 12/09/2026: pedido em seguida - "consegue colocar bold e etc" + "opcao pra eu mesmo diminuir o
 // tamanho das fontes" - dois controles a mais, tambem por SELECT (nunca texto livre, mesma logica
@@ -74,17 +84,33 @@ const FONT_PRESETS = {
 // de fonte do site inteiro (site_font_scale). As listas abaixo repetem a mesma validacao usada no
 // admin (server/routes/admin.js) - qualquer valor fora delas e ignorado (fica no padrão), pra
 // nunca injetar algo estranho nesse <style> que vai direto pro <head> de toda pagina.
+// Pedido em 24/09/2026 ("deixar o tamanho de todos textos do jeito q eu quero"): escala ampliada
+// de 5 pra 16 degraus (70% a 150%, de 5 em 5%), pra dar controle bem mais fino sem abrir mao da
+// validacao por lista fixa (nunca um numero livre vindo do formulario).
 const FONT_WEIGHTS = new Set(['400', '500', '600', '800']);
-const FONT_SCALES = new Set(['0.85', '0.9', '0.95', '1.05', '1.1']);
+const FONT_SCALES = new Set([
+  '0.7', '0.75', '0.8', '0.85', '0.9', '0.95',
+  '1.05', '1.1', '1.15', '1.2', '1.25', '1.3', '1.35', '1.4', '1.45', '1.5',
+]);  
+// Pedido em 24/09/2026 ("opcao de eu mudar cores de todos os textos do site quando eu quizer") -
+// mesmo padrao de seguranca ja usado em hero_accent_color (server/routes/public.js): o valor so
+// e aceito se bater exatamente no formato hexadecimal de 6 digitos que o proprio seletor de cor
+// do navegador (<input type="color">) sempre gera - qualquer outra coisa e ignorada, entao nunca
+// da pra injetar algo alem de uma cor valida nesse <style> que vai pro <head> de toda pagina.
+// Controla --fg (cor principal do texto em todo o site); --fg-muted e --fg-dim (legendas, datas,
+// texto secundario) continuam no tom proprio deles de propósito, pra manter contraste e leitura.
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 function fontOverrideStyle(settings) {
   const preset = FONT_PRESETS[settings.site_font_preset];
   const weight = FONT_WEIGHTS.has(settings.site_font_weight) ? settings.site_font_weight : '';
   const scale = FONT_SCALES.has(settings.site_font_scale) ? settings.site_font_scale : '';
+  const textColor = HEX_COLOR_RE.test(settings.site_text_color || '') ? settings.site_text_color : '';
   const decls = [
     preset && preset.display ? `--font-display: ${preset.display};` : '',
     preset && preset.body ? `--font-body: ${preset.body};` : '',
     weight ? `--font-weight-display: ${weight};` : '',
     scale ? `--font-scale: ${scale};` : '',
+    textColor ? `--fg: ${textColor};` : '',
   ].filter(Boolean).join(' ');
   if (!decls) return '';
   return `<style>:root { ${decls} }</style>`;
@@ -251,7 +277,7 @@ ${videoAbs ? `<meta property="og:video" content="${escapeHtml(videoAbs)}">
      ExtraBold), bem mais arredondada e combinando com o estilo das outras fontes do site.
      Anton e Bebas Neue continuam importadas mas não usadas mais no título (deixadas caso
      sirvam de novo depois). -->
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Manrope:wght@400;600;700;800&family=Montserrat:wght@500;600;700;800&family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Quicksand:wght@500;600;700&family=Lato:wght@400;700;900&family=Nunito:wght@400;600;700;800&family=Merriweather:wght@400;700;900&family=Raleway:wght@500;600;700;800&family=Rubik:wght@400;500;600;700;800&family=Josefin+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Bebas+Neue&family=Inter:wght@400;500;600;700;800&family=Hanken+Grotesk:wght@500;600;700;800&family=Outfit:wght@400;700;800&family=Poppins:wght@700;800&family=Playfair+Display:wght@600;700;800&family=Lora:wght@400;500;600&family=Manrope:wght@400;600;700;800&family=Montserrat:wght@500;600;700;800&family=Oswald:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Quicksand:wght@500;600;700&family=Lato:wght@400;700;900&family=Nunito:wght@400;600;700;800&family=Merriweather:wght@400;700;900&family=Raleway:wght@500;600;700;800&family=Rubik:wght@400;500;600;700;800&family=Josefin+Sans:wght@500;600;700&family=Cormorant+Garamond:wght@500;600;700&family=Space+Grotesk:wght@500;600;700;800&family=Archivo+Black&family=Caveat:wght@600;700&family=Bodoni+Moda:wght@600;700;800&family=Big+Shoulders+Display:wght@600;700;800&display=swap" rel="stylesheet">
 ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage)}">` : ''}
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${fontOverrideStyle(settings)}
