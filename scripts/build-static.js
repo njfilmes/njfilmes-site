@@ -35,7 +35,7 @@ if (!process.env.PUBLIC_API_BASE) {
 
 const { layout } = await import('../server/render.js');
 const Pub = await import('../server/routes/public.js');
-const { listCategories, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions, listDeliveryCases, getDeliveryCaseBySlug, listSelectionCases, getSelectionCaseBySlug } = await import(
+const { listCategories, listCategoriesWithProjects, listAllProjectsForAdmin, getSettings, listPhotosMissingDimensions, setPhotoDimensions, listDeliveryCases, getDeliveryCaseBySlug, listSelectionCases, getSelectionCaseBySlug } = await import(
   '../server/queries.js'
 );
 const { renderDeliveryCasePage } = await import('../server/deliveryPage.js');
@@ -256,7 +256,13 @@ async function main() {
   }
 
   await build404(settings, categories);
-  await buildSitemapAndRobots(categories, allProjects);
+  // corrigido 23/09/2026 (mesmo motivo do server/index.js): o sitemap.xml estatico usava
+  // "categories" (todas, inclusive vazia) - Google via isso como pagina fina/vazia e recusava
+  // indexar (soft 404). O sitemap agora usa so categoria com projeto publicado; a pagina HTML de
+  // cada categoria continua sendo gerada normalmente pra quem entrar direto no link (com noindex
+  // automatico quando ainda nao tem projeto - ver noindex em categoryOrProjectPage).
+  const categoriesWithProjects = await listCategoriesWithProjects();
+  await buildSitemapAndRobots(categoriesWithProjects, allProjects);
   await copyStaticAssets();
 
   console.log(`\nPronto! ${1 + 1 + 1 + categories.length + allProjects.length + deliveryCases.length + selectionCases.length + 3} páginas geradas em dist/.`);
