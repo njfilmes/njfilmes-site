@@ -1356,8 +1356,14 @@ export async function settingsPage(req, res, admin) {
           { value: 'sofisticada', label: 'Sofisticada (Raleway)' },
           { value: 'divertida', label: 'Divertida (Rubik)' },
           { value: 'retro', label: 'Retrô elegante (Josefin Sans)' },
+          { value: 'casamento', label: 'Romântica / casamento (Cormorant Garamond)' },
+          { value: 'futurista', label: 'Futurista (Space Grotesk)' },
+          { value: 'solida', label: 'Extra sólida (Archivo Black)' },
+          { value: 'assinatura', label: 'Manuscrita / assinatura (Caveat)' },
+          { value: 'moda', label: 'Editorial de moda (Bodoni Moda)' },
+          { value: 'urbano', label: 'Urbana / pôster (Big Shoulders Display)' },
         ],
-        help: 'Troca a fonte dos títulos das seções e do menu em todo o site. Em algumas opções (Elegante, Minimalista, Tech, Suave, Clássica, Amigável, Editorial e Divertida) o texto corrido também muda junto, pra combinar; nas outras, o texto corrido continua no mesmo, pra manter a leitura confortável. O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
+        help: 'Troca a fonte dos títulos das seções e do menu em todo o site. Em algumas opções (Elegante, Minimalista, Tech, Suave, Clássica, Amigável, Editorial, Divertida e Romântica/casamento) o texto corrido também muda junto, pra combinar; nas outras, o texto corrido continua no mesmo, pra manter a leitura confortável. O título grande da Home tem fonte própria, já ajustada à parte, e não muda por aqui.',
       })}
       ${selectField({
         label: 'Peso dos títulos (negrito)',
@@ -1377,15 +1383,27 @@ export async function settingsPage(req, res, admin) {
         name: 'site_font_scale',
         selected: s.site_font_scale || '',
         options: [
-          { value: '', label: 'Padrão' },
-          { value: '0.85', label: 'Bem menor (85%)' },
+          { value: '', label: 'Padrão (100%)' },
+          { value: '0.7', label: 'Muito menor (70%)' },
+          { value: '0.75', label: 'Bem menor (75%)' },
+          { value: '0.8', label: 'Menor (80%)' },
+          { value: '0.85', label: 'Um pouco bem menor (85%)' },
           { value: '0.9', label: 'Menor (90%)' },
-          { value: '0.95', label: 'Um pouco menor (95%)' },
+          { value: '0.95', label: 'Um pouco menor (95%)' },          
           { value: '1.05', label: 'Um pouco maior (105%)' },
           { value: '1.1', label: 'Maior (110%)' },
+          { value: '1.15', label: 'Um pouco bem maior (115%)' },
+          { value: '1.2', label: 'Bem maior (120%)' },
+          { value: '1.25', label: 'Grande (125%)' },          
+          { value: '1.3', label: 'Bem grande (130%)' },
+          { value: '1.35', label: 'Muito grande (135%)' },
+          { value: '1.4', label: 'Extra grande (140%)' },
+          { value: '1.45', label: 'Extra grande + (145%)' },
+          { value: '1.5', label: 'Máximo (150%)' },          
         ],
-        help: 'Diminui ou aumenta o tamanho de quase todo o texto do site de uma vez só (títulos, textos, botões, menu). Útil se algum texto estiver maior ou menor do que você gostaria em geral.',
+        help: 'Diminui ou aumenta o tamanho de quase todo o texto do site de uma vez só (títulos, textos, botões, menu), com bastante graduação pra você achar o tamanho exato que quiser. Útil se algum texto estiver maior ou menor do que você gostaria em geral.',
       })}
+      ${field({ label: 'Cor do texto do site', name: 'site_text_color', value: s.site_text_color, type: 'color', placeholder: '#f5f4f0', help: 'Muda a cor principal do texto em todo o site (títulos, parágrafos, menu). Textos secundários (datas, legendas pequenas, categorias) continuam num tom mais discreto de propósito, pra manter a leitura confortável. Como o fundo do site é escuro, escolha uma cor clara/de contraste alto — deixando em branco, volta pro branco levemente creme de sempre.' })}
       ${field({ label: 'Legenda acima do título da Home', name: 'hero_eyebrow', value: s.hero_eyebrow, placeholder: 'Produção Audiovisual · Salvador, BA' })}
       ${field({ label: 'Título de destaque na Home', name: 'hero_headline', value: s.hero_headline, help: 'Quer mais respiro entre duas palavras específicas? É só digitar espaços extras entre elas aqui mesmo (ex: caprichando na barra de espaço) — o site já respeita e mostra o espaço a mais na tela automaticamente, sem precisar mexer em código.' })} ${field({ label: 'Cor da legenda "Produção Audiovisual" e da última palavra do título (ex: "filmes")', name: 'hero_accent_color', value: s.hero_accent_color, type: 'color', placeholder: '#f6c445', help: 'Pedido em 22/09/2026: essas duas partes (a legenda pequena acima do título e a última palavra em destaque, tipo "filmes") agora usam a mesma cor, editável por aqui. Deixando em branco, volta pro dourado de sempre.' })}
       ${field({ label: 'Subtítulo da Home', name: 'hero_subheadline', value: s.hero_subheadline, textarea: true, rows: 2 })}
