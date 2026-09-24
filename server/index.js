@@ -117,7 +117,9 @@ async function sitemapXml(req, res) {
   const base = process.env.SITE_URL || 'https://njfilmes.com.br';
   const buildTime = sitemapLastmod(new Date());
   const staticPaths = ['/', '/portfolio', '/sobre', '/servicos', '/contato'];
-    const categories = await listCategoriesWithProjects(); // corrigido 23/09/2026: antes usava listCategories() e mandava categoria sem projeto publicado (conteudo vazio) pro sitemap, o que o Google recusa indexar como soft 404  const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
+    // corrigido 23/09/2026: antes usava listCategories() e mandava categoria sem projeto publicado (conteudo vazio) pro sitemap, o que o Google recusa indexar como soft 404
+  const categories = await listCategoriesWithProjects();
+  const projects = (await listAllProjectsForAdmin()).filter((p) => p.published);
   const tags = [
     ...staticPaths.map((p) => sitemapUrlTag(`${base}${p}`, buildTime)),
     ...categories.map((c) => sitemapUrlTag(`${base}/portfolio/${c.slug}`, buildTime)),
