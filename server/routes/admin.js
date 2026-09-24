@@ -1447,6 +1447,7 @@ export async function settingsPage(req, res, admin) {
         <small>Tamanho ideal: 1200x630px. Se não enviar nenhuma, o site usa a imagem padrão (logo NJFILMES).</small>
       </div>
       ${field({ label: 'Texto do rodapé', name: 'footer_text', value: s.footer_text })}
+      ${field({ label: 'CNPJ (linha própria, embaixo do texto do rodapé)', name: 'footer_cnpj', value: s.footer_cnpj, placeholder: 'CNPJ 00.000.000/0001-00', help: 'Aparece numa linha separada, embaixo do texto do rodapé. Deixe em branco pra não mostrar nenhuma linha de CNPJ.' })}
       <h2 style="margin-top:32px;">Textos das seções da Home</h2>
       <p class="muted" style="margin-top:-8px;">Títulos que apareciam fixos no código — pedido do usuário em 10/09/2026 (e numa rodada maior em 17/09/2026, cobrindo o resto do site) pra deixar tudo editável por aqui. Deixando em branco, volta pro texto padrão.</p>
       ${field({ label: 'Botão "Ver portfólio" do topo da Home', name: 'hero_cta_primary_text', value: s.hero_cta_primary_text, placeholder: 'Ver portfólio' })}
@@ -1607,6 +1608,7 @@ export async function settingsUpdate(req, res, body) {
     meta_description: body.meta_description || '',
     og_image,
     footer_text: body.footer_text || '',
+    footer_cnpj: body.footer_cnpj || '',
     services_eyebrow: body.services_eyebrow || '',
     services_title: body.services_title || '',
     services_subtitle: body.services_subtitle || '',
