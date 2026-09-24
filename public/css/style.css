@@ -1731,6 +1731,7 @@ html.no-intro .cine-intro { display: none; }
 .site-footer { border-top: 1px solid var(--border); padding: 80px 0 0; background: var(--bg-alt); }
 .footer-inner { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 48px; padding-bottom: 48px; }
 .footer-brand p { margin-top: 16px; max-width: 320px; }
+.footer-cnpj { margin-top: 6px; font-size: 0.82rem; color: var(--fg-dim); }
 .footer-links h4, .footer-social h4 { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.14em; color: var(--fg-muted); margin-bottom: 18px; }
 .footer-links ul { display: flex; flex-direction: column; gap: 10px; }
 .footer-links a:hover, .social-links a:hover { color: var(--accent); }
