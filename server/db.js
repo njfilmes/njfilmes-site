@@ -764,6 +764,13 @@ export async function initSchema() {
     if (!settingsCols.includes('site_text_color')) {
             await query("ALTER TABLE settings ADD COLUMN site_text_color TEXT DEFAULT ''");
     }
+    // 24/09/2026 (continuação): CNPJ separado do "Texto do rodapé" - o usuário colocou o CNPJ
+    // junto do texto livre, mas pediu pra ele ficar "puro" numa linha própria embaixo e continuar
+    // editável na hora sem precisar mexer no texto principal do rodapé. Vazio = não aparece
+    // nenhuma linha extra (não muda nada pra quem nunca preencher).
+        if (!settingsCols.includes('footer_cnpj')) {
+        await query("ALTER TABLE settings ADD COLUMN footer_cnpj TEXT DEFAULT ''");
+    }
 
   const projectCols = (await queryRows("SELECT column_name FROM information_schema.columns WHERE table_name = 'projects'")).map(
         (c) => c.column_name
