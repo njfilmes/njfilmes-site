@@ -1632,6 +1632,7 @@ export async function settingsUpdate(req, res, body) {
     site_font_preset: body.site_font_preset || '',
     site_font_weight: body.site_font_weight || '',
     site_font_scale: body.site_font_scale || '',
+    site_text_color: body.site_text_color || '',
     // 17/09/2026: rodada de "quero todo o site com textos editáveis" (ver server/db.js).
     featured_eyebrow: body.featured_eyebrow || '',
     featured_cta_text: body.featured_cta_text || '',
