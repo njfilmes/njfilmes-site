@@ -342,6 +342,7 @@ ${content}
     <div class="footer-brand">
       <a href="/" class="logo logo-img"><img src="/img/nj-logo.webp?v=${ASSET_VERSION}" alt="NJFILMES" class="logo-img-el"></a>
       <p>${escapeHtml(settings.footer_text || '')}</p>
+      ${settings.footer_cnpj ? `<p class="footer-cnpj">${escapeHtml(settings.footer_cnpj)}</p>` : ''}
     </div>
     <div class="footer-links">
       <h4>Navegue</h4>
