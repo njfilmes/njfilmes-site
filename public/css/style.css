@@ -1730,7 +1730,7 @@ html.no-intro .cine-intro { display: none; }
 /* ---------- Footer ---------- */
 .site-footer { border-top: 1px solid var(--border); padding: 80px 0 0; background: var(--bg-alt); }
 .footer-inner { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 48px; padding-bottom: 48px; }
-.footer-brand p { margin-top: 16px; max-width: 320px; }
+.footer-brand p { margin-top: 16px; max-width: 460px; white-space: nowrap; }
 .footer-cnpj { margin-top: 6px; font-size: 0.82rem; color: var(--fg-dim); }
 .footer-links h4, .footer-social h4 { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.14em; color: var(--fg-muted); margin-bottom: 18px; }
 .footer-links ul { display: flex; flex-direction: column; gap: 10px; }
@@ -2268,6 +2268,7 @@ html.no-intro .cine-intro { display: none; }
   }
   .specialties-list span:not(:last-child)::after { content: ' · '; color: var(--fg-dim); }
   .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+   .footer-brand p { font-size: 0.92rem; }
   .gallery-grid { grid-template-columns: repeat(3, 1fr); }
   .hero { min-height: 84svh; }
   .hero-scroll { bottom: 18px; }
