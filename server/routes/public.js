@@ -1,6 +1,7 @@
 import { layout, absoluteUrl } from '../render.js';
 import { escapeHtml, nl2br, videoEmbedHtml, parseVideoUrl, formatDatePtBr, truncate } from '../util.js';
 import { ASSET_VERSION } from '../assetVersion.js';
+import { sendEmail } from '../mailer.js';
 import {
   getSettings,
   getBio,
@@ -615,6 +616,9 @@ function makeRateLimiter(windowMs, max) {
 }
 
 const commentRateLimitOk = makeRateLimiter(10 * 60 * 1000, 6); // 6 comentários / 10 min por IP
+// Envio do mini-formulário de contato (Nome + WhatsApp), adicionado em 26/09/2026 junto do Meta
+// Pixel - mais restrito que comentário porque cada envio dispara um e-mail de verdade.
+const leadRateLimitOk = makeRateLimiter(10 * 60 * 1000, 5); // 5 envios / 10 min por IP
 // Curtir/visualizar são ações bem mais corriqueiras que comentar (um visitante pode curtir várias
 // fotos numa galeria em segundos, por exemplo), então o limite aqui é bem mais generoso - existe
 // só pra barrar um script abusando do endpoint, não pra atrapalhar uso normal.
@@ -778,6 +782,43 @@ export async function postComment(req, res, slug, body) {
     ok: true,
     comment: { id: comment.id, author_name: comment.author_name, content: comment.content, admin_reply: '', admin_reply_at: null, created_at: comment.created_at },
   }));
+}
+
+// Mini-formulário de contato da página /contato (Nome + WhatsApp), adicionado em 26/09/2026 junto
+// do Meta Pixel: manda um e-mail de aviso pro contato@njfilmes.com.br a cada envio, pra além do
+// evento "Lead" do pixel (disparado no navegador, ver public/js/site.js) o usuário também ficar
+// sabendo na hora, por e-mail, mesmo se estiver longe do celular. Se o e-mail não estiver
+// configurado (RESEND_API_KEY/RESEND_FROM_EMAIL ausentes, ver server/mailer.js) isso não quebra
+// nada - só não chega o aviso por e-mail, e o WhatsApp abre do mesmo jeito no navegador da pessoa.
+export async function submitContactLead(req, res, body) {
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  if (body.empresa) {
+    // honeypot: finge sucesso, não manda e-mail nem grava nada
+    res.statusCode = 200;
+    return res.end(JSON.stringify({ ok: true }));
+  }
+  const nome = String(body.nome || '').trim().slice(0, 80);
+  const telefone = String(body.telefone || '').trim().slice(0, 30);
+  const tipoEvento = String(body.tipo_evento || '').trim().slice(0, 80);
+  if (!nome || !telefone) {
+    res.statusCode = 400;
+    return res.end(JSON.stringify({ ok: false, error: 'Preencha seu nome e WhatsApp.' }));
+  }
+  const ip = getClientIp(req);
+  if (!leadRateLimitOk(ip)) {
+    res.statusCode = 429;
+    return res.end(JSON.stringify({ ok: false, error: 'Muitos envios em pouco tempo. Tente novamente em alguns minutos.' }));
+  }
+  const settings = await getSettings();
+  const to = settings.contact_email || 'contato@njfilmes.com.br';
+  const html = `<p><strong>Novo contato pelo site (njfilmes.com.br)</strong></p>
+<p>Nome: ${escapeHtml(nome)}<br>WhatsApp: ${escapeHtml(telefone)}${tipoEvento ? `<br>Tipo de evento: ${escapeHtml(tipoEvento)}` : ''}</p>
+<p style="color:#888;font-size:12px;">Enviado automaticamente pelo mini-formulário de Contato do site.</p>`;
+  // Não bloqueia a resposta esperando o e-mail (o navegador já abre o WhatsApp assim que essa
+  // chamada terminar) - se o envio falhar, só fica registrado no log do servidor.
+  sendEmail({ to, subject: `Novo contato pelo site: ${nome}`, html }).catch(() => {});
+  res.statusCode = 200;
+  res.end(JSON.stringify({ ok: true }));
 }
 
 // ---------- Página de entrega do cliente (/entregas/:slug) ----------
@@ -1251,6 +1292,9 @@ export async function contactPage(req, res) {
   const links = await listLinks();
   const digits = String(settings.whatsapp_number || '').replace(/\D/g, '');
   const waUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(settings.whatsapp_message || '')}` : null;
+  // Base sem mensagem pronta, pra o mini-formulário abaixo montar a própria mensagem (com o nome
+  // e o tipo de evento que a pessoa preencheu) antes de abrir o WhatsApp - ver public/js/site.js.
+  const waUrlBase = digits ? `https://wa.me/${digits}?text=` : null;
 
   const content = `
   <section class="simple-hero">
@@ -1261,6 +1305,20 @@ export async function contactPage(req, res) {
   </section>
   <section style="padding-top:0;">
     <div class="container contact-grid">
+      ${waUrlBase ? `<div class="contact-card reveal">
+        <h3>Me conta rapidinho e eu já te chamo</h3>
+        <p>Nome e WhatsApp — assim que enviar, a conversa já abre pronta, sem precisar digitar nada.</p>
+        <form class="comment-form" data-lead-form data-wa-url="${escapeHtml(waUrlBase)}">
+          <input type="text" name="nome" placeholder="Seu nome" maxlength="80" required>
+          <input type="text" name="telefone" placeholder="Seu WhatsApp (com DDD)" maxlength="30" required>
+          <input type="text" name="tipo_evento" placeholder="Tipo de evento (opcional)" maxlength="80">
+          <input type="text" name="empresa" class="comment-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="form-actions">
+            <button type="submit" class="btn btn-solid">Enviar e abrir WhatsApp</button>
+          </div>
+          <p class="comment-form-status" data-lead-status></p>
+        </form>
+      </div>` : ''}
       <div class="contact-card reveal">
         <h3>${escapeHtml(settings.contact_budget_title || 'Orçamento rápido')}</h3>
         <p>${escapeHtml(settings.contact_budget_text || 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.')}</p>
