@@ -4,6 +4,32 @@ import { ASSET_VERSION } from './assetVersion.js';
 
 export const SITE_URL = process.env.SITE_URL || 'https://njfilmes.com.br';
 
+// Meta Pixel (instalado em 26/09/2026, pedido do usuário) — mede quem visita o site vindo do
+// anúncio pago do Instagram/Facebook, pra no futuro dar pro Meta o sinal de quem virou lead de
+// verdade (não só quem clicou). O ID do pixel não é segredo (ele aparece no código-fonte de
+// qualquer site que o usa, é assim que a Meta pretende que funcione) — por isso fica direto aqui,
+// sem precisar de variável de ambiente. Site inteiro manda "PageView" (visita de página); a
+// página de Contato manda "Lead" também, quando alguém envia o mini-formulário antes do WhatsApp
+// (ver contactPage em server/routes/public.js).
+const META_PIXEL_ID = '1633292798505183';
+const metaPixelSnippet = `<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${META_PIXEL_ID}');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=${META_PIXEL_ID}&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->`;
+
 export function absoluteUrl(pathOrUrl) {
   if (!pathOrUrl) return SITE_URL;
   if (/^https?:\/\//i.test(pathOrUrl)) return pathOrUrl;
@@ -282,6 +308,7 @@ ${preloadImage ? `<link rel="preload" as="image" href="${escapeHtml(preloadImage
 <link rel="stylesheet" href="/css/style.css?v=${ASSET_VERSION}">
 ${fontOverrideStyle(settings)}
 ${structuredData ? `<script type="application/ld+json">${JSON.stringify(structuredData)}</script>` : ''}
+${metaPixelSnippet}
 </head>
 <body class="${escapeHtml(bodyClass)}">
 <div class="cine-intro" data-cine-intro aria-hidden="true">
