@@ -194,13 +194,18 @@ async function router(req, res) {
   if (
     pathname.match(
       /^\/api\/(curtir|curtir-foto|visualizar|comentarios|entrega-comentarios|entrega-curtir-foto|entrega-curtir-video|selecao-marcar|selecao-enviar)\/[a-z0-9-]+$/
-    )
+    ) ||
+    pathname === '/api/contato-lead'
   ) {
     applyCors(req, res);
     if (method === 'OPTIONS') {
       res.statusCode = 204;
       return res.end();
     }
+  }
+  // Mini-formulário de contato (Nome + WhatsApp) da página /contato — ver server/routes/public.js.
+  if (pathname === '/api/contato-lead' && method === 'POST') {
+    return Pub.submitContactLead(req, res, await parseBody(req));
   }
   if ((m = pathname.match(/^\/api\/curtir\/([a-z0-9-]+)$/)) && method === 'POST') {
     return Pub.likeProject(req, res, m[1]);
