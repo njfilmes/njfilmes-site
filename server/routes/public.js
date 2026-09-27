@@ -217,35 +217,11 @@ function heroHeadlineHtml(text) {
   return `${restHtml}${joinHtml}`;
 }
 
-export async function homePage(req, res) {
-  // As consultas abaixo são todas independentes entre si (nenhuma usa o resultado de outra pra
-  // decidir o que buscar) — rodar em paralelo com Promise.all em vez de uma de cada vez (await
-  // sequencial) deixa a página bem mais rápida de montar, principalmente com o banco de dados
-  // num serviço remoto (Neon), onde cada ida-e-volta tem uma latência de rede real. Otimizado em
-  // 04/09/2026; nenhuma consulta nem o resultado final mudou, só a ordem em que rodam.
-  const [settings, categories, navLinks, featuredList, recentRaw, servicesRaw, brands, people, testimonials, heroGalleryPhotos, bio] = await Promise.all([
-    getSettings(),
-    listCategoriesWithProjects(),
-    listNavLinks(),
-    listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }),
-    listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 }),
-    listServices({ onlyPublished: true }),
-    listBrands(),
-    listPeople(),
-    listTestimonials(),
-    listHeroPhotos(),
-    getBio(),
-  ]);
-  const featured = featuredList[0];
-  const featuredPreview = featured ? previewVideoData(featured) : null;
-  const recent = recentRaw.filter((p) => !featured || p.id !== featured.id).slice(0, 6);
-  const services = servicesRaw.slice(0, 6);
-
-  // 03/09/2026: a foto de destaque da Home agora pode ser trocada pelo painel
-  // (Configurações). Se o usuário já enviou uma pelo painel (settings.hero_photo),
-  // usa ela; senão cai pra imagem padrão do site (com o carimbo de versão, já que
-  // esse arquivo padrão é fixo no código). O upload pelo painel já gera um arquivo
-  // com nome único a cada troca, então não precisa de carimbo de versão nele.
+// Blocos compartilhados entre a Home e a página /orcamento (página de destino dos anúncios,
+// criada em 27/09/2026): mesma mídia do topo, mesma faixa de clientes, mesmos depoimentos em
+// vídeo e o mesmo mini-formulário de contato - assim tudo que for editado no painel aparece igual
+// nas duas páginas, sem duplicar código.
+function heroMedia(settings, heroGalleryPhotos) {
   const heroPosterUrl = settings.hero_photo || `/img/hero-poster.webp?v=${ASSET_VERSION}`;
 
   // Fotos de destaque da Home passando com transição suave (crossfade), uma pra outra — pedido
@@ -276,9 +252,10 @@ export async function homePage(req, res) {
       : `<div class="hero-photo-split">${heroPhotoUrls
           .map((src, i) => `<img class="hero-photo-slide${i === 0 ? ' is-active' : ''}" src="${escapeHtml(src)}" alt="NJFILMES">`)
           .join('')}</div>`;
+  return { heroVideo, heroPosterUrl };
+}
 
-  // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
-  // sempre coloridos — sem preto e branco.
+function clientChips(brands, people) {
   const marqueeChips = [
     ...brands.map(
       (b) => {
@@ -293,9 +270,10 @@ export async function homePage(req, res) {
         `<div class="person-chip"><div class="person-chip-photo"><img src="${escapeHtml(p.photo)}" alt="${escapeHtml(p.name)}" loading="lazy"></div><span>${escapeHtml(p.name)}</span></div>`
     ),
   ];
+  return marqueeChips;
+}
 
-  // Faixa de depoimentos em vídeo (feedback de clientes): rolagem manual, um vídeo
-  // "passando" atrás do outro conforme a pessoa arrasta/rola pro lado.
+function testimonialCardsHtml(testimonials) {
   const testimonialCards = testimonials.map(
     (t) => `<div class="testimonial-card reveal">
       ${videoEmbedHtml({ provider: t.provider, video_id: t.video_id, url: t.video_url, title: t.client_name }, { className: 'testimonial-video video-embed' })}
@@ -305,6 +283,71 @@ export async function homePage(req, res) {
       </div>
     </div>`
   );
+  return testimonialCards;
+}
+
+// Mini-formulário (Nome + WhatsApp + tipo de evento): envia pra /api/contato-lead, dispara o
+// "Lead" do Meta Pixel e abre o WhatsApp - toda a lógica fica em public/js/site.js
+// ([data-lead-form]). Só pode existir UM por página, porque o site.js pega o primeiro que achar.
+const EVENT_TYPES = ['Casamento', '15 anos', 'Aniversário', 'Evento corporativo', 'Ensaio fotográfico', 'Vídeo para empresa', 'Outro'];
+function leadFormCard(waUrlBase, { title = 'Me conta rapidinho e eu já te chamo', text = 'Nome e WhatsApp — assim que enviar, a conversa já abre pronta, sem precisar digitar nada.', eventSelect = false, buttonText = 'Enviar e abrir WhatsApp' } = {}) {
+  const eventField = eventSelect
+    ? `<select name="tipo_evento" aria-label="Tipo de evento"><option value="">Tipo de evento (opcional)</option>${EVENT_TYPES.map((t) => `<option>${escapeHtml(t)}</option>`).join('')}</select>`
+    : `<input type="text" name="tipo_evento" placeholder="Tipo de evento (opcional)" maxlength="80">`;
+  return `<div class="contact-card reveal">
+        <h3>${escapeHtml(title)}</h3>
+        <p>${escapeHtml(text)}</p>
+        <form class="comment-form" data-lead-form data-wa-url="${escapeHtml(waUrlBase)}">
+          <input type="text" name="nome" placeholder="Seu nome" maxlength="80" required>
+          <input type="text" name="telefone" placeholder="Seu WhatsApp (com DDD)" maxlength="30" required>
+          ${eventField}
+          <input type="text" name="empresa" class="comment-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <div class="form-actions">
+            <button type="submit" class="btn btn-solid">${escapeHtml(buttonText)}</button>
+          </div>
+          <p class="comment-form-status" data-lead-status></p>
+        </form>
+      </div>`;
+}
+
+export async function homePage(req, res) {
+  // As consultas abaixo são todas independentes entre si (nenhuma usa o resultado de outra pra
+  // decidir o que buscar) — rodar em paralelo com Promise.all em vez de uma de cada vez (await
+  // sequencial) deixa a página bem mais rápida de montar, principalmente com o banco de dados
+  // num serviço remoto (Neon), onde cada ida-e-volta tem uma latência de rede real. Otimizado em
+  // 04/09/2026; nenhuma consulta nem o resultado final mudou, só a ordem em que rodam.
+  const [settings, categories, navLinks, featuredList, recentRaw, servicesRaw, brands, people, testimonials, heroGalleryPhotos, bio] = await Promise.all([
+    getSettings(),
+    listCategoriesWithProjects(),
+    listNavLinks(),
+    listProjects({ onlyPublished: true, featuredOnly: true, limit: 1 }),
+    listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 7 }),
+    listServices({ onlyPublished: true }),
+    listBrands(),
+    listPeople(),
+    listTestimonials(),
+    listHeroPhotos(),
+    getBio(),
+  ]);
+  const featured = featuredList[0];
+  const featuredPreview = featured ? previewVideoData(featured) : null;
+  const recent = recentRaw.filter((p) => !featured || p.id !== featured.id).slice(0, 6);
+  const services = servicesRaw.slice(0, 6);
+
+  // 03/09/2026: a foto de destaque da Home agora pode ser trocada pelo painel
+  // (Configurações). Se o usuário já enviou uma pelo painel (settings.hero_photo),
+  // usa ela; senão cai pra imagem padrão do site (com o carimbo de versão, já que
+  // esse arquivo padrão é fixo no código). O upload pelo painel já gera um arquivo
+  // com nome único a cada troca, então não precisa de carimbo de versão nele.
+  const { heroVideo, heroPosterUrl } = heroMedia(settings, heroGalleryPhotos);
+
+  // Faixa que rola na horizontal: marcas (logos) e artistas/pessoas (foto + nome) juntos,
+  // sempre coloridos — sem preto e branco.
+  const marqueeChips = clientChips(brands, people);
+
+  // Faixa de depoimentos em vídeo (feedback de clientes): rolagem manual, um vídeo
+  // "passando" atrás do outro conforme a pessoa arrasta/rola pro lado.
+  const testimonialCards = testimonialCardsHtml(testimonials);
 
   const content = `
   <section class="hero">
@@ -1305,20 +1348,7 @@ export async function contactPage(req, res) {
   </section>
   <section style="padding-top:0;">
     <div class="container contact-grid">
-      ${waUrlBase ? `<div class="contact-card reveal">
-        <h3>Me conta rapidinho e eu já te chamo</h3>
-        <p>Nome e WhatsApp — assim que enviar, a conversa já abre pronta, sem precisar digitar nada.</p>
-        <form class="comment-form" data-lead-form data-wa-url="${escapeHtml(waUrlBase)}">
-          <input type="text" name="nome" placeholder="Seu nome" maxlength="80" required>
-          <input type="text" name="telefone" placeholder="Seu WhatsApp (com DDD)" maxlength="30" required>
-          <input type="text" name="tipo_evento" placeholder="Tipo de evento (opcional)" maxlength="80">
-          <input type="text" name="empresa" class="comment-hp" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <div class="form-actions">
-            <button type="submit" class="btn btn-solid">Enviar e abrir WhatsApp</button>
-          </div>
-          <p class="comment-form-status" data-lead-status></p>
-        </form>
-      </div>` : ''}
+      ${waUrlBase ? leadFormCard(waUrlBase) : ''}
       <div class="contact-card reveal">
         <h3>${escapeHtml(settings.contact_budget_title || 'Orçamento rápido')}</h3>
         <p>${escapeHtml(settings.contact_budget_text || 'A forma mais rápida de falar com a NJFILMES é pelo WhatsApp — conte um pouco sobre o seu evento, data e local que retornamos com uma proposta.')}</p>
@@ -1349,6 +1379,142 @@ export async function contactPage(req, res) {
       categories,
       navLinks,
       content,
+    })
+  );
+}
+
+// Página de destino dos anúncios (Meta/Google) — criada em 27/09/2026, pedido do usuário. Feita
+// pra convencer rápido quem chega de um anúncio: vídeo/foto do topo igual à Home, o formulário
+// logo em seguida (dispara o "Lead" do Pixel + e-mail + WhatsApp), provas (clientes, trabalhos,
+// avaliações) e o chamado final. Sem link no menu de propósito — o link é usado nos anúncios.
+// Leva noindex: é uma página de campanha, não precisa competir no Google com a Home/Contato.
+const GOOGLE_REVIEWS = [
+  { name: 'Natalia Montes', text: 'Além das fotos fiz algumas sessões de vídeos e adorei o resultado, ficaram perfeitas! Nj foi bem atencioso e cuidadoso com cada detalhe, um ótimo profissional, farei mais em breve.' },
+  { name: 'Gabriel Nunes', text: 'Excelente profissional, trabalho incrível, parabéns.' },
+];
+const WHY_NJ = [
+  ['Vídeo e foto juntos', 'Um só profissional cuidando das imagens do seu evento, do começo ao fim.'],
+  ['Filmagem com drone', 'Imagens aéreas que deixam o seu evento com cara de cinema.'],
+  ['Jornalista visual (DRT)', 'Olhar de quem conta histórias: cada momento importante registrado.'],
+  ['Salvador e todo o Brasil', 'Base em Salvador, com projetos em qualquer lugar do país.'],
+];
+
+export async function orcamentoPage(req, res) {
+  const [settings, categories, navLinks, recentRaw, brands, people, testimonials, heroGalleryPhotos] = await Promise.all([
+    getSettings(),
+    listCategoriesWithProjects(),
+    listNavLinks(),
+    listProjects({ onlyPublished: true, excludeHiddenFromRecent: true, limit: 4 }),
+    listBrands(),
+    listPeople(),
+    listTestimonials(),
+    listHeroPhotos(),
+  ]);
+  const { heroVideo, heroPosterUrl } = heroMedia(settings, heroGalleryPhotos);
+  const marqueeChips = clientChips(brands, people);
+  const testimonialCards = testimonialCardsHtml(testimonials);
+  const digits = String(settings.whatsapp_number || '').replace(/\D/g, '');
+  const waUrl = digits ? `https://wa.me/${digits}?text=${encodeURIComponent(settings.whatsapp_message || '')}` : null;
+  const waUrlBase = digits ? `https://wa.me/${digits}?text=` : null;
+  const stars = '<span class="lp-stars" aria-label="5 estrelas">★★★★★</span>';
+
+  const content = `
+  <section class="hero lp-hero">
+    <div class="hero-media">${heroVideo}</div>
+    <div class="container hero-content" style="--hero-accent-color:${escapeHtml(settings.hero_accent_color || '#f6c445')}">
+      <span class="eyebrow reveal hero-eyebrow-lower">Orçamento · Salvador, BA</span>
+      <h1 class="reveal reveal-delay-1">${heroHeadlineHtml('Filmagem e fotografia para o seu evento')}</h1>
+      <p class="lp-sub reveal reveal-delay-2">Casamentos, 15 anos, eventos e empresas. Com drone e entrega caprichada.</p>
+      <div class="btn-row reveal reveal-delay-3">
+        <a href="#orcamento" class="btn btn-solid">Quero um orçamento</a>
+        ${waUrl ? `<a href="${escapeHtml(waUrl)}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
+      </div>
+    </div>
+  </section>
+
+  <section id="orcamento" class="lp-form-section">
+    <div class="container lp-form-split">
+      <div class="reveal">
+        <span class="eyebrow">Orçamento sem compromisso</span>
+        <h2>Me conta do seu evento</h2>
+        <p class="lp-lead">Preencha em 10 segundos. A conversa no WhatsApp já abre pronta e eu te respondo com a proposta.</p>
+        <ul class="lp-checks">
+          <li>Resposta rápida pelo WhatsApp</li>
+          <li>Vídeo, foto e drone no mesmo pacote</li>
+          <li>Avaliação 5 estrelas no Google</li>
+        </ul>
+      </div>
+      ${waUrlBase ? leadFormCard(waUrlBase, { title: 'Peça seu orçamento', text: 'Nome, WhatsApp e o tipo do evento. Só isso.', eventSelect: true, buttonText: 'Quero meu orçamento' })
+        : `<div class="contact-card"><p class="muted">Configure o número de WhatsApp no painel administrativo para ativar o formulário.</p></div>`}
+    </div>
+  </section>
+
+  ${marqueeChips.length ? `
+  <section class="alt-bg">
+    <div class="container">
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Quem já confiou</span>
+      <h2 class="reveal text-center">Clientes</h2>
+      <div class="marquee reveal" data-drag-scroll>
+        <div class="marquee-track" data-drag-scroll-track>
+          ${[...marqueeChips, ...marqueeChips].join('')}
+        </div>
+      </div>
+    </div>
+  </section>` : ''}
+
+  ${recentRaw.length ? `
+  <section>
+    <div class="container">
+      <div class="section-head reveal">
+        <div><span class="eyebrow">Trabalhos</span><h2>Alguns projetos recentes</h2></div>
+        <a href="/portfolio" class="btn btn-outline">Ver portfólio completo</a>
+      </div>
+      <div class="work-grid">${recentRaw.map((p, i) => workCard(p, { tall: i === 0 })).join('')}</div>
+    </div>
+  </section>` : ''}
+
+  <section class="alt-bg">
+    <div class="container">
+      <span class="eyebrow reveal text-center" style="display:block;text-align:center;">Avaliações no Google</span>
+      <h2 class="reveal text-center">O que dizem os clientes</h2>
+      <div class="lp-reviews">
+        ${GOOGLE_REVIEWS.map((r) => `<figure class="lp-review reveal">${stars}<blockquote>“${escapeHtml(r.text)}”</blockquote><figcaption>${escapeHtml(r.name)}</figcaption></figure>`).join('')}
+      </div>
+      ${testimonialCards.length ? `<div class="testimonials-scroll lp-video-reviews">${testimonialCards.join('')}</div>` : ''}
+    </div>
+  </section>
+
+  <section>
+    <div class="container">
+      <div class="section-head reveal"><div><span class="eyebrow">Por que a NJFILMES</span><h2>O cuidado que o seu evento merece</h2></div></div>
+      <div class="services-grid">
+        ${WHY_NJ.map(([t, d], i) => `<div class="service-card reveal"><span class="num">0${i + 1}</span><h3>${escapeHtml(t)}</h3><p>${escapeHtml(d)}</p></div>`).join('')}
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-section alt-bg">
+    <div class="container">
+      <span class="eyebrow reveal">Vamos gravar sua história?</span>
+      <h2 class="reveal">Garanta a data do seu evento</h2>
+      <div class="btn-row reveal">
+        <a href="#orcamento" class="btn btn-solid">Pedir orçamento</a>
+        ${waUrl ? `<a href="${escapeHtml(waUrl)}" class="btn btn-outline" target="_blank" rel="noopener noreferrer">Falar no WhatsApp</a>` : ''}
+      </div>
+    </div>
+  </section>`;
+
+  res.end(
+    layout({
+      title: 'Orçamento de filmagem e fotografia em Salvador',
+      description: 'Filmagem e fotografia para casamentos, 15 anos, eventos e empresas em Salvador. Peça seu orçamento pelo WhatsApp.',
+      path: '/orcamento',
+      settings,
+      categories,
+      navLinks,
+      content,
+      noindex: true,
+      preloadImage: settings.hero_video_url ? null : heroPosterUrl,
     })
   );
 }

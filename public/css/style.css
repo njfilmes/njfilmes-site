@@ -2640,3 +2640,41 @@ html.no-intro .cine-intro { display: none; }
   .links-page { padding: 70px 0 40px; }
   .link-btn { padding: 13px 16px; font-size: 0.9rem; }
 }
+
+/* ---------- Página /orcamento (destino dos anúncios) — 27/09/2026 ----------
+   Reaproveita o hero, os cards e o formulário do resto do site; aqui só o que é próprio dela:
+   topo um pouco mais baixo (o formulário precisa aparecer logo), texto centralizado sem o
+   deslocamento do hero da Home, formulário ao lado da explicação e as avaliações do Google. */
+.lp-hero { min-height: 78svh; align-items: center; }
+.lp-hero .hero-content { transform: none; padding: 120px 0 64px; }
+.lp-sub { max-width: min(620px, calc(100vw - 48px)); box-sizing: border-box; margin: 18px auto 0; color: var(--fg); font-size: 1.1rem; opacity: 0.92; }
+.lp-hero .btn-row { justify-content: center; margin-top: 28px; }
+.lp-form-section { scroll-margin-top: 80px; }
+.lp-form-split { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+.lp-lead { color: var(--fg-muted); font-size: 1.05rem; margin: 14px 0 22px; max-width: 46ch; }
+.lp-checks { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.lp-checks li { display: flex; gap: 10px; align-items: baseline; }
+.lp-checks li::before { content: "✓"; color: var(--accent); font-weight: 700; }
+.comment-form select {
+  width: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  color: var(--fg);
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+.comment-form select:focus { outline: none; border-color: var(--accent); }
+.lp-reviews { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 36px; }
+.lp-review { margin: 0; border: 1px solid var(--border); background: var(--bg-card); padding: 28px; display: flex; flex-direction: column; gap: 14px; }
+.lp-review blockquote { margin: 0; font-size: 1.02rem; line-height: 1.6; }
+.lp-review figcaption { color: var(--fg-muted); font-weight: 600; }
+.lp-stars { color: #f6c445; letter-spacing: 3px; font-size: 1.05rem; }
+.lp-video-reviews { margin-top: 40px; }
+@media (max-width: 860px) {
+  .lp-form-split { grid-template-columns: 1fr; gap: 32px; }
+  .lp-reviews { grid-template-columns: 1fr; }
+  .lp-hero { min-height: 70svh; }
+  .lp-hero .hero-content { padding: 110px 0 48px; }
+}

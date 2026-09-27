@@ -225,6 +225,11 @@ async function main() {
     const { html } = await renderPage(Pub.contactPage, {});
     await writePage('contato', html);
   }
+  // Página de destino dos anúncios (27/09/2026) — fora do sitemap de propósito (tem noindex).
+  {
+    const { html } = await renderPage(Pub.orcamentoPage, {});
+    await writePage('orcamento', html);
+  }
   // "Link na bio" (estilo Linktree) — pedido do usuário em 17/09/2026, pra colar na bio do
   // Instagram e juntar site/WhatsApp/Instagram/Google num link só.
   {
