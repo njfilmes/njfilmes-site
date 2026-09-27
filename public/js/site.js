@@ -1260,23 +1260,44 @@
           }
         } catch (e) { /* sem pixel carregado (bloqueador de anúncios etc.), segue o formulário normalmente */ }
 
-        fetch(API_BASE + '/api/contato-lead', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ nome: nome, telefone: telefone, tipo_evento: tipoEvento, empresa: honeypot ? honeypot.value : '' }),
-        })
-          .catch(function () { /* mesmo se o aviso por e-mail falhar, a conversa no WhatsApp abaixo abre igual */ })
-          .finally(function () {
-            if (submitBtn) submitBtn.disabled = false;
-            if (leadStatusEl) {
-              leadStatusEl.textContent = 'Perfeito! Abrindo o WhatsApp...';
-              leadStatusEl.className = 'comment-form-status is-success';
-            }
-            var msg = 'Olá! Meu nome é ' + nome + (tipoEvento ? ', quero falar sobre: ' + tipoEvento : '') + '.';
-            if (waBase) {
-              setTimeout(function () { window.open(waBase + encodeURIComponent(msg), '_blank', 'noopener'); }, 250);
-            }
-          });
+        // Abre o WhatsApp JÁ, dentro do clique (27/09/2026, pedido do usuário): antes o site esperava
+        // o servidor responder, e o plano gratuito do Render leva até ~50s pra "acordar" - o cliente
+        // ficava parado em "Abrindo o WhatsApp...". Abrir dentro do clique também evita o bloqueio de
+        // pop-up do navegador; se mesmo assim for bloqueado, abre na mesma aba.
+        var msg = 'Olá! Meu nome é ' + nome + (tipoEvento ? ', quero falar sobre: ' + tipoEvento : '') + '.';
+        var waUrl = waBase ? waBase + encodeURIComponent(msg) : '';
+        var leadPayload = JSON.stringify({ nome: nome, telefone: telefone, tipo_evento: tipoEvento, empresa: honeypot ? honeypot.value : '' });
+
+        // O aviso por e-mail vai por trás, sem o cliente esperar. keepalive mantém o envio vivo
+        // mesmo se a página for trocada pelo WhatsApp logo em seguida.
+        try {
+          fetch(API_BASE + '/api/contato-lead', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: leadPayload,
+            keepalive: true,
+          }).catch(function () { /* se o aviso por e-mail falhar, a conversa no WhatsApp já abriu igual */ });
+        } catch (e) { /* navegador sem fetch: segue só com o WhatsApp */ }
+
+        // Deixa claro que foi enviado: limpa os campos e mostra a confirmação com um link de reserva.
+        leadForm.reset();
+        if (submitBtn) submitBtn.disabled = false;
+        if (leadStatusEl) {
+          leadStatusEl.className = 'comment-form-status is-success';
+          leadStatusEl.textContent = 'Recebido, ' + nome.split(' ')[0] + '! A conversa no WhatsApp abriu numa nova aba. ';
+          if (waUrl) {
+            var again = document.createElement('a');
+            again.href = waUrl; again.target = '_blank'; again.rel = 'noopener';
+            again.textContent = 'Não abriu? Toque aqui.';
+            leadStatusEl.appendChild(again);
+          }
+        }
+
+        if (waUrl) {
+          var win = window.open(waUrl, '_blank');
+          if (win) { try { win.opener = null; } catch (e) {} }
+          else { setTimeout(function () { window.location.href = waUrl; }, 300); }
+        }
       });
     }
   } catch (err) { /* não deixa um erro aqui travar o resto do script */ }
